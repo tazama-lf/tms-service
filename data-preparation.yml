@@ -1,0 +1,22 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: https://frmfaas.sybrin.com
+functions:
+  data-preparation:
+    namespace: openfaas-fn
+    lang: dockerfile
+    handler: .
+    image: actio.azurecr.io/data-preparation:latest
+    labels:
+      com.openfaas.health.http.initialDelay: "45s" 
+      com.openfaas.profile: nodeselector 
+      com.openfaas.scale.type: rps 
+      com.openfaas.scale.min: 1 
+      com.openfaas.scale.max: 10 
+      com.openfaas.scale.zero: false 
+      com.openfaas.scale.zero-duration: 15m 
+      com.openfaas.scale.target: 50 
+      com.openfaas.scale.target-proportion: 0.90
+    secrets:
+      - frmpullsecret
