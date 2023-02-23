@@ -75,7 +75,7 @@ export class ArangoDBService {
   }
 
   async getPseudonyms(hash: string): Promise<any> {
-    const db = this.pseudonymsClient.collection(configuration.db.pseudonymscollection)
+    const db = this.pseudonymsClient.collection(configuration.db.pseudonymscollection);
     const query = aql`FOR i IN ${db}
         FILTER i.pseudonym == ${hash}
         RETURN i`;
@@ -84,7 +84,7 @@ export class ArangoDBService {
   }
 
   async getTransactionHistory(EndToEndId: string): Promise<any> {
-    const db = this.transactionHistoryClient.collection('transactionHistory')
+    const db = this.transactionHistoryClient.collection('transactionHistory');
     const query = aql`FOR doc IN ${db} 
       FILTER doc.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId == ${EndToEndId} 
       RETURN doc`;
@@ -105,7 +105,7 @@ export class ArangoDBService {
         Id: entityId,
         CreDtTm: CreDtTm,
       },
-      { waitForSync: true, overwriteMode: 'ignore' },
+      { overwriteMode: 'ignore' },
     );
   }
 
@@ -118,7 +118,7 @@ export class ArangoDBService {
         _to: `accounts/${accountId}`,
         CreDtTm: CreDtTm,
       },
-      { waitForSync: true, overwriteMode: 'ignore' },
+      { overwriteMode: 'ignore' },
     );
   }
 
@@ -139,20 +139,18 @@ export class ArangoDBService {
         lat: tR.lat,
         long: tR.long,
       },
-      { waitForSync: true, overwriteMode: 'ignore' },
+      { overwriteMode: 'ignore' },
     );
   }
 
   async saveTransactionHistory(transaction: any): Promise<any> {
     return this.save(this.transactionHistoryClient, configuration.db.transactionhistorycollection, transaction, {
-      waitForSync: true,
       overwriteMode: 'ignore',
     });
   }
 
   async savePseudonym(pseudonym: any): Promise<any> {
     return this.save(this.pseudonymsClient, configuration.db.pseudonymscollection, pseudonym, {
-      waitForSync: true,
       overwriteMode: 'ignore',
     });
   }
