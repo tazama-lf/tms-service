@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { config } from 'dotenv';
 import apm from 'elastic-apm-node';
 import { databaseClient } from '.';
 import { Pacs002 } from './classes/pacs.002.001.12';
@@ -281,7 +282,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   try {
     await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs002_collection);
 
-    let result = await databaseClient.getTransactionHistory(EndToEndId)
+    let result = await databaseClient.getTransactionHistoryPacs008(EndToEndId)
     let crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id
     let dtrPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id
     transactionRelationship.from = `accounts/${crdtPseudo}`
