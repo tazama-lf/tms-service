@@ -64,7 +64,7 @@ describe('App Controller & Logic Service', () => {
       });
     });
 
-    jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any) => {
+    jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any, transactionhistorycollection: string) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
@@ -95,7 +95,7 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote, database error', async () => {
       const request = getMockRequestPain001() as Pain001;
 
-      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any) => {
+      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any, transactionhistorycollection: string) => {
         return new Promise((resolve, reject) => {
           throw new Error('Deliberate Error');
         });
@@ -123,7 +123,7 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote Reply, database error', async () => {
       const request = getMockRequestPain013() as Pain013;
 
-      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any) => {
+      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any, transactionhistorycollection: string) => {
         return new Promise((resolve, reject) => {
           throw new Error('Deliberate Error');
         });
@@ -149,7 +149,7 @@ describe('App Controller & Logic Service', () => {
     });
 
     it('should handle Transfer, database error', async () => {
-      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((EndToEndId: string) => {
+      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: string, transactionhistorycollection: string) => {
         return new Promise((resolve, reject) => {
           throw new Error('Deliberate Error');
         });

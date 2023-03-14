@@ -78,7 +78,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
 
   try {
-    await databaseClient.saveTransactionHistory(transaction);
+    await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain001_collection);
     await databaseClient.addAccount(debtorHash);
     await databaseClient.addAccount(creditorHash);
     await databaseClient.addEntity(creditorId, CreDtTm);
@@ -161,7 +161,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   transaction._key = MsgId
 
   try {
-    await databaseClient.saveTransactionHistory(transaction);
+    await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain013_collection);
     await databaseClient.addAccount(debtorHash);
     await databaseClient.addAccount(creditorHash);
     await databaseClient.saveTransactionRelationship(transactionRelationship);
@@ -239,7 +239,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry = "PSEUDO"
 
   try {
-    await databaseClient.saveTransactionHistory(transaction);
+    await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs008_collection);
     await databaseClient.addAccount(debtorHash);
     await databaseClient.addAccount(creditorHash);
     await databaseClient.saveTransactionRelationship(transactionRelationship);
@@ -279,7 +279,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   transaction._key = MsgId
 
   try {
-    await databaseClient.saveTransactionHistory(transaction);
+    await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs002_collection);
 
     let result = await databaseClient.getTransactionHistory(EndToEndId)
     let crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id
