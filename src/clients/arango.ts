@@ -143,8 +143,8 @@ export class ArangoDBService {
     );
   }
 
-  async saveTransactionHistory(transaction: any): Promise<any> {
-    return this.save(this.transactionHistoryClient, configuration.db.transactionhistorycollection, transaction, {
+  async saveTransactionHistory(transaction: any, transactionhistorycollection: string): Promise<any> {
+    return this.save(this.transactionHistoryClient, transactionhistorycollection, transaction, {
       overwriteMode: 'ignore',
     });
   }
