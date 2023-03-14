@@ -168,7 +168,7 @@ describe('App Controller & Logic Service', () => {
 
   describe('handleTransferResponse', () => {
     it('should handle Transfer Response', async () => {
-      jest.spyOn(databaseClient, 'getTransactionHistory').mockImplementation((EndToEndId: string) => {
+      jest.spyOn(databaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
         return new Promise((resolve, reject) => {
           resolve(
             JSON.parse(
@@ -185,7 +185,7 @@ describe('App Controller & Logic Service', () => {
     });
 
     it('should handle Transfer Response, database error', async () => {
-      jest.spyOn(databaseClient, 'getTransactionHistory').mockImplementation((EndToEndId: string) => {
+      jest.spyOn(databaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
         return new Promise((resolve, reject) => {
           throw new Error('Deliberate Error');
         });

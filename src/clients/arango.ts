@@ -83,8 +83,8 @@ export class ArangoDBService {
     return this.query(query, this.pseudonymsClient);
   }
 
-  async getTransactionHistory(EndToEndId: string): Promise<any> {
-    const db = this.transactionHistoryClient.collection('transactionHistory');
+  async getTransactionHistoryPacs008(EndToEndId: string): Promise<any> {
+    const db = this.transactionHistoryClient.collection(configuration.db.transactionhistory_pacs008_collection);
     const query = aql`FOR doc IN ${db} 
       FILTER doc.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId == ${EndToEndId} 
       RETURN doc`;
