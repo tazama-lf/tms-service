@@ -17,6 +17,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   const creditorHash = calcCreditorHash(transaction);
   const debtorHash = calcDebtorHash(transaction);
 
+  transaction.EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
+
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
   const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
@@ -45,38 +47,40 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
     TxTp: TxTp,
   };
 
-  let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
-  let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
+  // let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
+  // let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
 
-  const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
+  // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
 
-  if (lookupCreditorResult.length === 0) {
-    //insert creditor pseudonym
-    let pseudonym = {
-      _key: creditorHash,
-      pseudonym: creditorHash,
-      Proprietary: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry,
-      MemberIdentification: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-      Identification: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-    };
-    await databaseClient.savePseudonym(pseudonym);
-  }
-  if (lookupDebtorResult.length === 0) {
-    //insert debtor pseudonym
-    let pseudonym = {
-      _key: debtorHash,
-      pseudonym: debtorHash,
-      Proprietary: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
-      MemberIdentification: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-      Identification: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
-    };
-    await databaseClient.savePseudonym(pseudonym);
-  }
+  // // if (lookupCreditorResult.length === 0) 
+  // {
+  //   //insert creditor pseudonym
+  //   // let pseudonym = {
+  //   //   _key: creditorHash,
+  //   //   pseudonym: creditorHash,
+  //   //   Proprietary: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry,
+  //   //   MemberIdentification: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  //   //   Identification: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
+  //   // };
+  //   // await databaseClient.savePseudonym(pseudonym);
+  // }
+  // // if (lookupDebtorResult.length === 0) 
+  // {
+  //   //insert debtor pseudonym
+  //   // let pseudonym = {
+  //   //   _key: debtorHash,
+  //   //   pseudonym: debtorHash,
+  //   //   Proprietary: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
+  //   //   MemberIdentification: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  //   //   Identification: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
+  //   // };
+  //   // await databaseClient.savePseudonym(pseudonym);
+  // }
 
-  transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id = creditorHash;
-  transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
-  transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash;
-  transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
+  // transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id = creditorHash;
+  // transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
+  // transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash;
+  // transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
 
   try {
     await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain001_collection);
@@ -107,6 +111,8 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   const creditorHash = calcCreditorHash(transaction);
   const debtorHash = calcDebtorHash(transaction);
 
+  transaction.EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
+
   const Amt = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
   const CreDtTm = transaction.CdtrPmtActvtnReq.GrpHdr.CreDtTm;
@@ -127,38 +133,38 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
     TxTp: TxTp,
   };
 
-  let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
-  let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
+  // let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
+  // let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
 
-  const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
+  // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
 
-  if (lookupCreditorResult.length === 0) {
-    //insert creditor pseudonym
-    let pseudonym = {
-      _key: creditorHash,
-      pseudonym: creditorHash,
-      Proprietary: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-      MemberIdentification: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-      Identification: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry,
-    };
-    await databaseClient.savePseudonym(pseudonym);
-  }
-  if (lookupDebtorResult.length === 0) {
-    //insert debtor pseudonym
-    let pseudonym = {
-      _key: debtorHash,
-      pseudonym: debtorHash,
-      Proprietary: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id,
-      MemberIdentification: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-      Identification: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
-    };
-    await databaseClient.savePseudonym(pseudonym);
-  }
+  // if (lookupCreditorResult.length === 0) {
+  //   //insert creditor pseudonym
+  //   let pseudonym = {
+  //     _key: creditorHash,
+  //     pseudonym: creditorHash,
+  //     Proprietary: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
+  //     MemberIdentification: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  //     Identification: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry,
+  //   };
+  //   await databaseClient.savePseudonym(pseudonym);
+  // }
+  // if (lookupDebtorResult.length === 0) {
+  //   //insert debtor pseudonym
+  //   let pseudonym = {
+  //     _key: debtorHash,
+  //     pseudonym: debtorHash,
+  //     Proprietary: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id,
+  //     MemberIdentification: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  //     Identification: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
+  //   };
+  //   await databaseClient.savePseudonym(pseudonym);
+  // }
 
-  transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id = creditorHash
-  transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
-  transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash
-  transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
+  // transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id = creditorHash
+  // transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
+  // transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash
+  // transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
   transaction._key = MsgId
 
   try {
@@ -186,6 +192,8 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   const creditorHash = calcCreditorHash(transaction);
   const debtorHash = calcDebtorHash(transaction);
 
+  transaction.EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
+
   const Amt = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Amt;
   const Ccy = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Ccy;
   const CreDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
@@ -206,38 +214,38 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
     TxTp: TxTp,
   };
 
-  let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
-  let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
+  // let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
+  // let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
 
-  const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
+  // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
 
-  if (lookupCreditorResult.length === 0) {
-    //insert creditor pseudonym
-    let pseudonym = {
-      _key: creditorHash,
-      pseudonym: creditorHash,
-      Proprietary: transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
-      MemberIdentification: transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-      Identification: transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry,
-    };
-    await databaseClient.savePseudonym(pseudonym);
-  }
-  if (lookupDebtorResult.length === 0) {
-    //insert debtor pseudonym
-    let pseudonym = {
-      _key: debtorHash,
-      pseudonym: debtorHash,
-      Proprietary: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
-      MemberIdentification: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-      Identification: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
-    };
-    await databaseClient.savePseudonym(pseudonym);
-  }
+  // if (lookupCreditorResult.length === 0) {
+  //   //insert creditor pseudonym
+  //   let pseudonym = {
+  //     _key: creditorHash,
+  //     pseudonym: creditorHash,
+  //     Proprietary: transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
+  //     MemberIdentification: transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  //     Identification: transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry,
+  //   };
+  //   await databaseClient.savePseudonym(pseudonym);
+  // }
+  // if (lookupDebtorResult.length === 0) {
+  //   //insert debtor pseudonym
+  //   let pseudonym = {
+  //     _key: debtorHash,
+  //     pseudonym: debtorHash,
+  //     Proprietary: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
+  //     MemberIdentification: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  //     Identification: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
+  //   };
+  //   await databaseClient.savePseudonym(pseudonym);
+  // }
 
-  transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id = debtorHash
-  transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = "PSEUDO"
-  transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id = creditorHash
-  transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry = "PSEUDO"
+  // transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id = debtorHash
+  // transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = "PSEUDO"
+  // transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id = creditorHash
+  // transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry = "PSEUDO"
 
   try {
     await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs008_collection);
@@ -259,6 +267,8 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
 export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   LoggerService.log('Start - Handle transaction data'); 
   const span = apm.startSpan('Handle transaction data');
+
+  transaction.EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId
   const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm
   const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId
   const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId

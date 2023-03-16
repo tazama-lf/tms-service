@@ -1,5 +1,6 @@
 export interface Pacs008 {
   TxTp: string;
+  EndToEndId: string;
   FIToFICstmrCdt: FIToFICstmrCdt;
 }
 
