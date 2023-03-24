@@ -1,7 +1,11 @@
 export interface Pain001 {
   TxTp: string;
-  EndToEndId: string;
   CstmrCdtTrfInitn: CstmrCdtTrfInitn;
+  
+  EndToEndId: string;
+  DebtorAcctId: string;
+  CreditorAcctId: string;
+  CreDtTm: string;
 }
 
 export interface CstmrCdtTrfInitn {
