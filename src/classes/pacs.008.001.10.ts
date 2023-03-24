@@ -1,7 +1,11 @@
 export interface Pacs008 {
   TxTp: string;
-  EndToEndId: string;
   FIToFICstmrCdt: FIToFICstmrCdt;
+  
+  EndToEndId: string;
+  DebtorAcctId: string;
+  CreditorAcctId: string;
+  CreDtTm: string;
 }
 
 export interface FIToFICstmrCdt {

@@ -18,6 +18,9 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   const debtorHash = calcDebtorHash(transaction);
 
   transaction.EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
+  transaction.DebtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
+  transaction.CreditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+  transaction.CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
 
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
@@ -201,6 +204,9 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   const debtorHash = calcDebtorHash(transaction);
 
   transaction.EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
+  transaction.DebtorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
+  transaction.CreditorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+  transaction.CreDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
 
   const Amt = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Amt;
   const Ccy = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Ccy;
@@ -280,6 +286,8 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   const span = apm.startSpan('Handle transaction data');
 
   transaction.EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId
+  transaction.TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts
+
   const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm
   const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId
   const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId
