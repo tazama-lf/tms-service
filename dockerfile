@@ -46,7 +46,7 @@ ENV prefix_logs="false"
 ENV FUNCTION_NAME=data-preparation-rel-1-0-0
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV CRSP_ENDPOINT=http://gateway.openfaas:8080/function/off-channel-router-setup-processor/execute
+ENV CRSP_ENDPOINT=
 ENV CACHE_TTL=30
 ENV CERT_PATH=
 
