@@ -71,9 +71,9 @@ export const runServer = (): void => {
   }  
 };
 
-const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU : os.cpus().length;
+const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1: os.cpus().length + 1;
 
-if (cluster.isPrimary) {
+if (cluster.isPrimary && configuration.maxCPU !== 1) {
   console.log(`Primary ${process.pid} is running`);
 
   // Fork workers.
