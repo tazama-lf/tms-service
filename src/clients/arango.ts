@@ -7,8 +7,8 @@ import { TransactionRelationship } from '../interfaces/iTransactionRelationship'
 import { LoggerService } from '../logger.service';
 
 export class ArangoDBService {
-  private transactionHistoryClient: Database;
-  private pseudonymsClient: Database;
+  transactionHistoryClient: Database;
+  pseudonymsClient: Database;
 
   constructor() {
     const caOption = fs.existsSync(configuration.cert) ? [fs.readFileSync(configuration.cert)] : [];
@@ -77,8 +77,8 @@ export class ArangoDBService {
   async getPseudonyms(hash: string): Promise<any> {
     const db = this.pseudonymsClient.collection(configuration.db.pseudonymscollection);
     const query = aql`FOR i IN ${db}
-        FILTER i.pseudonym == ${hash}
-        RETURN i`;
+      FILTER i.pseudonym == ${hash}
+      RETURN i`;
 
     return this.query(query, this.pseudonymsClient);
   }
