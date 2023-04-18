@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { config } from 'dotenv';
 import apm from 'elastic-apm-node';
 import { databaseClient } from '.';
 import { Pacs002 } from './classes/pacs.002.001.12';
@@ -55,7 +54,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
 
   // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
 
-  // // if (lookupCreditorResult.length === 0) 
+  // // if (lookupCreditorResult.length === 0)
   // {
   //   //insert creditor pseudonym
   //   // let pseudonym = {
@@ -67,7 +66,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   //   // };
   //   // await databaseClient.savePseudonym(pseudonym);
   // }
-  // // if (lookupDebtorResult.length === 0) 
+  // // if (lookupDebtorResult.length === 0)
   // {
   //   //insert debtor pseudonym
   //   // let pseudonym = {
@@ -91,13 +90,13 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
       databaseClient.addAccount(debtorHash),
       databaseClient.addAccount(creditorHash),
       databaseClient.addEntity(creditorId, CreDtTm),
-      databaseClient.addEntity(debtorId, CreDtTm)
+      databaseClient.addEntity(debtorId, CreDtTm),
     ]);
 
     await Promise.all([
       databaseClient.saveTransactionRelationship(transactionRelationship),
       databaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      databaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm)
+      databaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
@@ -108,7 +107,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
-  span?.end()
+  span?.end();
   LoggerService.log('END - Handle transaction data');
   return transaction;
 };
@@ -127,7 +126,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   const EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
-  const TxTp = transaction.TxTp
+  const TxTp = transaction.TxTp;
 
   let transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorHash}`,
@@ -173,13 +172,13 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   // transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
   // transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash
   // transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
-  transaction._key = MsgId
+  transaction._key = MsgId;
 
   try {
     await Promise.all([
       databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain013_collection),
       databaseClient.addAccount(debtorHash),
-      databaseClient.addAccount(creditorHash)
+      databaseClient.addAccount(creditorHash),
     ]);
 
     await databaseClient.saveTransactionRelationship(transactionRelationship);
@@ -192,7 +191,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
-  span?.end()
+  span?.end();
   LoggerService.log('END - Handle transaction data');
   return transaction;
 };
@@ -265,7 +264,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
     await Promise.all([
       databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs008_collection),
       databaseClient.addAccount(debtorHash),
-      databaseClient.addAccount(creditorHash)
+      databaseClient.addAccount(creditorHash),
     ]);
 
     await databaseClient.saveTransactionRelationship(transactionRelationship);
@@ -285,15 +284,15 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
 
-  transaction.EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId
-  transaction.TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts
+  transaction.EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId;
+  transaction.TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
 
-  const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm
-  const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId
-  const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId
-  const PmtInfId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlInstrId
-  const TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts
-  const TxTp = transaction.TxTp
+  const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
+  const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId;
+  const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId;
+  const PmtInfId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlInstrId;
+  const TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
+  const TxTp = transaction.TxTp;
 
   let transactionRelationship: TransactionRelationship = {
     from: '',
@@ -303,19 +302,19 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
     MsgId: MsgId,
     PmtInfId: PmtInfId,
     TxTp: TxTp,
-    TxSts: TxSts
+    TxSts: TxSts,
   };
 
-  transaction._key = MsgId
+  transaction._key = MsgId;
 
   try {
     await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs002_collection);
 
-    let result = await databaseClient.getTransactionHistoryPacs008(EndToEndId)
-    let crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id
-    let dtrPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id
-    transactionRelationship.from = `accounts/${crdtPseudo}`
-    transactionRelationship.to = `accounts/${dtrPseudo}`
+    let result = await databaseClient.getTransactionHistoryPacs008(EndToEndId);
+    let crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+    let dtrPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
+    transactionRelationship.from = `accounts/${crdtPseudo}`;
+    transactionRelationship.to = `accounts/${dtrPseudo}`;
 
     await databaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
@@ -327,7 +326,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
-  span?.end()
+  span?.end();
   LoggerService.log('END - Handle transaction data');
   return transaction;
 };
@@ -340,10 +339,10 @@ const executePost = async (endpoint: string, request: any) => {
     if (crspRes.status !== 200) {
       LoggerService.error(`CRSP Response StatusCode != 200, request:\r\n${request}`);
     }
-    LoggerService.log(`CRSP Reponse - ${crspRes.status} with data\n ${JSON.stringify(crspRes.data)}`)
+    LoggerService.log(`CRSP Reponse - ${crspRes.status} with data\n ${JSON.stringify(crspRes.data)}`);
     span?.end();
   } catch (error) {
-    LoggerService.error(`Error while sending request to CRSP at ${endpoint ?? ''} with message: ${error}`);
+    LoggerService.error(`Error while sending request to CRSP at ${endpoint ? endpoint : ''} with message: ${error}`);
     LoggerService.trace(`CRSP Error Request:\r\n${JSON.stringify(request)}`);
   }
 };

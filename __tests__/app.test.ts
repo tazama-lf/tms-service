@@ -1,12 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
+import apm from 'elastic-apm-node';
 import { Pacs002 } from '../src/classes/pacs.002.001.12';
 import { Pacs008 } from '../src/classes/pacs.008.001.10';
 import { Pain001 } from '../src/classes/pain.001.001.11';
 import { Pain013 } from '../src/classes/pain.013.001.09';
-import { databaseClient } from '../src/index';
+import { configuration } from '../src/config';
+import { app, cache, cacheClient, databaseClient } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from '../src/logic.service';
+
+jest.mock('elastic-apm-node');
+const mockApm = apm as jest.Mocked<typeof apm>;
+
+interface MockedSpan extends Omit<apm.Span, 'end'> {
+  end: jest.Mock;
+}
+
+(mockApm.startSpan as jest.MockedFunction<typeof mockApm.startSpan>).mockReturnValue({
+  end: jest.fn(),
+} as MockedSpan);
+
+afterAll(() => {
+  cache.close();
+  cacheClient.client.quit();
+  databaseClient.pseudonymsClient.close();
+  databaseClient.transactionHistoryClient.close();
+  app.terminate();
+});
 
 describe('App Controller & Logic Service', () => {
   let postSpy: jest.SpyInstance;
@@ -88,8 +109,8 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPain001() as Pain001;
 
       const result = await handlePain001(request);
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('PSEUDO');
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('PSEUDO');
+      expect(result.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
     });
 
     it('should handle Quote, database error', async () => {
@@ -116,8 +137,7 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPain013() as Pain013;
 
       const result = await handlePain013(request);
-      expect(result.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('PSEUDO');
-      expect(result.CdtrPmtActvtnReq?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('PSEUDO');
+      expect(result.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
     });
 
     it('should handle Quote Reply, database error', async () => {
@@ -144,16 +164,18 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs008() as Pacs008;
 
       const result = await handlePacs008(request);
-      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('PSEUDO');
-      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('PSEUDO');
+      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
     });
 
     it('should handle Transfer, database error', async () => {
-      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: string, transactionhistorycollection: string) => {
-        return new Promise((resolve, reject) => {
-          throw new Error('Deliberate Error');
+      jest
+        .spyOn(databaseClient, 'saveTransactionHistory')
+        .mockImplementation((transaction: string, transactionhistorycollection: string) => {
+          return new Promise((resolve, reject) => {
+            throw new Error('Deliberate Error');
+          });
         });
-      });
       const request = getMockRequestPacs008() as Pacs008;
 
       let error = '';
@@ -203,7 +225,7 @@ describe('App Controller & Logic Service', () => {
   });
 
   describe('Send Transaction to CRSP', () => {
-    it('fail gracefully', async() => {
+    it('fail gracefully', async () => {
       jest.spyOn(axios, 'post').mockImplementation((url: string, data?: any) => {
         return new Promise((resolve, reject) => {
           resolve({ status: 500 });
@@ -211,9 +233,37 @@ describe('App Controller & Logic Service', () => {
       });
 
       const request = getMockRequestPacs008() as Pacs008;
-      await handlePacs008(request);  
+      await handlePacs008(request);
 
-      expect(axios.post).toBeCalledTimes(1)
-    }) 
+      expect(axios.post).toBeCalledTimes(1);
+    });
+
+    it('handle no endpoint exception', async () => {
+      configuration.crspEndpoint = '';
+      jest.spyOn(axios, 'post').mockRejectedValue((url: string, data?: any) => {
+        return new Promise((resolve, reject) => {
+          resolve(new Error('test'));
+        });
+      });
+
+      const request = getMockRequestPacs008() as Pacs008;
+      await handlePacs008(request);
+
+      expect(axios.post).toBeCalledTimes(1);
+    });
+
+    it('handle generic exception', async () => {
+      configuration.crspEndpoint = 'crsp';
+      jest.spyOn(axios, 'post').mockRejectedValue((url: string, data?: any) => {
+        return new Promise((resolve, reject) => {
+          resolve(new Error('test'));
+        });
+      });
+
+      const request = getMockRequestPacs008() as Pacs008;
+      await handlePacs008(request);
+
+      expect(axios.post).toBeCalledTimes(1);
+    });
   });
 });
