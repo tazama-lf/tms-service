@@ -1,61 +1,61 @@
 export interface Pain001 {
   TxTp: string;
   CstmrCdtTrfInitn: CstmrCdtTrfInitn;
-  
+
   EndToEndId: string;
   DebtorAcctId: string;
   CreditorAcctId: string;
   CreDtTm: string;
 }
 
-export interface CstmrCdtTrfInitn {
+interface CstmrCdtTrfInitn {
   GrpHdr: GrpHdr;
   PmtInf: PmtInf;
   SplmtryData: CstmrCdtTrfInitnSplmtryData;
 }
 
-export interface GrpHdr {
+interface GrpHdr {
   MsgId: string;
   CreDtTm: string;
   NbOfTxs: number;
   InitgPty: InitgPty;
 }
 
-export interface InitgPty {
+interface InitgPty {
   Nm: string;
   Id: InitgPtyID;
   CtctDtls: CtctDtls;
 }
 
-export interface CtctDtls {
+interface CtctDtls {
   MobNb: string;
 }
 
-export interface InitgPtyID {
+interface InitgPtyID {
   PrvtId: PrvtID;
 }
 
-export interface PrvtID {
+interface PrvtID {
   DtAndPlcOfBirth: DtAndPLCOfBirth;
   Othr: Othr;
 }
 
-export interface DtAndPLCOfBirth {
+interface DtAndPLCOfBirth {
   BirthDt: Date;
   CityOfBirth: string;
   CtryOfBirth: string;
 }
 
-export interface Othr {
+interface Othr {
   Id: string;
   SchmeNm: CtgyPurp;
 }
 
-export interface CtgyPurp {
+interface CtgyPurp {
   Prtry: string;
 }
 
-export interface PmtInf {
+interface PmtInf {
   PmtInfId: string;
   PmtMtd: string;
   ReqdAdvcTp: ReqdAdvcTp;
@@ -66,7 +66,7 @@ export interface PmtInf {
   CdtTrfTxInf: CdtTrfTxInf;
 }
 
-export interface CdtTrfTxInf {
+interface CdtTrfTxInf {
   PmtId: PmtID;
   PmtTpInf: PmtTpInf;
   Amt: Amt;
@@ -80,125 +80,125 @@ export interface CdtTrfTxInf {
   SplmtryData: CdtTrfTxInfSplmtryData;
 }
 
-export interface Amt {
+interface Amt {
   InstdAmt: InstdAmt;
   EqvtAmt: EqvtAmt;
 }
 
-export interface EqvtAmt {
+interface EqvtAmt {
   Amt: DbtrFinSvcsPrvdrFeesClass;
   CcyOfTrf: string;
 }
 
-export interface DbtrFinSvcsPrvdrFeesClass {
+interface DbtrFinSvcsPrvdrFeesClass {
   Amt: string;
   Ccy: string;
 }
 
-export interface InstdAmt {
+interface InstdAmt {
   Amt: DbtrFinSvcsPrvdrFeesClass;
 }
 
-export interface TrAcct {
+interface TrAcct {
   Id: DbtrAcctID;
   Nm: string;
 }
 
-export interface DbtrAcctID {
+interface DbtrAcctID {
   Othr: Othr;
 }
 
-export interface TrAgt {
+interface TrAgt {
   FinInstnId: FinInstnID;
 }
 
-export interface FinInstnID {
+interface FinInstnID {
   ClrSysMmbId: CLRSysMmbID;
 }
 
-export interface CLRSysMmbID {
+interface CLRSysMmbID {
   MmbId: string;
 }
 
-export interface PmtID {
+interface PmtID {
   EndToEndId: string;
 }
 
-export interface PmtTpInf {
+interface PmtTpInf {
   CtgyPurp: CtgyPurp;
 }
 
-export interface Purp {
+interface Purp {
   Cd: string;
 }
 
-export interface RgltryRptg {
+interface RgltryRptg {
   Dtls: Dtls;
 }
 
-export interface Dtls {
+interface Dtls {
   Tp: string;
   Cd: string;
 }
 
-export interface RmtInf {
+interface RmtInf {
   Ustrd: string;
 }
 
-export interface CdtTrfTxInfSplmtryData {
+interface CdtTrfTxInfSplmtryData {
   Envlp: PurpleEnvlp;
 }
 
-export interface PurpleEnvlp {
+interface PurpleEnvlp {
   Doc: PurpleDoc;
 }
 
-export interface PurpleDoc {
+interface PurpleDoc {
   Dbtr: Cdtr;
   Cdtr: Cdtr;
   DbtrFinSvcsPrvdrFees: DbtrFinSvcsPrvdrFeesClass;
   Xprtn: Date;
 }
 
-export interface Cdtr {
+interface Cdtr {
   FrstNm: string;
   MddlNm: string;
   LastNm: string;
   MrchntClssfctnCd: string;
 }
 
-export interface ReqdAdvcTp {
+interface ReqdAdvcTp {
   DbtAdvc: DbtAdvc;
 }
 
-export interface DbtAdvc {
+interface DbtAdvc {
   Cd: string;
   Prtry: string;
 }
 
-export interface ReqdExctnDt {
+interface ReqdExctnDt {
   Dt: Date;
   DtTm: Date;
 }
 
-export interface CstmrCdtTrfInitnSplmtryData {
+interface CstmrCdtTrfInitnSplmtryData {
   Envlp: FluffyEnvlp;
 }
 
-export interface FluffyEnvlp {
+interface FluffyEnvlp {
   Doc: FluffyDoc;
 }
 
-export interface FluffyDoc {
+interface FluffyDoc {
   InitgPty: DocInitgPty;
 }
 
-export interface DocInitgPty {
+interface DocInitgPty {
   InitrTp: string;
   Glctn: Glctn;
 }
 
-export interface Glctn {
+interface Glctn {
   Lat: string;
   Long: string;
 }

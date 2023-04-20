@@ -23,7 +23,7 @@ const config: Config.InitialOptions = {
   collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  //collectCoverageFrom: ['src/app.controller.ts'],
+  // collectCoverageFrom: ['src/app.controller.ts'],
   collectCoverageFrom: ['src/logic.service.ts'],
 
   // The directory where Jest should output its coverage files
@@ -149,7 +149,7 @@ const config: Config.InitialOptions = {
   setupFiles: ['dotenv/config', './cluster-setup.ts'],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: ['./jest.setup.redis-mock.js'],
+  setupFilesAfterEnv: ['./setup.jest.js'],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,

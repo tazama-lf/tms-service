@@ -1,23 +1,23 @@
 export interface Pacs002 {
   TxTp: string;
   FIToFIPmtSts: FIToFIPmtSts;
-  
+
   EndToEndId: string;
   TxSts: string;
   _key?: string;
 }
 
-export interface FIToFIPmtSts {
+interface FIToFIPmtSts {
   GrpHdr: GrpHdr;
   TxInfAndSts: TxInfAndSts;
 }
 
-export interface GrpHdr {
+interface GrpHdr {
   MsgId: string;
   CreDtTm: string;
 }
 
-export interface TxInfAndSts {
+interface TxInfAndSts {
   OrgnlInstrId: string;
   OrgnlEndToEndId: string;
   TxSts: string;
@@ -27,24 +27,24 @@ export interface TxInfAndSts {
   InstdAgt: Agt;
 }
 
-export interface ChrgsInf {
+interface ChrgsInf {
   Amt: Amt;
   Agt: Agt;
 }
 
-export interface Agt {
+interface Agt {
   FinInstnId: FinInstnID;
 }
 
-export interface FinInstnID {
+interface FinInstnID {
   ClrSysMmbId: CLRSysMmbID;
 }
 
-export interface CLRSysMmbID {
+interface CLRSysMmbID {
   MmbId: string;
 }
 
-export interface Amt {
+interface Amt {
   Amt: number;
   Ccy: string;
 }

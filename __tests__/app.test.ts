@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import apm from 'elastic-apm-node';
-import { Pacs002 } from '../src/classes/pacs.002.001.12';
-import { Pacs008 } from '../src/classes/pacs.008.001.10';
-import { Pain001 } from '../src/classes/pain.001.001.11';
-import { Pain013 } from '../src/classes/pain.013.001.09';
+import App from '../src/app';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { configuration } from '../src/config';
-import { app, cache, cacheClient, databaseClient } from '../src/index';
+import { cache, runServer } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from '../src/logic.service';
+import { cacheDatabaseClient } from '../src/services-container';
+
+let app: App;
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -21,11 +22,13 @@ interface MockedSpan extends Omit<apm.Span, 'end'> {
   end: jest.fn(),
 } as MockedSpan);
 
+beforeAll(async () => {
+  app = await runServer();
+});
+
 afterAll(() => {
   cache.close();
-  cacheClient.client.quit();
-  databaseClient.pseudonymsClient.close();
-  databaseClient.transactionHistoryClient.close();
+  cacheDatabaseClient.quit();
   app.terminate();
 });
 
@@ -55,43 +58,45 @@ describe('App Controller & Logic Service', () => {
     );
 
   beforeEach(() => {
-    jest.spyOn(databaseClient, 'getPseudonyms').mockImplementation((hash: string) => {
+    jest.spyOn(cacheDatabaseClient, 'getPseudonyms').mockImplementation((hash: string) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
     });
 
-    jest.spyOn(databaseClient, 'addAccount').mockImplementation((hash: string) => {
+    jest.spyOn(cacheDatabaseClient, 'addAccount').mockImplementation((hash: string) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
     });
 
-    jest.spyOn(databaseClient, 'addEntity').mockImplementation((entityId: string, CreDtTm: string) => {
+    jest.spyOn(cacheDatabaseClient, 'addEntity').mockImplementation((entityId: string, CreDtTm: string) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
     });
 
-    jest.spyOn(databaseClient, 'addAccountHolder').mockImplementation((entityId: string, accountId: string, CreDtTm: string) => {
+    jest.spyOn(cacheDatabaseClient, 'addAccountHolder').mockImplementation((entityId: string, accountId: string, CreDtTm: string) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
     });
 
-    jest.spyOn(databaseClient, 'saveTransactionRelationship').mockImplementation((tR: TransactionRelationship) => {
+    jest.spyOn(cacheDatabaseClient, 'saveTransactionRelationship').mockImplementation((tR: TransactionRelationship) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
     });
 
-    jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any, transactionhistorycollection: string) => {
-      return new Promise((resolve, reject) => {
-        resolve('');
+    jest
+      .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+      .mockImplementation((transaction: any, transactionhistorycollection: string) => {
+        return new Promise((resolve, reject) => {
+          resolve('');
+        });
       });
-    });
 
-    jest.spyOn(databaseClient, 'savePseudonym').mockImplementation((pseudonym: any) => {
+    jest.spyOn(cacheDatabaseClient, 'savePseudonym').mockImplementation((pseudonym: any) => {
       return new Promise((resolve, reject) => {
         resolve('');
       });
@@ -116,11 +121,13 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote, database error', async () => {
       const request = getMockRequestPain001() as Pain001;
 
-      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any, transactionhistorycollection: string) => {
-        return new Promise((resolve, reject) => {
-          throw new Error('Deliberate Error');
+      jest
+        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .mockImplementation((transaction: any, transactionhistorycollection: string) => {
+          return new Promise((resolve, reject) => {
+            throw new Error('Deliberate Error');
+          });
         });
-      });
 
       let error = '';
       try {
@@ -143,11 +150,13 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote Reply, database error', async () => {
       const request = getMockRequestPain013() as Pain013;
 
-      jest.spyOn(databaseClient, 'saveTransactionHistory').mockImplementation((transaction: any, transactionhistorycollection: string) => {
-        return new Promise((resolve, reject) => {
-          throw new Error('Deliberate Error');
+      jest
+        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .mockImplementation((transaction: any, transactionhistorycollection: string) => {
+          return new Promise((resolve, reject) => {
+            throw new Error('Deliberate Error');
+          });
         });
-      });
 
       let error = '';
       try {
@@ -170,8 +179,8 @@ describe('App Controller & Logic Service', () => {
 
     it('should handle Transfer, database error', async () => {
       jest
-        .spyOn(databaseClient, 'saveTransactionHistory')
-        .mockImplementation((transaction: string, transactionhistorycollection: string) => {
+        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .mockImplementation((transaction: Pain001 | Pain013 | Pacs008 | Pacs002, transactionhistorycollection: string) => {
           return new Promise((resolve, reject) => {
             throw new Error('Deliberate Error');
           });
@@ -190,7 +199,7 @@ describe('App Controller & Logic Service', () => {
 
   describe('handleTransferResponse', () => {
     it('should handle Transfer Response', async () => {
-      jest.spyOn(databaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
+      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
         return new Promise((resolve, reject) => {
           resolve(
             JSON.parse(
@@ -207,7 +216,7 @@ describe('App Controller & Logic Service', () => {
     });
 
     it('should handle Transfer Response, database error', async () => {
-      jest.spyOn(databaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
+      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
         return new Promise((resolve, reject) => {
           throw new Error('Deliberate Error');
         });
