@@ -54,7 +54,7 @@ export const configuration: IConfig = {
     secretToken: <string>process.env.APM_SECRET_TOKEN,
     active: <string>process.env.APM_ACTIVE,
   },
-  cacheTTL: parseInt(process.env.CACHE_TTL!, 10),
+  cacheTTL: parseInt(process.env.CACHE_TTL!, 10) || 300,
   cert: <string>process.env.CERT_PATH,
   crspEndpoint: <string>process.env.CRSP_ENDPOINT,
   db: {

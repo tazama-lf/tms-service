@@ -1,7 +1,5 @@
 import { createHash } from 'node:crypto';
-import { Pacs008 } from '../classes/pacs.008.001.10';
-import { Pain001 } from '../classes/pain.001.001.11';
-import { Pain013 } from '../classes/pain.013.001.09';
+import { Pacs008, Pain001, Pain013 } from '../classes/pain-pacs';
 
 export function calcCreditorHash(transaction: Pain001 | Pain013 | Pacs008): string {
   if ('CdtrPmtActvtnReq' in transaction) {

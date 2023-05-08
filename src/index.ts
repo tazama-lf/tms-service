@@ -1,11 +1,11 @@
 import cluster from 'cluster';
 import apm from 'elastic-apm-node';
 import { Context } from 'koa';
-import os from 'os';
 import App from './app';
 import { configuration } from './config';
 import { LoggerService } from './logger.service';
-import { Services } from './services';
+import { ServicesContainer, initCacheDatabase } from './services-container';
+import os from 'os';
 
 /*
  * Initialize the APM Logging
@@ -21,13 +21,12 @@ if (configuration.apm.active === 'true') {
   });
 }
 
-export const databaseClient = Services.getDatabaseInstance();
-export const cache = Services.getCacheInstance();
-export const cacheClient = Services.getCacheClientInstance();
-let app: App;
+export const cache = ServicesContainer.getCacheInstance();
 
-export const runServer = (): App => {
+export const runServer = async (): Promise<App> => {
   const koaApp = new App();
+
+  await initCacheDatabase(configuration.cacheTTL);
 
   /*
    * Centralized error handling
@@ -76,26 +75,21 @@ export const runServer = (): App => {
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
 
 if (cluster.isPrimary && configuration.maxCPU != 1) {
-  console.log(`Primary ${process.pid} is running`);
-
-  // Fork workers.
   for (let i = 1; i < numCPUs; i++) {
     cluster.fork();
   }
 
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died, starting another worker`);
     cluster.fork();
   });
 } else {
-  // Workers can share any TCP connection
-  // In this case it is an HTTP server
-  try {
-    app = runServer();
-  } catch (err) {
-    LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
-  }
-  console.log(`Worker ${process.pid} started`);
+  (async () => {
+    try {
+      if (process.env.NODE_ENV !== 'test') {
+        await runServer();
+      }
+    } catch (err) {
+      LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
+    }
+  })()
 }
-
-export { app };

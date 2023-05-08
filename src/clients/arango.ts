@@ -2,6 +2,7 @@ import { aql, Database } from 'arangojs';
 import { AqlQuery } from 'arangojs/aql';
 import apm from 'elastic-apm-node';
 import * as fs from 'fs';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '../classes/pain-pacs';
 import { configuration } from '../config';
 import { TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { LoggerService } from '../logger.service';
@@ -103,7 +104,7 @@ export class ArangoDBService {
       {
         _key: entityId,
         Id: entityId,
-        CreDtTm: CreDtTm,
+        CreDtTm,
       },
       { overwriteMode: 'ignore' },
     );
@@ -116,7 +117,7 @@ export class ArangoDBService {
       {
         _from: `entities/${entityId}`,
         _to: `accounts/${accountId}`,
-        CreDtTm: CreDtTm,
+        CreDtTm,
       },
       { overwriteMode: 'ignore' },
     );
@@ -143,7 +144,7 @@ export class ArangoDBService {
     );
   }
 
-  async saveTransactionHistory(transaction: any, transactionhistorycollection: string): Promise<any> {
+  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002, transactionhistorycollection: string): Promise<any> {
     return this.save(this.transactionHistoryClient, transactionhistorycollection, transaction, {
       overwriteMode: 'ignore',
     });

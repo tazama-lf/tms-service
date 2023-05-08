@@ -1,13 +1,10 @@
 import axios from 'axios';
 import apm from 'elastic-apm-node';
-import { databaseClient } from '.';
-import { Pacs002 } from './classes/pacs.002.001.12';
-import { Pacs008 } from './classes/pacs.008.001.10';
-import { Pain001 } from './classes/pain.001.001.11';
-import { Pain013 } from './classes/pain.013.001.09';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { configuration } from './config';
 import { TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { LoggerService } from './logger.service';
+import { cacheDatabaseClient } from './services-container';
 import { calcCreditorHash, calcDebtorHash } from './utils/transaction-tools';
 
 export const handlePain001 = async (transaction: Pain001): Promise<any> => {
@@ -35,75 +32,40 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   const PmtInfId = transaction.CstmrCdtTrfInitn.PmtInf.PmtInfId;
   const TxTp = transaction.TxTp;
 
-  let transactionRelationship: TransactionRelationship = {
+  const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorHash}`,
     to: `accounts/${creditorHash}`,
-    Amt: Amt,
-    Ccy: Ccy,
-    CreDtTm: CreDtTm,
-    EndToEndId: EndToEndId,
-    lat: lat,
-    long: long,
-    MsgId: MsgId,
-    PmtInfId: PmtInfId,
-    TxTp: TxTp,
+    Amt,
+    Ccy,
+    CreDtTm,
+    EndToEndId,
+    lat,
+    long,
+    MsgId,
+    PmtInfId,
+    TxTp,
   };
-
-  // let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
-  // let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
-
-  // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
-
-  // // if (lookupCreditorResult.length === 0)
-  // {
-  //   //insert creditor pseudonym
-  //   // let pseudonym = {
-  //   //   _key: creditorHash,
-  //   //   pseudonym: creditorHash,
-  //   //   Proprietary: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry,
-  //   //   MemberIdentification: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-  //   //   Identification: transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-  //   // };
-  //   // await databaseClient.savePseudonym(pseudonym);
-  // }
-  // // if (lookupDebtorResult.length === 0)
-  // {
-  //   //insert debtor pseudonym
-  //   // let pseudonym = {
-  //   //   _key: debtorHash,
-  //   //   pseudonym: debtorHash,
-  //   //   Proprietary: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
-  //   //   MemberIdentification: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-  //   //   Identification: transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
-  //   // };
-  //   // await databaseClient.savePseudonym(pseudonym);
-  // }
-
-  // transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id = creditorHash;
-  // transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
-  // transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash;
-  // transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO';
 
   try {
     await Promise.all([
-      databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain001_collection),
-      databaseClient.addAccount(debtorHash),
-      databaseClient.addAccount(creditorHash),
-      databaseClient.addEntity(creditorId, CreDtTm),
-      databaseClient.addEntity(debtorId, CreDtTm),
+      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain001_collection, `pain001_${transaction.EndToEndId}`),
+      cacheDatabaseClient.addAccount(debtorHash),
+      cacheDatabaseClient.addAccount(creditorHash),
+      cacheDatabaseClient.addEntity(creditorId, CreDtTm),
+      cacheDatabaseClient.addEntity(debtorId, CreDtTm),
     ]);
 
     await Promise.all([
-      databaseClient.saveTransactionRelationship(transactionRelationship),
-      databaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      databaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+      cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
+      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
   }
 
-  //Notify CRSP
+  // Notify CRSP
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
@@ -128,66 +90,34 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
   const TxTp = transaction.TxTp;
 
-  let transactionRelationship: TransactionRelationship = {
+  const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorHash}`,
     to: `accounts/${debtorHash}`,
-    Amt: Amt,
-    Ccy: Ccy,
-    CreDtTm: CreDtTm,
-    EndToEndId: EndToEndId,
-    MsgId: MsgId,
-    PmtInfId: PmtInfId,
-    TxTp: TxTp,
+    Amt,
+    Ccy,
+    CreDtTm,
+    EndToEndId,
+    MsgId,
+    PmtInfId,
+    TxTp,
   };
 
-  // let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
-  // let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
-
-  // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
-
-  // if (lookupCreditorResult.length === 0) {
-  //   //insert creditor pseudonym
-  //   let pseudonym = {
-  //     _key: creditorHash,
-  //     pseudonym: creditorHash,
-  //     Proprietary: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-  //     MemberIdentification: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-  //     Identification: transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry,
-  //   };
-  //   await databaseClient.savePseudonym(pseudonym);
-  // }
-  // if (lookupDebtorResult.length === 0) {
-  //   //insert debtor pseudonym
-  //   let pseudonym = {
-  //     _key: debtorHash,
-  //     pseudonym: debtorHash,
-  //     Proprietary: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id,
-  //     MemberIdentification: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-  //     Identification: transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
-  //   };
-  //   await databaseClient.savePseudonym(pseudonym);
-  // }
-
-  // transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id = creditorHash
-  // transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
-  // transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id = debtorHash
-  // transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = 'PSEUDO'
   transaction._key = MsgId;
 
   try {
     await Promise.all([
-      databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain013_collection),
-      databaseClient.addAccount(debtorHash),
-      databaseClient.addAccount(creditorHash),
+      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain013_collection, `pain013_${transaction.EndToEndId}`),
+      cacheDatabaseClient.addAccount(debtorHash),
+      cacheDatabaseClient.addAccount(creditorHash),
     ]);
 
-    await databaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
   }
 
-  //Notify CRSP
+  // Notify CRSP
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
@@ -215,65 +145,32 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
   const TxTp = transaction.TxTp;
 
-  let transactionRelationship: TransactionRelationship = {
+  const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorHash}`,
     to: `accounts/${creditorHash}`,
-    Amt: Amt,
-    Ccy: Ccy,
-    CreDtTm: CreDtTm,
-    EndToEndId: EndToEndId,
-    MsgId: MsgId,
-    PmtInfId: PmtInfId,
-    TxTp: TxTp,
+    Amt,
+    Ccy,
+    CreDtTm,
+    EndToEndId,
+    MsgId,
+    PmtInfId,
+    TxTp,
   };
-
-  // let lookupCreditor = databaseClient.getPseudonyms(creditorHash);
-  // let lookupDebtor = databaseClient.getPseudonyms(debtorHash);
-
-  // const [lookupCreditorResult, lookupDebtorResult] = await Promise.all([lookupCreditor, lookupDebtor]);
-
-  // if (lookupCreditorResult.length === 0) {
-  //   //insert creditor pseudonym
-  //   let pseudonym = {
-  //     _key: creditorHash,
-  //     pseudonym: creditorHash,
-  //     Proprietary: transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
-  //     MemberIdentification: transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-  //     Identification: transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry,
-  //   };
-  //   await databaseClient.savePseudonym(pseudonym);
-  // }
-  // if (lookupDebtorResult.length === 0) {
-  //   //insert debtor pseudonym
-  //   let pseudonym = {
-  //     _key: debtorHash,
-  //     pseudonym: debtorHash,
-  //     Proprietary: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
-  //     MemberIdentification: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
-  //     Identification: transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry,
-  //   };
-  //   await databaseClient.savePseudonym(pseudonym);
-  // }
-
-  // transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id = debtorHash
-  // transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry = "PSEUDO"
-  // transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id = creditorHash
-  // transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry = "PSEUDO"
 
   try {
     await Promise.all([
-      databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs008_collection),
-      databaseClient.addAccount(debtorHash),
-      databaseClient.addAccount(creditorHash),
+      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs008_collection, `pacs008_${transaction.EndToEndId}`),
+      cacheDatabaseClient.addAccount(debtorHash),
+      cacheDatabaseClient.addAccount(creditorHash),
     ]);
 
-    await databaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
   }
 
-  //Notify CRSP
+  // Notify CRSP
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
@@ -294,35 +191,35 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   const TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
   const TxTp = transaction.TxTp;
 
-  let transactionRelationship: TransactionRelationship = {
+  const transactionRelationship: TransactionRelationship = {
     from: '',
     to: '',
-    CreDtTm: CreDtTm,
-    EndToEndId: EndToEndId,
-    MsgId: MsgId,
-    PmtInfId: PmtInfId,
-    TxTp: TxTp,
-    TxSts: TxSts,
+    CreDtTm,
+    EndToEndId,
+    MsgId,
+    PmtInfId,
+    TxTp,
+    TxSts,
   };
 
   transaction._key = MsgId;
 
   try {
-    await databaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs002_collection);
+    await cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs002_collection, `pacs002_${transaction.EndToEndId}`);
 
-    let result = await databaseClient.getTransactionHistoryPacs008(EndToEndId);
-    let crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
-    let dtrPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
+    const result = await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId);
+    const crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+    const dtrPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
     transactionRelationship.from = `accounts/${crdtPseudo}`;
     transactionRelationship.to = `accounts/${dtrPseudo}`;
 
-    await databaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
   }
 
-  //Notify CRSP
+  // Notify CRSP
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
 
@@ -342,7 +239,7 @@ const executePost = async (endpoint: string, request: any) => {
     LoggerService.log(`CRSP Reponse - ${crspRes.status} with data\n ${JSON.stringify(crspRes.data)}`);
     span?.end();
   } catch (error) {
-    LoggerService.error(`Error while sending request to CRSP at ${endpoint ? endpoint : ''} with message: ${error}`);
+    LoggerService.error(`Error while sending request to CRSP at ${endpoint || ''} with message: ${error}`);
     LoggerService.trace(`CRSP Error Request:\r\n${JSON.stringify(request)}`);
   }
 };

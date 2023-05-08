@@ -1,9 +1,6 @@
 import apm from 'elastic-apm-node';
 import { Context, Next } from 'koa';
-import { Pacs002 } from './classes/pacs.002.001.12';
-import { Pacs008 } from './classes/pacs.008.001.10';
-import { Pain001 } from './classes/pain.001.001.11';
-import { Pain013 } from './classes/pain.013.001.09';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { LoggerService } from './logger.service';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
 
@@ -24,10 +21,10 @@ export const handleExecute = async (ctx: Context, next: Next): Promise<Context> 
     LoggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage
+    ctx.body = failMessage;
     return ctx;
   } finally {
-    tx?.end()
+    tx?.end();
     LoggerService.log('End - Handle execute request');
   }
 };
@@ -49,10 +46,10 @@ export const handleQuoteReply = async (ctx: Context, next: Next): Promise<Contex
     LoggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage
+    ctx.body = failMessage;
     return ctx;
   } finally {
-    tx?.end()
+    tx?.end();
     LoggerService.log('End - Handle quote reply request');
   }
 };
@@ -74,10 +71,10 @@ export const handleTransfer = async (ctx: Context, next: Next): Promise<Context>
     LoggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage
+    ctx.body = failMessage;
     return ctx;
   } finally {
-    tx?.end()
+    tx?.end();
     LoggerService.log('End - Handle transfer request');
   }
 };
@@ -99,10 +96,10 @@ export const handleTransferResponse = async (ctx: Context, next: Next): Promise<
     LoggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage
+    ctx.body = failMessage;
     return ctx;
   } finally {
-    tx?.end()
+    tx?.end();
     LoggerService.log('End - Handle transfer response request');
   }
 };

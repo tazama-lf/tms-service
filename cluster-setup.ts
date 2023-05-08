@@ -1,1 +1,1 @@
-process.env.MAX_CPU='1'
+process.env.MAX_CPU = '1';
