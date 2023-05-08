@@ -83,13 +83,13 @@ if (cluster.isPrimary && configuration.maxCPU != 1) {
     cluster.fork();
   });
 } else {
-  try {
-    if (process.env.NODE_ENV !== 'test') {
-      (async () => {
-        return await runServer();
-      })();
+  (async () => {
+    try {
+      if (process.env.NODE_ENV !== 'test') {
+        await runServer();
+      }
+    } catch (err) {
+      LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
     }
-  } catch (err) {
-    LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
-  }
+  })()
 }
