@@ -1,7 +1,9 @@
+import { DataCache } from "./data-cache";
+
 export interface Pain001 {
   TxTp: string;
   CstmrCdtTrfInitn: CstmrCdtTrfInitn;
-
+  DataCache: DataCache;
   EndToEndId: string;
   DebtorAcctId: string;
   CreditorAcctId: string;

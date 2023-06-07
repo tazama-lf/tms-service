@@ -46,6 +46,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
     TxTp,
   };
 
+
+
   try {
     await Promise.all([
       cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain001_collection, `pain001_${transaction.EndToEndId}`),
@@ -57,9 +59,17 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
 
     await Promise.all([
       cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(creditorId, creditorHash, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(debtorId, debtorHash, CreDtTm)
     ]);
+
+    transaction.DataCache = {
+      "cdtrId": creditorId, 
+      "dbtrId": debtorId,
+      "cdtrAcctId": creditorAcctId,
+      "dbtrAcctId": debtorAcctId
+    }
+
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
@@ -117,6 +127,11 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
     throw err;
   }
 
+  transaction.DataCache = {
+    "cdtrAcctId": creditorHash,
+    "dbtrAcctId": debtorHash
+  }
+
   // Notify CRSP
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
@@ -170,6 +185,11 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
     throw err;
   }
 
+  transaction.DataCache = {
+    "dbtrAcctId": debtorHash,
+    "cdtrAcctId": creditorHash
+  }
+
   // Notify CRSP
   executePost(configuration.crspEndpoint, transaction);
   LoggerService.log('Transaction send to CRSP service');
@@ -217,6 +237,11 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
+  }
+
+  transaction.DataCache = {
+    "cdtrAcctId": transactionRelationship.from,
+    "dbtrAcctId": transactionRelationship.to
   }
 
   // Notify CRSP
