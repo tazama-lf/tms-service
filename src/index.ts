@@ -6,7 +6,19 @@ import { configuration } from './config';
 import { LoggerService } from './logger.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
 import os from 'os';
+import {
+  CreateDatabaseManager,
+  type DatabaseManagerInstance,
+} from '@frmscoe/frms-coe-lib';
 
+const databaseManagerConfig = {
+  redisConfig: {
+    db: configuration.redis.db,
+    host: configuration.redis.host,
+    password: configuration.redis.auth,
+    port: configuration.redis.port,
+  }
+}
 /*
  * Initialize the APM Logging
  **/
@@ -22,6 +34,7 @@ if (configuration.apm.active === 'true') {
 }
 
 export const cache = ServicesContainer.getCacheInstance();
+let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 
 export const runServer = async (): Promise<App> => {
   const koaApp = new App();
@@ -72,6 +85,11 @@ export const runServer = async (): Promise<App> => {
   return koaApp;
 };
 
+export const init = async (): Promise<void> => {
+  databaseManager = await CreateDatabaseManager(databaseManagerConfig);
+};
+
+
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
 
 if (cluster.isPrimary && configuration.maxCPU != 1) {
@@ -86,10 +104,14 @@ if (cluster.isPrimary && configuration.maxCPU != 1) {
   (async () => {
     try {
       if (process.env.NODE_ENV !== 'test') {
-        await runServer();
+        await runServer().then(async () => {
+          await init();
+        });;
       }
     } catch (err) {
       LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
     }
   })()
 }
+
+export { databaseManager };
