@@ -6,6 +6,8 @@ import { TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { LoggerService } from './logger.service';
 import { cacheDatabaseClient } from './services-container';
 import { calcCreditorHash, calcDebtorHash } from './utils/transaction-tools';
+import { databaseManager } from '.';
+import { DataCache } from './classes/data-cache';
 
 export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   LoggerService.log('Start - Handle transaction data');
@@ -46,11 +48,20 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
     TxTp,
   };
 
-
+  transaction.DataCache = {
+    cdtrId: creditorId,
+    dbtrId: debtorId,
+    cdtrAcctId: creditorAcctId,
+    dbtrAcctId: debtorAcctId,
+  };
 
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain001_collection, `pain001_${transaction.EndToEndId}`),
+      cacheDatabaseClient.saveTransactionHistory(
+        transaction,
+        configuration.db.transactionhistory_pain001_collection,
+        `pain001_${transaction.EndToEndId}`,
+      ),
       cacheDatabaseClient.addAccount(debtorHash),
       cacheDatabaseClient.addAccount(creditorHash),
       cacheDatabaseClient.addEntity(creditorId, CreDtTm),
@@ -60,16 +71,10 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
     await Promise.all([
       cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
       cacheDatabaseClient.addAccountHolder(creditorId, creditorHash, CreDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorHash, CreDtTm)
+      cacheDatabaseClient.addAccountHolder(debtorId, debtorHash, CreDtTm),
     ]);
 
-    transaction.DataCache = {
-      "cdtrId": creditorId, 
-      "dbtrId": debtorId,
-      "cdtrAcctId": creditorAcctId,
-      "dbtrAcctId": debtorAcctId
-    }
-
+    await databaseManager.setJson(transaction.EndToEndId, JSON.stringify(transaction.DataCache), 150);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
@@ -112,11 +117,23 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
     TxTp,
   };
 
+  try {
+    const dataCache = await databaseManager.getJson(transaction.EndToEndId);
+    transaction.DataCache = JSON.parse(dataCache) as DataCache;
+  } catch (ex){
+    LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
+    transaction = await getDataCache(transaction) as Pain013;
+  }
+
   transaction._key = MsgId;
 
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pain013_collection, `pain013_${transaction.EndToEndId}`),
+      cacheDatabaseClient.saveTransactionHistory(
+        transaction,
+        configuration.db.transactionhistory_pain013_collection,
+        `pain013_${transaction.EndToEndId}`,
+      ),
       cacheDatabaseClient.addAccount(debtorHash),
       cacheDatabaseClient.addAccount(creditorHash),
     ]);
@@ -125,11 +142,6 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  }
-
-  transaction.DataCache = {
-    "cdtrAcctId": creditorHash,
-    "dbtrAcctId": debtorHash
   }
 
   // Notify CRSP
@@ -173,8 +185,20 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   };
 
   try {
+    const dataCache = await databaseManager.getJson(transaction.EndToEndId);
+    transaction.DataCache = JSON.parse(dataCache) as DataCache;
+  } catch (ex){
+    LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
+    transaction = await getDataCache(transaction) as Pacs008;
+  }
+
+  try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs008_collection, `pacs008_${transaction.EndToEndId}`),
+      cacheDatabaseClient.saveTransactionHistory(
+        transaction,
+        configuration.db.transactionhistory_pacs008_collection,
+        `pacs008_${transaction.EndToEndId}`,
+      ),
       cacheDatabaseClient.addAccount(debtorHash),
       cacheDatabaseClient.addAccount(creditorHash),
     ]);
@@ -183,11 +207,6 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  }
-
-  transaction.DataCache = {
-    "dbtrAcctId": debtorHash,
-    "cdtrAcctId": creditorHash
   }
 
   // Notify CRSP
@@ -222,10 +241,22 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
     TxSts,
   };
 
+  try {
+    const dataCache = await databaseManager.getJson(transaction.EndToEndId);
+    transaction.DataCache = JSON.parse(dataCache) as DataCache;
+  } catch (ex){
+    LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
+    transaction = await getDataCache(transaction) as Pacs002;
+  }
+
   transaction._key = MsgId;
 
   try {
-    await cacheDatabaseClient.saveTransactionHistory(transaction, configuration.db.transactionhistory_pacs002_collection, `pacs002_${transaction.EndToEndId}`);
+    await cacheDatabaseClient.saveTransactionHistory(
+      transaction,
+      configuration.db.transactionhistory_pacs002_collection,
+      `pacs002_${transaction.EndToEndId}`,
+    );
 
     const result = await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId);
     const crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
@@ -237,11 +268,6 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  }
-
-  transaction.DataCache = {
-    "cdtrAcctId": transactionRelationship.from,
-    "dbtrAcctId": transactionRelationship.to
   }
 
   // Notify CRSP
@@ -268,3 +294,11 @@ const executePost = async (endpoint: string, request: any) => {
     LoggerService.trace(`CRSP Error Request:\r\n${JSON.stringify(request)}`);
   }
 };
+
+export const getDataCache = async (transaction: Pacs002 | Pacs008 | Pain013) : Promise<Pacs002 | Pacs008 | Pain013> => {
+  const currentPain001 = await databaseManager.getTransactionPain001(transaction.EndToEndId) as [Pain001[]];
+  transaction.DataCache = currentPain001[0][0].DataCache;
+  await databaseManager.setJson(transaction.EndToEndId, JSON.stringify(transaction.DataCache), 150);
+
+  return transaction;
+}
