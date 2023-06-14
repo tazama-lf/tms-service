@@ -17,6 +17,13 @@ const databaseManagerConfig = {
     host: configuration.redis.host,
     password: configuration.redis.auth,
     port: configuration.redis.port,
+  },
+  transactionHistory: {
+    certPath: configuration.cert,
+    databaseName: configuration.db.transactionhistorydb,
+    user: configuration.db.user,
+    password: configuration.db.password,
+    url: configuration.db.url,
   }
 }
 /*
