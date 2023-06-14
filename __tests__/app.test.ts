@@ -4,7 +4,7 @@ import apm from 'elastic-apm-node';
 import App from '../src/app';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { configuration } from '../src/config';
-import { cache, runServer } from '../src/index';
+import { cache, databaseManager, init, runServer } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from '../src/logic.service';
 import { cacheDatabaseClient } from '../src/services-container';
@@ -24,11 +24,14 @@ interface MockedSpan extends Omit<apm.Span, 'end'> {
 
 beforeAll(async () => {
   app = await runServer();
+  await init();
 });
+
 
 afterAll(() => {
   cache.close();
   cacheDatabaseClient.quit();
+  databaseManager.quit();
   app.terminate();
 });
 
@@ -39,7 +42,7 @@ describe('App Controller & Logic Service', () => {
 
   const getMockRequestPain001 = () =>
     JSON.parse(
-      '{"TxTp":"pain.001.001.11","CstmrCdtTrfInitn":{"GrpHdr":{"MsgId":"17fa-afea-48d6-b147-05c8463ea494","CreDtTm":"2023-02-03T07:03:17.438Z","NbOfTxs":1,"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+36-432226947"}}},"PmtInf":{"PmtInfId":"23730c89dd57490a9a79f9b3747e3c08","PmtMtd":"TRA","ReqdAdvcTp":{"DbtAdvc":{"Cd":"ADWD","Prtry":"Advice with transaction details"}},"ReqdExctnDt":{"Dt":"2023-02-03","DtTm":"2023-02-03T07:03:17.438Z"},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"typolog028"}}}},"CtctDtls":{"MobNb":"+36-432226947"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typolog028"}}},"CdtTrfTxInf":{"PmtId":{"EndToEndId":"8f37-9e6f-4c30-bb87-5e0e42f0f000"},"PmtTpInf":{"CtgyPurp":{"Prtry":"TRANSFER BLANK"}},"Amt":{"InstdAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"EqvtAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"},"CcyOfTrf":"USD"}},"ChrgBr":"DEBT","CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+42-966969344","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+42-966969344"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+42-966969344","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Dbtr":{"FrstNm":"April","MddlNm":"Blake","LastNm":"Grant","MrchntClssfctnCd":"BLANK"},"Cdtr":{"FrstNm":"Felicia","MddlNm":"Easton","LastNm":"Quill","MrchntClssfctnCd":"BLANK"},"DbtrFinSvcsPrvdrFees":{"Ccy":"USD","Amt":307.14},"Xprtn":"2021-11-30T10:38:56.000Z"}}}}},"SplmtryData":{"Envlp":{"Doc":{"InitgPty":{"InitrTp":"CONSUMER","Glctn":{"Lat":"-3,1609","Long":"38,3588"}}}}}}}',
+      '{"TxTp":"pain.001.001.11","DataCache": {"cdtrId": "+42-966969344","dbtrId": "+36-432226947","cdtrAcctId": "+42-966969344","dbtrAcctId": "+36-432226947"},"CstmrCdtTrfInitn":{"GrpHdr":{"MsgId":"17fa-afea-48d6-b147-05c8463ea494","CreDtTm":"2023-02-03T07:03:17.438Z","NbOfTxs":1,"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+36-432226947"}}},"PmtInf":{"PmtInfId":"23730c89dd57490a9a79f9b3747e3c08","PmtMtd":"TRA","ReqdAdvcTp":{"DbtAdvc":{"Cd":"ADWD","Prtry":"Advice with transaction details"}},"ReqdExctnDt":{"Dt":"2023-02-03","DtTm":"2023-02-03T07:03:17.438Z"},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"typolog028"}}}},"CtctDtls":{"MobNb":"+36-432226947"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typolog028"}}},"CdtTrfTxInf":{"PmtId":{"EndToEndId":"8f37-9e6f-4c30-bb87-5e0e42f0f000"},"PmtTpInf":{"CtgyPurp":{"Prtry":"TRANSFER BLANK"}},"Amt":{"InstdAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"EqvtAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"},"CcyOfTrf":"USD"}},"ChrgBr":"DEBT","CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+42-966969344","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+42-966969344"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+42-966969344","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Dbtr":{"FrstNm":"April","MddlNm":"Blake","LastNm":"Grant","MrchntClssfctnCd":"BLANK"},"Cdtr":{"FrstNm":"Felicia","MddlNm":"Easton","LastNm":"Quill","MrchntClssfctnCd":"BLANK"},"DbtrFinSvcsPrvdrFees":{"Ccy":"USD","Amt":307.14},"Xprtn":"2021-11-30T10:38:56.000Z"}}}}},"SplmtryData":{"Envlp":{"Doc":{"InitgPty":{"InitrTp":"CONSUMER","Glctn":{"Lat":"-3,1609","Long":"38,3588"}}}}}}}',
     );
 
   const getMockRequestPain013 = () =>
@@ -102,6 +105,24 @@ describe('App Controller & Logic Service', () => {
       });
     });
 
+    jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((pseudonym: any) => {
+      return new Promise((resolve, reject) => {
+        resolve([[getMockRequestPain001() as Pain001]]);
+      });
+    });
+
+    jest.spyOn(databaseManager, 'getJson').mockImplementation((key: any) => {
+      return new Promise((resolve, reject) => {
+        resolve(getMockRequestPain001().DataCache);
+      });
+    });
+
+    jest.spyOn(databaseManager, 'setJson').mockImplementation((pseudonym: any) => {
+      return new Promise((resolve, reject) => {
+        resolve('OK');
+      });
+    });
+
     postSpy = jest.spyOn(axios, 'post').mockImplementation((url: string, data?: any) => {
       return new Promise((resolve, reject) => {
         resolve({ status: 200 });
@@ -150,8 +171,10 @@ describe('App Controller & Logic Service', () => {
 
       const result = await handlePain013(request);
       expect(result.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
-      expect(result.DataCache.cdtrAcctId).toEqual("865d9d7270a9f1c796143d07407536fa10e7087f75d8bb4417c3e7041247b248");
-      expect(result.DataCache.dbtrAcctId).toEqual("185036c4753b37e8d1b2f42bb2b079bda5e544c36b8ef748972bc3c1c95597fd");
+      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
+      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
+      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
+      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
     });
 
     it('should handle Quote Reply, database error', async () => {
@@ -182,8 +205,10 @@ describe('App Controller & Logic Service', () => {
       const result = await handlePacs008(request);
       expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.DataCache.cdtrAcctId).toEqual('d268851fb938bb1be81f9e4d4d3b59e7abfa3a6ce041358b9848f1bc2fd071e3');
-      expect(result.DataCache.dbtrAcctId).toEqual('15dd2c50ae4263b71c6bf90c039dcd0c136427f7bb840d7245fde9223e97a0f5');
+      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
+      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
+      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
+      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
     });
 
     it('should handle Transfer, database error', async () => {
@@ -222,6 +247,10 @@ describe('App Controller & Logic Service', () => {
 
       const result = await handlePacs002(request);
       expect(result).toEqual(request);
+      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
+      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
+      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
+      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
     });
 
     it('should handle Transfer Response, database error', async () => {
