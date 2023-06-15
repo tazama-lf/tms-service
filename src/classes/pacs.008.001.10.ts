@@ -1,7 +1,9 @@
+import { DataCache } from "./data-cache";
+
 export interface Pacs008 {
   TxTp: string;
   FIToFICstmrCdt: FIToFICstmrCdt;
-
+  DataCache: DataCache;
   EndToEndId: string;
   DebtorAcctId: string;
   CreditorAcctId: string;

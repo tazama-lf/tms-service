@@ -36,6 +36,10 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16'
+      - name: Set up npm registry authentication
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.GH_TOKEN }}" > ~/.npmrc
+      - name: Install library dependencies and fetch package
+        run: npm install @frmscoe/frms-coe-lib
       - name: Install dependencies
         run: npm install
       - name: Run unit tests

@@ -1,5 +1,8 @@
+import { DataCache } from "./data-cache";
+
 export interface Pain013 {
   TxTp: string;
+  DataCache: DataCache;
   EndToEndId: string;
   CdtrPmtActvtnReq: CdtrPmtActvtnReq;
   _key?: string;
