@@ -9,7 +9,26 @@ import { calcCreditorHash, calcDebtorHash } from './utils/transaction-tools';
 import { databaseManager } from '.';
 import { DataCache } from './classes/data-cache';
 
-export const handlePain001 = async (transaction: Pain001): Promise<any> => {
+export const handleTransaction = async (transaction : Pain001 | Pain013 | Pacs002 | Pacs008) : Promise<any> => {
+  switch (transaction.TxTp) {
+    case "pain.001.001.11":
+      return await handlePain001(transaction as Pain001);
+
+    case "pain.013.001.09":
+      return await handlePain013(transaction as Pain013);
+
+    case "pacs.008.001.10":
+      return await handlePacs008(transaction as Pacs008);
+      
+    case "pacs.002.001.12":
+      return await handlePacs002(transaction as Pacs002);
+
+    default:
+      break;
+  }
+}
+
+const handlePain001 = async (transaction: Pain001): Promise<any> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const creditorHash = calcCreditorHash(transaction);
@@ -89,7 +108,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<any> => {
   return transaction;
 };
 
-export const handlePain013 = async (transaction: Pain013): Promise<any> => {
+const handlePain013 = async (transaction: Pain013): Promise<any> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const creditorHash = calcCreditorHash(transaction);
@@ -120,9 +139,9 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   try {
     const dataCache = await databaseManager.getJson(transaction.EndToEndId);
     transaction.DataCache = JSON.parse(dataCache) as DataCache;
-  } catch (ex){
+  } catch (ex) {
     LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    transaction = await getDataCache(transaction) as Pain013;
+    transaction = (await getDataCache(transaction)) as Pain013;
   }
 
   transaction._key = MsgId;
@@ -153,7 +172,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<any> => {
   return transaction;
 };
 
-export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
+const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const creditorHash = calcCreditorHash(transaction);
@@ -187,9 +206,9 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   try {
     const dataCache = await databaseManager.getJson(transaction.EndToEndId);
     transaction.DataCache = JSON.parse(dataCache) as DataCache;
-  } catch (ex){
+  } catch (ex) {
     LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    transaction = await getDataCache(transaction) as Pacs008;
+    transaction = (await getDataCache(transaction)) as Pacs008;
   }
 
   try {
@@ -216,7 +235,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   return transaction;
 };
 
-export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
+const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
 
@@ -244,9 +263,9 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   try {
     const dataCache = await databaseManager.getJson(transaction.EndToEndId);
     transaction.DataCache = JSON.parse(dataCache) as DataCache;
-  } catch (ex){
+  } catch (ex) {
     LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    transaction = await getDataCache(transaction) as Pacs002;
+    transaction = (await getDataCache(transaction)) as Pacs002;
   }
 
   transaction._key = MsgId;
@@ -278,6 +297,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   LoggerService.log('END - Handle transaction data');
   return transaction;
 };
+
 // Submit the transaction to CRSP
 const executePost = async (endpoint: string, request: any) => {
   const span = apm.startSpan(`POST ${endpoint}`);
@@ -295,10 +315,10 @@ const executePost = async (endpoint: string, request: any) => {
   }
 };
 
-export const getDataCache = async (transaction: Pacs002 | Pacs008 | Pain013) : Promise<Pacs002 | Pacs008 | Pain013> => {
-  const currentPain001 = await databaseManager.getTransactionPain001(transaction.EndToEndId) as [Pain001[]];
+export const getDataCache = async (transaction: Pacs002 | Pacs008 | Pain013): Promise<Pacs002 | Pacs008 | Pain013> => {
+  const currentPain001 = (await databaseManager.getTransactionPain001(transaction.EndToEndId)) as [Pain001[]];
   transaction.DataCache = currentPain001[0][0].DataCache;
   await databaseManager.setJson(transaction.EndToEndId, JSON.stringify(transaction.DataCache), 150);
 
   return transaction;
-}
+};
