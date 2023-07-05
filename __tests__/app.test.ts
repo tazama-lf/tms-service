@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from 'axios';
+import * as startUpLib from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
-import App from '../src/app';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { configuration } from '../src/config';
-import { cache, databaseManager, init, runServer } from '../src/index';
+import { cache, databaseManager, dbinit } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
-import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from '../src/logic.service';
-import { cacheDatabaseClient } from '../src/services-container';
-
-let app: App;
+import { handleTransaction } from '../src/logic.service';
+import { cacheDatabaseClient, initCacheDatabase } from '../src/services-container';
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -23,8 +20,8 @@ interface MockedSpan extends Omit<apm.Span, 'end'> {
 } as MockedSpan);
 
 beforeAll(async () => {
-  app = await runServer();
-  await init();
+  await dbinit();
+  await initCacheDatabase(configuration.cacheTTL); 
 });
 
 
@@ -32,13 +29,10 @@ afterAll(() => {
   cache.close();
   cacheDatabaseClient.quit();
   databaseManager.quit();
-  app.terminate();
 });
 
 describe('App Controller & Logic Service', () => {
-  let postSpy: jest.SpyInstance;
-
-  const getMockEmptyRequest = () => JSON.parse('{}');
+  let responseSpy: jest.SpyInstance;
 
   const getMockRequestPain001 = () =>
     JSON.parse(
@@ -123,18 +117,14 @@ describe('App Controller & Logic Service', () => {
       });
     });
 
-    postSpy = jest.spyOn(axios, 'post').mockImplementation((url: string, data?: any) => {
-      return new Promise((resolve, reject) => {
-        resolve({ status: 200 });
-      });
-    });
+    responseSpy = jest.spyOn(startUpLib, 'handleResponse').mockImplementation(jest.fn());
   });
 
   describe('handleExecute', () => {
     it('should handle Quote', async () => {
       const request = getMockRequestPain001() as Pain001;
 
-      const result = await handlePain001(request);
+      const result = await handleTransaction(request);
       expect(result.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.DataCache.cdtrId).toEqual('+42-966969344');
@@ -157,7 +147,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handlePain001(request);
+        const result = await handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -169,7 +159,7 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote Reply', async () => {
       const request = getMockRequestPain013() as Pain013;
 
-      const result = await handlePain013(request);
+      const result = await handleTransaction(request);
       expect(result.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
       expect(result.DataCache.cdtrId).toEqual('+42-966969344');
       expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
@@ -190,7 +180,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handlePain013(request);
+        const result = await handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -202,7 +192,7 @@ describe('App Controller & Logic Service', () => {
     it('should handle Transfer', async () => {
       const request = getMockRequestPacs008() as Pacs008;
 
-      const result = await handlePacs008(request);
+      const result = await handleTransaction(request);
       expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.DataCache.cdtrId).toEqual('+42-966969344');
@@ -223,7 +213,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handlePacs008(request);
+        const result = await handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -245,7 +235,7 @@ describe('App Controller & Logic Service', () => {
 
       const request = getMockRequestPacs002() as Pacs002;
 
-      const result = await handlePacs002(request);
+      const result = await handleTransaction(request);
       expect(result).toEqual(request);
       expect(result.DataCache.cdtrId).toEqual('+42-966969344');
       expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
@@ -263,7 +253,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handlePacs002(request);
+        const result = await handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -273,44 +263,29 @@ describe('App Controller & Logic Service', () => {
 
   describe('Send Transaction to CRSP', () => {
     it('fail gracefully', async () => {
-      jest.spyOn(axios, 'post').mockImplementation((url: string, data?: any) => {
-        return new Promise((resolve, reject) => {
-          resolve({ status: 500 });
-        });
-      });
 
       const request = getMockRequestPacs008() as Pacs008;
-      await handlePacs008(request);
+      await handleTransaction(request);
 
-      expect(axios.post).toBeCalledTimes(1);
+      expect(startUpLib.handleResponse).toBeCalledTimes(1);
     });
 
     it('handle no endpoint exception', async () => {
       configuration.crspEndpoint = '';
-      jest.spyOn(axios, 'post').mockRejectedValue((url: string, data?: any) => {
-        return new Promise((resolve, reject) => {
-          resolve(new Error('test'));
-        });
-      });
 
       const request = getMockRequestPacs008() as Pacs008;
-      await handlePacs008(request);
+      await handleTransaction(request);
 
-      expect(axios.post).toBeCalledTimes(1);
+      expect(startUpLib.handleResponse).toBeCalledTimes(1);
     });
 
     it('handle generic exception', async () => {
       configuration.crspEndpoint = 'crsp';
-      jest.spyOn(axios, 'post').mockRejectedValue((url: string, data?: any) => {
-        return new Promise((resolve, reject) => {
-          resolve(new Error('test'));
-        });
-      });
 
       const request = getMockRequestPacs008() as Pacs008;
-      await handlePacs008(request);
+      await handleTransaction(request);
 
-      expect(axios.post).toBeCalledTimes(1);
+      expect(startUpLib.handleResponse).toBeCalledTimes(1);
     });
   });
 });
