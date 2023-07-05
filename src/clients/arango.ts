@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '../classes/pain-pacs';
 import { configuration } from '../config';
 import { TransactionRelationship } from '../interfaces/iTransactionRelationship';
-import { LoggerService } from '../logger.service';
+import { loggerService } from '..';
 
 export class ArangoDBService {
   transactionHistoryClient: Database;
@@ -13,7 +13,7 @@ export class ArangoDBService {
 
   constructor() {
     const caOption = fs.existsSync(configuration.cert) ? [fs.readFileSync(configuration.cert)] : [];
-    if (caOption.length === 0) LoggerService.warn('🟠 ArangoDB was not supplied with a certificate');
+    if (caOption.length === 0) loggerService.warn('🟠 ArangoDB was not supplied with a certificate');
     this.pseudonymsClient = new Database({
       url: configuration.db.url,
       databaseName: configuration.db.pseudonymsdb,
@@ -39,9 +39,9 @@ export class ArangoDBService {
     });
 
     if (this.pseudonymsClient.isArangoDatabase) {
-      LoggerService.log('✅ ArangoDB connection is ready');
+      loggerService.log('✅ ArangoDB connection is ready');
     } else {
-      LoggerService.error('❌ ArangoDB connection is not ready');
+      loggerService.error('❌ ArangoDB connection is not ready');
       throw new Error('ArangoDB connection is not ready');
     }
   }
@@ -53,11 +53,11 @@ export class ArangoDBService {
       const results = await cycles.batches.all();
 
       span?.end();
-      LoggerService.log(`Query result: ${JSON.stringify(results)}`);
+      loggerService.log(`Query result: ${JSON.stringify(results)}`);
 
       return results;
     } catch (error) {
-      LoggerService.error('Error while executing query from arango with message:', error as Error, 'ArangoDBService');
+      loggerService.error('Error while executing query from arango with message:', error as Error, 'ArangoDBService');
       throw new Error(`Error while executing query from arango with message: ${error as Error}`);
     }
   }
@@ -65,12 +65,12 @@ export class ArangoDBService {
   async save(client: Database, collectionName: string, data: any, saveOptions?: any): Promise<void> {
     const span = apm.startSpan(`Save ${collectionName} document in ${client.name}`);
     try {
-      await client.collection(collectionName).save(data, saveOptions || undefined);
+      const temp = await client.collection(collectionName).save(data, saveOptions || undefined);
       span?.end();
     } catch (error) {
-      LoggerService.error(`Error while saving data to collection ${collectionName} with document\n ${JSON.stringify(data)}`);
-      if (saveOptions) LoggerService.error(`With save options: ${JSON.stringify(saveOptions)}`);
-      LoggerService.error(JSON.stringify(error));
+      loggerService.error(`Error while saving data to collection ${collectionName} with document\n ${JSON.stringify(data)}`);
+      if (saveOptions) loggerService.error(`With save options: ${JSON.stringify(saveOptions)}`);
+      loggerService.error(JSON.stringify(error));
       throw new Error(`Error while saving data to collection ${collectionName}`);
     }
   }
