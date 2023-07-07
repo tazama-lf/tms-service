@@ -4,7 +4,7 @@ import os from 'os';
 import { configuration } from './config';
 import { handleTransaction } from './logic.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
-import { init } from '@frmscoe/frms-coe-startup-lib';
+import { StartupFactory, IStartupService } from 'startup';
 import cluster from 'cluster';
 
 const databaseManagerConfig = {
@@ -24,6 +24,7 @@ const databaseManagerConfig = {
 };
 
 export const loggerService: LoggerService = new LoggerService();
+export let server: IStartupService;
 /*
  * Initialize the APM Logging
  **/
@@ -48,10 +49,10 @@ export const dbinit = async (): Promise<void> => {
 export const runServer = async () => {
   await dbinit();
   await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
-
+  server = new StartupFactory();
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     console.log(`Connecting to nats server...`);
-     if (!(await init(handleTransaction))) {
+    if (!(await server.init(handleTransaction))) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
       console.log(`Connected to nats`);

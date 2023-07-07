@@ -1,6 +1,5 @@
-import { handleResponse } from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
-import { databaseManager, loggerService } from '.';
+import { databaseManager, loggerService, server } from '.';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { DataCache } from './classes/data-cache';
 import { configuration } from './config';
@@ -100,7 +99,7 @@ const handlePain001 = async (transaction: Pain001): Promise<any> => {
   }
 
   // Notify CRSP
-  handleResponse(JSON.stringify(transaction));
+  server.handleResponse(transaction);
   loggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -164,7 +163,7 @@ const handlePain013 = async (transaction: Pain013): Promise<any> => {
   }
 
   // Notify CRSP
-  handleResponse(JSON.stringify(transaction));
+  server.handleResponse(transaction);
   loggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -229,7 +228,7 @@ const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   }
 
   // Notify CRSP
-  handleResponse(JSON.stringify(transaction));
+  server.handleResponse(transaction);
   loggerService.log('Transaction send to CRSP service');
 
   return transaction;
@@ -290,7 +289,7 @@ const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   }
 
   // Notify CRSP
-  handleResponse(JSON.stringify(transaction));
+  server.handleResponse(transaction);
   loggerService.log('Transaction send to CRSP service');
 
   span?.end();
