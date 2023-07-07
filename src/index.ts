@@ -50,15 +50,16 @@ export const runServer = async () => {
   await dbinit();
   await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
-  for (let retryCount = 0; retryCount < 10; retryCount++) {
-    console.log(`Connecting to nats server...`);
-    if (!(await server.init(handleTransaction))) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    } else {
-      console.log(`Connected to nats`);
-      break;
+  if (configuration.env !== "test")
+    for (let retryCount = 0; retryCount < 10; retryCount++) {
+      console.log(`Connecting to nats server...`);
+      if (!(await server.init(handleTransaction))) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      } else {
+        console.log(`Connected to nats`);
+        break;
+      }
     }
-  }
 };
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;

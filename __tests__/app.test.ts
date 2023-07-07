@@ -3,7 +3,7 @@ import * as startUpLib from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { configuration } from '../src/config';
-import { cache, databaseManager, dbinit } from '../src/index';
+import { cache, databaseManager, dbinit, runServer, server } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
 import { handleTransaction } from '../src/logic.service';
 import { cacheDatabaseClient, initCacheDatabase } from '../src/services-container';
@@ -20,8 +20,7 @@ interface MockedSpan extends Omit<apm.Span, 'end'> {
 } as MockedSpan);
 
 beforeAll(async () => {
-  await dbinit();
-  await initCacheDatabase(configuration.cacheTTL); 
+  await runServer();
 });
 
 
@@ -117,7 +116,7 @@ describe('App Controller & Logic Service', () => {
       });
     });
 
-    responseSpy = jest.spyOn(startUpLib, 'handleResponse').mockImplementation(jest.fn());
+    responseSpy = jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
   });
 
   describe('handleExecute', () => {
@@ -267,7 +266,7 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs008() as Pacs008;
       await handleTransaction(request);
 
-      expect(startUpLib.handleResponse).toBeCalledTimes(1);
+      expect(server.handleResponse).toBeCalledTimes(1);
     });
 
     it('handle no endpoint exception', async () => {
@@ -276,7 +275,7 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs008() as Pacs008;
       await handleTransaction(request);
 
-      expect(startUpLib.handleResponse).toBeCalledTimes(1);
+      expect(server.handleResponse).toBeCalledTimes(1);
     });
 
     it('handle generic exception', async () => {
@@ -285,7 +284,7 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs008() as Pacs008;
       await handleTransaction(request);
 
-      expect(startUpLib.handleResponse).toBeCalledTimes(1);
+      expect(server.handleResponse).toBeCalledTimes(1);
     });
   });
 });
