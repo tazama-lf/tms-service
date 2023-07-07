@@ -24,23 +24,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+          registry-url: https://npm.pkg.github.com/
+          scope: '@frmscoe'
       - name: Install dependencies 
-        run: pnpm install
-  lint-and-test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-      - name: Set up npm registry authentication
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.GH_TOKEN }}" > ~/.npmrc
-      - name: Install library dependencies and fetch package
-        run: npm install @frmscoe/frms-coe-lib
-      - name: Install dependencies
-        run: npm install
+        run: npm ci
+        env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
       - name: Run unit tests
         run: npm run test
