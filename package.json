@@ -42,8 +42,7 @@
     "ioredis": "^5.3.2",
     "lodash": "^4.17.21",
     "log4js": "^6.9.1",
-    "node-cache": "^5.1.2",
-    "startup": "file:../frms-coe-startup-lib/lib"
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",

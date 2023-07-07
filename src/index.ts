@@ -4,8 +4,8 @@ import os from 'os';
 import { configuration } from './config';
 import { handleTransaction } from './logic.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
-import { StartupFactory, IStartupService } from 'startup';
 import cluster from 'cluster';
+import { IStartupService, StartupFactory } from '@frmscoe/frms-coe-startup-lib';
 
 const databaseManagerConfig = {
   redisConfig: {
