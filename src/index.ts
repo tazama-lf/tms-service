@@ -75,7 +75,9 @@ if (cluster.isPrimary && configuration.maxCPU != 1) {
   (async () => {
     try {
       if (process.env.NODE_ENV !== 'test') {
-        await runServer();
+        async () => {
+          await runServer();
+        }
       }
     } catch (err) {
       loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
