@@ -1,15 +1,11 @@
-import cluster from 'cluster';
+import { CreateDatabaseManager, type DatabaseManagerInstance, LoggerService } from '@frmscoe/frms-coe-lib';
 import apm from 'elastic-apm-node';
-import { Context } from 'koa';
-import App from './app';
-import { configuration } from './config';
-import { LoggerService } from './logger.service';
-import { ServicesContainer, initCacheDatabase } from './services-container';
 import os from 'os';
-import {
-  CreateDatabaseManager,
-  type DatabaseManagerInstance,
-} from '@frmscoe/frms-coe-lib';
+import { configuration } from './config';
+import { handleTransaction } from './logic.service';
+import { ServicesContainer, initCacheDatabase } from './services-container';
+import cluster from 'cluster';
+import { IStartupService, StartupFactory } from '@frmscoe/frms-coe-startup-lib';
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -24,8 +20,11 @@ const databaseManagerConfig = {
     user: configuration.db.user,
     password: configuration.db.password,
     url: configuration.db.url,
-  }
-}
+  },
+};
+
+export const loggerService: LoggerService = new LoggerService();
+export let server: IStartupService;
 /*
  * Initialize the APM Logging
  **/
@@ -43,59 +42,25 @@ if (configuration.apm.active === 'true') {
 export const cache = ServicesContainer.getCacheInstance();
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 
-export const runServer = async (): Promise<App> => {
-  const koaApp = new App();
-
-  await initCacheDatabase(configuration.cacheTTL);
-
-  /*
-   * Centralized error handling
-   **/
-  koaApp.on('error', handleError);
-
-  function handleError(err: Error, ctx: Context): void {
-    if (ctx == null) {
-      LoggerService.error(err, undefined, 'Unhandled exception occured');
-    }
-  }
-
-  function terminate(signal: NodeJS.Signals): void {
-    try {
-      koaApp.terminate();
-    } finally {
-      LoggerService.log('App is terminated');
-      process.kill(process.pid, signal);
-    }
-  }
-
-  /*
-   * Start server
-   **/
-  if (Object.values(require.cache).filter(async (m) => m?.children.includes(module))) {
-    const server = koaApp.listen(configuration.port, () => {
-      LoggerService.log(`API server listening on PORT ${configuration.port}`, 'execute');
-    });
-    server.on('error', handleError);
-
-    const errors = ['unhandledRejection', 'uncaughtException'];
-    errors.forEach((error) => {
-      process.on(error, handleError);
-    });
-
-    const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
-
-    signals.forEach((signal) => {
-      process.once(signal, () => terminate(signal));
-    });
-  }
-
-  return koaApp;
-};
-
-export const init = async (): Promise<void> => {
+export const dbinit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 
+export const runServer = async () => {
+  await dbinit();
+  await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
+  server = new StartupFactory();
+  if (configuration.env !== "test")
+    for (let retryCount = 0; retryCount < 10; retryCount++) {
+      console.log(`Connecting to nats server...`);
+      if (!(await server.init(handleTransaction))) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      } else {
+        console.log(`Connected to nats`);
+        break;
+      }
+    }
+};
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
 
@@ -111,14 +76,13 @@ if (cluster.isPrimary && configuration.maxCPU != 1) {
   (async () => {
     try {
       if (process.env.NODE_ENV !== 'test') {
-        await runServer().then(async () => {
-          await init();
-        });;
+        await runServer();
       }
     } catch (err) {
-      LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
+      loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
     }
   })()
 }
 
 export { databaseManager };
+
