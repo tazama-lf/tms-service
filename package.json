@@ -2,7 +2,7 @@
   "name": "data-preparation",
   "version": "0.1.0",
   "description": "data-preparation",
-  "main": "src/index.ts",
+  "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
     "dev": "nodemon -r dotenv/config",
@@ -42,7 +42,9 @@
     "ioredis": "^5.3.2",
     "lodash": "^4.17.21",
     "log4js": "^6.9.1",
-    "node-cache": "^5.1.2"
+    "node-cache": "^5.1.2",
+    "tslib": "^2.6.0",
+    "typescript": "^5.0.4"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",
@@ -62,8 +64,7 @@
     "nodemon": "^2.0.22",
     "prettier": "^2.8.7",
     "ts-jest": "^29.1.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "ts-node": "^10.9.1"
   },
   "husky": {
     "hooks": {

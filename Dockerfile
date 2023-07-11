@@ -1,48 +1,36 @@
-# Stage 1: Build stage
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ghcr.io/openfaas/of-watchdog:0.9.12 as watchdog
-FROM --platform=${TARGETPLATFORM:-linux/amd64} node:18.16-alpine as build
 
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-
-COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
-RUN chmod +x /usr/bin/fwatchdog
-
-# Create new group and user called app
-RUN addgroup -S app && adduser -S -g app app
-
-# Upgrade all packages and install curl and ca-certificates
-RUN apk --no-cache update && \
-    apk --no-cache upgrade && \
-    apk --no-cache add curl ca-certificates
-
-# Turn down the verbosity to default level.
-ENV NPM_CONFIG_LOGLEVEL warn
+FROM node:16 AS builder
+LABEL stage=build
 
 # Create a folder named function
 RUN mkdir -p /home/app
 
-# Set working directory / Wrapper/boot-strapper
+# Wrapper/boot-strapper
 WORKDIR /home/app
 
-# Copy dependencies manifests
+COPY ./src ./src
 COPY ./package.json ./
 COPY ./package-lock.json ./
 COPY ./tsconfig.json ./
-COPY ./global.d.ts ./
+COPY ./.npmrc ./
+ARG GH_TOKEN
 
-# Install dependencies
-RUN npm install
-
-# Copy application source code
-COPY ./src ./src
+# Install dependencies for production
+RUN npm ci --omit=dev --ignore-scripts
 
 # Build the project
 RUN npm run build
 
-# Environment variables for openfaas
-ENV cgi_headers="true"
-ENV fprocess="node ./build/index.js"
+FROM gcr.io/distroless/nodejs16-debian11:nonroot
+USER nonroot
+
+COPY --from=builder /home/app /home/app
+
+# Turn down the verbosity to default level.
+ENV NPM_CONFIG_LOGLEVEL warn
+
+WORKDIR /home/app
+
 ENV mode="http"
 ENV upstream_url="http://127.0.0.1:3000"
 ENV exec_timeout="10s"
@@ -85,4 +73,4 @@ ENV LOGSTASH_PORT=8080
 HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
 
 # Execute watchdog command
-CMD ["fwatchdog"]
+CMD ["build/index.js"]

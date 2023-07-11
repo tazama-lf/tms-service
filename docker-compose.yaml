@@ -1,5 +1,9 @@
 version: "2"
 services:
   node:
-    image: channel_orchestrator
+    container_name: data-prep
+    build:
+      context: .
+      args:
+        - GH_TOKEN
     restart: "no"
