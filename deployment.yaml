@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-preparation-rel-1-0-0
+  namespace: processor
+  labels:
+    app: data-preparation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-preparation
+  template:
+    metadata:
+      name: data-preparation-rel-1-0-0
+      labels:
+        app: data-preparation
+      annotations:
+        prometheus.io.scrape: 'false'
+    spec:
+      containers:
+        - name: data-preparation-rel-1-0-0
+          image: actio.azurecr.io/data-preparation-rel-1-0-0:1.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources: {}
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      imagePullSecrets:
+        - name: frmpullsecret
+      schedulerName: default-scheduler
+      enableServiceLinks: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
