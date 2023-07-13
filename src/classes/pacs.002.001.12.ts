@@ -2,7 +2,7 @@
 import { DataCache } from './data-cache';
 
 export interface Pacs002 {
-  prcgTm: number;
+  prcgTmDPS: number;
   TxTp: string;
   FIToFIPmtSts: FIToFIPmtSts;
   DataCache: DataCache;

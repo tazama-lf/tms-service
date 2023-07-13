@@ -2,7 +2,7 @@
 import { DataCache } from './data-cache';
 
 export interface Pain001 {
-  prcgTm: number;
+  prcgTmDPS: number;
   TxTp: string;
   CstmrCdtTrfInitn: CstmrCdtTrfInitn;
   DataCache: DataCache;
