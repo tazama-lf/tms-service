@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 export interface Pain013 {
-  prcgTm: number;
+  prcgTmDP: number;
   TxTp: string;
   EndToEndId: string;
   CdtrPmtActvtnReq: CdtrPmtActvtnReq;
