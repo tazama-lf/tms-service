@@ -132,6 +132,7 @@ export class ArangoDBService {
         _from: tR.from,
         _to: tR.to,
         TxTp: tR.TxTp,
+        TxSts: tR.TxSts,
         CreDtTm: tR.CreDtTm,
         Amt: tR.Amt,
         Ccy: tR.Ccy,
