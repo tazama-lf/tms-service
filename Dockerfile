@@ -31,6 +31,8 @@ WORKDIR /home/app
 COPY --from=dep-resolver /node_modules ./node_modules
 COPY --from=builder /home/app/build ./build
 COPY package.json ./
+COPY service.yaml ./
+COPY deployment.yaml ./
 
 # Turn down the verbosity to default level.
 ENV NPM_CONFIG_LOGLEVEL warn
