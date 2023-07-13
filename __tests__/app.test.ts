@@ -6,8 +6,9 @@ import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
 import { configuration } from '../src/config';
 import { cache, databaseManager, init, runServer } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
-import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from '../src/logic.service';
+import { handlePacs002, handlePacs008, handlePain001, handlePain013, rebuildCache } from '../src/logic.service';
 import { cacheDatabaseClient } from '../src/services-container';
+import { LoggerService } from '../src/logger.service';
 
 let app: App;
 
@@ -27,7 +28,6 @@ beforeAll(async () => {
   await init();
 });
 
-
 afterAll(() => {
   cache.close();
   cacheDatabaseClient.quit();
@@ -36,8 +36,6 @@ afterAll(() => {
 });
 
 describe('App Controller & Logic Service', () => {
-  let postSpy: jest.SpyInstance;
-
   const getMockEmptyRequest = () => JSON.parse('{}');
 
   const getMockRequestPain001 = () =>
@@ -123,7 +121,7 @@ describe('App Controller & Logic Service', () => {
       });
     });
 
-    postSpy = jest.spyOn(axios, 'post').mockImplementation((url: string, data?: any) => {
+    jest.spyOn(axios, 'post').mockImplementation((url: string, data?: any) => {
       return new Promise((resolve, reject) => {
         resolve({ status: 200 });
       });
@@ -135,13 +133,13 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPain001() as Pain001;
 
       const result = await handlePain001(request);
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.transaction.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.transaction.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
+      expect(result.DataCache.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
       expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.DataCache.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
+      expect(result.transaction.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
     });
 
     it('should handle Quote, database error', async () => {
@@ -170,11 +168,11 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPain013() as Pain013;
 
       const result = await handlePain013(request);
-      expect(result.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
+      expect(result.transaction.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
+      expect(result.DataCache!.cdtrId).toEqual('+42-966969344');
+      expect(result.DataCache!.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache!.dbtrId).toEqual('+36-432226947');
+      expect(result.DataCache!.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
     });
 
     it('should handle Quote Reply, database error', async () => {
@@ -203,12 +201,12 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs008() as Pacs008;
 
       const result = await handlePacs008(request);
-      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
+      expect(result.transaction.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.transaction.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      expect(result.DataCache!.cdtrId).toEqual('+42-966969344');
+      expect(result.DataCache!.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache!.dbtrId).toEqual('+36-432226947');
+      expect(result.DataCache!.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
     });
 
     it('should handle Transfer, database error', async () => {
@@ -246,11 +244,11 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs002() as Pacs002;
 
       const result = await handlePacs002(request);
-      expect(result).toEqual(request);
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
+      expect(result.transaction).toEqual(request);
+      expect(result.DataCache!.cdtrId).toEqual('+42-966969344');
+      expect(result.DataCache!.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache!.dbtrId).toEqual('+36-432226947');
+      expect(result.DataCache!.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
     });
 
     it('should handle Transfer Response, database error', async () => {
@@ -270,6 +268,21 @@ describe('App Controller & Logic Service', () => {
       expect(error).toEqual('Deliberate Error');
     });
   });
+
+  describe('rebuildCache', () => {
+    it('should handle getTransactionPain001, empty result', async () => {
+      const loggerErrorSpy = jest.spyOn(LoggerService, 'error')
+      jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((EndToEndId: string) => {
+        return new Promise((resolve) => {
+          resolve([[]])
+        });
+      });
+      const result = await rebuildCache('test-EndToEndId');
+      expect(loggerErrorSpy).toBeCalledTimes(1);
+      expect(loggerErrorSpy).toBeCalledWith('Could not find pain001 transaction to rebuild dataCache with');
+      expect(result).toEqual(undefined);
+    });
+  })
 
   describe('Send Transaction to CRSP', () => {
     it('fail gracefully', async () => {
