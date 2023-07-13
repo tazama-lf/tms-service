@@ -27,10 +27,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<Pain001> => {
 
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
-  const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
   const creditorId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
   const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
-  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
   const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
   const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
@@ -56,8 +54,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<Pain001> => {
   transaction.DataCache = {
     cdtrId: creditorId,
     dbtrId: debtorId,
-    cdtrAcctId: creditorAcctId,
-    dbtrAcctId: debtorAcctId,
+    cdtrAcctId: creditorHash,
+    dbtrAcctId: debtorHash,
   };
 
   try {
@@ -130,7 +128,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<Pain013> => {
     transaction.DataCache = JSON.parse(dataCache) as DataCache;
   } catch (ex) {
     LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    transaction = (await getDataCache(transaction)) as Pain013;
+    transaction = await setDataCache(transaction) as Pain013;
   }
 
   transaction._key = MsgId;
@@ -200,7 +198,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<Pacs008> => {
     transaction.DataCache = JSON.parse(dataCache) as DataCache;
   } catch (ex) {
     LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    transaction = (await getDataCache(transaction)) as Pacs008;
+    transaction = await setDataCache(transaction) as Pacs008;
   }
 
   try {
@@ -261,7 +259,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<Pacs002> => {
     transaction.DataCache = JSON.parse(dataCache) as DataCache;
   } catch (ex) {
     LoggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    transaction = (await getDataCache(transaction)) as Pacs002;
+    transaction = await setDataCache(transaction) as Pacs002;
   }
 
   transaction._key = MsgId;
@@ -274,10 +272,11 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<Pacs002> => {
     );
 
     const result = await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId);
-    const crdtPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
-    const dtrPseudo = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
-    transactionRelationship.from = `accounts/${crdtPseudo}`;
-    transactionRelationship.to = `accounts/${dtrPseudo}`;
+    const creditorHash = calcCreditorHash(result[0][0] as Pacs008);
+    const debtorHash = calcDebtorHash(result[0][0] as Pacs008);
+
+    transactionRelationship.to = `accounts/${debtorHash}`;
+    transactionRelationship.from = `accounts/${creditorHash}`;
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
@@ -312,8 +311,8 @@ const executePost = async (endpoint: string, request: Pacs002 | Pacs008 | Pain00
   }
 };
 
-export const getDataCache = async (transaction: Pacs002 | Pacs008 | Pain013): Promise<Pacs002 | Pacs008 | Pain013> => {
-  const currentPain001 = (await databaseManager.getTransactionPain001(transaction.EndToEndId)) as [Pain001[]];
+export const setDataCache = async (transaction: Pacs002 | Pacs008 | Pain013) : Promise<Pacs002 | Pacs008 | Pain013> => {
+  const currentPain001 = await databaseManager.getTransactionPain001(transaction.EndToEndId) as [Pain001[]];
   transaction.DataCache = currentPain001[0][0].DataCache;
   await databaseManager.setJson(transaction.EndToEndId, JSON.stringify(transaction.DataCache), 150);
 
