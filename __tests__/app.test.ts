@@ -136,9 +136,9 @@ describe('App Controller & Logic Service', () => {
       expect(result.transaction.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.transaction.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
       expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
+      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
       expect(result.transaction.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
     });
 
@@ -170,9 +170,9 @@ describe('App Controller & Logic Service', () => {
       const result = await handlePain013(request);
       expect(result.transaction.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
       expect(result.DataCache!.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache!.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache!.cdtrAcctId).toEqual('+42-966969344');
       expect(result.DataCache!.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache!.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
+      expect(result.DataCache!.dbtrAcctId).toEqual('+36-432226947');
     });
 
     it('should handle Quote Reply, database error', async () => {
@@ -204,9 +204,9 @@ describe('App Controller & Logic Service', () => {
       expect(result.transaction.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.transaction.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
       expect(result.DataCache!.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache!.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache!.cdtrAcctId).toEqual('+42-966969344');
       expect(result.DataCache!.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache!.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
+      expect(result.DataCache!.dbtrAcctId).toEqual('+36-432226947');
     });
 
     it('should handle Transfer, database error', async () => {
@@ -246,9 +246,9 @@ describe('App Controller & Logic Service', () => {
       const result = await handlePacs002(request);
       expect(result.transaction).toEqual(request);
       expect(result.DataCache!.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache!.cdtrAcctId).toEqual('32b405ee32c746e7353aa4fb79357e166279cee9ec36f8fa29245de68003c42f');
+      expect(result.DataCache!.cdtrAcctId).toEqual('+42-966969344');
       expect(result.DataCache!.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache!.dbtrAcctId).toEqual('7647ffbee21a5ccc2821729f1b7c93a3f7998789b8ca31012c3490e79c8caf4b');
+      expect(result.DataCache!.dbtrAcctId).toEqual('+36-432226947');
     });
 
     it('should handle Transfer Response, database error', async () => {

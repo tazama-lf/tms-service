@@ -7,7 +7,6 @@ import { configuration } from './config';
 import { TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { LoggerService } from './logger.service';
 import { cacheDatabaseClient } from './services-container';
-import { calcCreditorHash, calcDebtorHash } from './utils/transaction-tools';
 
 const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
   return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
@@ -17,8 +16,6 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
-  const creditorHash = calcCreditorHash(transaction);
-  const debtorHash = calcDebtorHash(transaction);
 
   transaction.EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   transaction.DebtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
@@ -28,8 +25,10 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
   const creditorId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
   const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
   const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
+  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id
   const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
@@ -38,8 +37,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   const TxTp = transaction.TxTp;
 
   const transactionRelationship: TransactionRelationship = {
-    from: `accounts/${debtorHash}`,
-    to: `accounts/${creditorHash}`,
+    from: `accounts/${debtorAcctId}`,
+    to: `accounts/${creditorAcctId}`,
     Amt,
     Ccy,
     CreDtTm,
@@ -54,8 +53,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   const dataCache: DataCache = {
     cdtrId: creditorId,
     dbtrId: debtorId,
-    cdtrAcctId: creditorHash,
-    dbtrAcctId: debtorHash,
+    cdtrAcctId: creditorAcctId,
+    dbtrAcctId: debtorAcctId,
   };
 
   try {
@@ -65,8 +64,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
         configuration.db.transactionhistory_pain001_collection,
         `pain001_${transaction.EndToEndId}`,
       ),
-      cacheDatabaseClient.addAccount(debtorHash),
-      cacheDatabaseClient.addAccount(creditorHash),
+      cacheDatabaseClient.addAccount(debtorAcctId),
+      cacheDatabaseClient.addAccount(creditorAcctId),
       cacheDatabaseClient.addEntity(creditorId, CreDtTm),
       cacheDatabaseClient.addEntity(debtorId, CreDtTm),
       databaseManager.setJson(transaction.EndToEndId, JSON.stringify(dataCache), 150),
@@ -74,8 +73,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
 
     await Promise.all([
       cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorHash, CreDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorHash, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
@@ -97,8 +96,6 @@ export const handlePain013 = async (transaction: Pain013): Promise<{ transaction
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
-  const creditorHash = calcCreditorHash(transaction);
-  const debtorHash = calcDebtorHash(transaction);
 
   transaction.EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
 
@@ -110,9 +107,12 @@ export const handlePain013 = async (transaction: Pain013): Promise<{ transaction
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
   const TxTp = transaction.TxTp;
 
+  const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id
+
   const transactionRelationship: TransactionRelationship = {
-    from: `accounts/${creditorHash}`,
-    to: `accounts/${debtorHash}`,
+    from: `accounts/${creditorAcctId}`,
+    to: `accounts/${debtorAcctId}`,
     Amt,
     Ccy,
     CreDtTm,
@@ -139,8 +139,8 @@ export const handlePain013 = async (transaction: Pain013): Promise<{ transaction
         configuration.db.transactionhistory_pain013_collection,
         `pain013_${transaction.EndToEndId}`,
       ),
-      cacheDatabaseClient.addAccount(debtorHash),
-      cacheDatabaseClient.addAccount(creditorHash),
+      cacheDatabaseClient.addAccount(debtorAcctId),
+      cacheDatabaseClient.addAccount(creditorAcctId),
     ]);
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
@@ -164,8 +164,6 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<{ transaction
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
-  const creditorHash = calcCreditorHash(transaction);
-  const debtorHash = calcDebtorHash(transaction);
 
   transaction.EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
   transaction.DebtorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
@@ -180,9 +178,12 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<{ transaction
   const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
   const TxTp = transaction.TxTp;
 
+  const debtorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
+  const creditorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+
   const transactionRelationship: TransactionRelationship = {
-    from: `accounts/${debtorHash}`,
-    to: `accounts/${creditorHash}`,
+    from: `accounts/${debtorAcctId}`,
+    to: `accounts/${creditorAcctId}`,
     Amt,
     Ccy,
     CreDtTm,
@@ -208,8 +209,8 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<{ transaction
         configuration.db.transactionhistory_pacs008_collection,
         `pacs008_${transaction.EndToEndId}`,
       ),
-      cacheDatabaseClient.addAccount(debtorHash),
-      cacheDatabaseClient.addAccount(creditorHash),
+      cacheDatabaseClient.addAccount(debtorAcctId),
+      cacheDatabaseClient.addAccount(creditorAcctId),
     ]);
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
@@ -273,11 +274,12 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<{ transaction
     );
 
     const result = await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId);
-    const creditorHash = calcCreditorHash(result[0][0] as Pacs008);
-    const debtorHash = calcDebtorHash(result[0][0] as Pacs008);
+   
+    const debtorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
+    const creditorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
 
-    transactionRelationship.to = `accounts/${debtorHash}`;
-    transactionRelationship.from = `accounts/${creditorHash}`;
+    transactionRelationship.to = `accounts/${debtorAcctId}`;
+    transactionRelationship.from = `accounts/${creditorAcctId}`;
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
@@ -322,8 +324,8 @@ export const rebuildCache = async (endToEndId: string): Promise<DataCache | unde
   let dataCache: DataCache = {
     cdtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
     dbtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id,
-    cdtrAcctId: calcCreditorHash(currentPain001[0][0]),
-    dbtrAcctId: calcDebtorHash(currentPain001[0][0]),
+    cdtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
+    dbtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
   };
   await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), 150);
 
