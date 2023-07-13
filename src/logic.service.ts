@@ -85,7 +85,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, transaction);
+  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
   LoggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -152,7 +152,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<{ transaction
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, transaction);
+  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
   LoggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -221,7 +221,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<{ transaction
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, transaction);
+  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
   LoggerService.log('Transaction send to CRSP service');
   span?.end();
 
@@ -288,7 +288,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<{ transaction
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, transaction);
+  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
   LoggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -297,7 +297,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<{ transaction
 };
 
 // Submit the transaction to CRSP
-const executePost = async (endpoint: string, request: Pacs002 | Pacs008 | Pain001 | Pain013) => {
+const executePost = async (endpoint: string, request: { transaction: Pain001 | Pacs008 | Pacs002 | Pain013; DataCache: DataCache | undefined }) => {
   const span = apm.startSpan(`POST ${endpoint}`);
   try {
     const crspRes = await axios.post(endpoint, request);
