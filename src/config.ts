@@ -47,7 +47,7 @@ export interface IConfig {
 }
 
 export const configuration: IConfig = {
-  maxCPU: parseInt(process.env.MAX_CPU!, 10) || Number.MAX_SAFE_INTEGER,
+  maxCPU: parseInt(process.env.MAX_CPU!, 10) || 1,
   apm: {
     serviceName: process.env.APM_SERVICE_NAME as string,
     url: process.env.APM_URL as string,
