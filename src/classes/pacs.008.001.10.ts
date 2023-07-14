@@ -1,5 +1,4 @@
 export interface Pacs008 {
-  prcgTmDP: number;
   TxTp: string;
   FIToFICstmrCdt: FIToFICstmrCdt;
   EndToEndId: string;

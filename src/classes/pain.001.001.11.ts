@@ -1,5 +1,4 @@
 export interface Pain001 {
-  prcgTmDP: number;
   TxTp: string;
   CstmrCdtTrfInitn: CstmrCdtTrfInitn;
   EndToEndId: string;
