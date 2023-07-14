@@ -5,7 +5,7 @@ import { configuration } from './config';
 import { handleTransaction } from './logic.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
 import cluster from 'cluster';
-import { IStartupService, StartupFactory } from '@frmscoe/frms-coe-startup-lib';
+import { type IStartupService, StartupFactory } from '@frmscoe/frms-coe-startup-lib';
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -46,17 +46,17 @@ export const dbinit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 
-export const runServer = async () => {
+export const runServer = async (): Promise<void> => {
   await dbinit();
   await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
-  if (configuration.env !== "test")
+  if (configuration.env !== 'test')
     for (let retryCount = 0; retryCount < 10; retryCount++) {
-      console.log(`Connecting to nats server...`);
+      loggerService.log(`Connecting to nats server...`);
       if (!(await server.init(handleTransaction))) {
         await new Promise((resolve) => setTimeout(resolve, 5000));
       } else {
-        console.log(`Connected to nats`);
+        loggerService.log(`Connected to nats`);
         break;
       }
     }
@@ -64,7 +64,7 @@ export const runServer = async () => {
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
 
-if (cluster.isPrimary && configuration.maxCPU != 1) {
+if (cluster.isPrimary && configuration.maxCPU !== 1) {
   for (let i = 1; i < numCPUs; i++) {
     cluster.fork();
   }
@@ -81,8 +81,7 @@ if (cluster.isPrimary && configuration.maxCPU != 1) {
     } catch (err) {
       loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
     }
-  })()
+  })();
 }
 
 export { databaseManager };
-

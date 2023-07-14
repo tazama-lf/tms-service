@@ -1,10 +1,6 @@
-/* eslint-disable no-use-before-define */
-import { DataCache } from './data-cache';
-
 export interface Pain013 {
   prcgTmDP: number;
   TxTp: string;
-  DataCache: DataCache;
   EndToEndId: string;
   CdtrPmtActvtnReq: CdtrPmtActvtnReq;
   _key?: string;

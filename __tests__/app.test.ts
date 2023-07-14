@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as startUpLib from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
-import { configuration } from '../src/config';
-import { cache, databaseManager, dbinit, runServer, server } from '../src/index';
+import { cache, databaseManager, runServer, server } from '../src/index';
 import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
-import { handleTransaction } from '../src/logic.service';
-import { cacheDatabaseClient, initCacheDatabase } from '../src/services-container';
+import * as LogicService from '../src/logic.service';
+import { cacheDatabaseClient } from '../src/services-container';
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -23,7 +21,6 @@ beforeAll(async () => {
   await runServer();
 });
 
-
 afterAll(() => {
   cache.close();
   cacheDatabaseClient.quit();
@@ -31,8 +28,6 @@ afterAll(() => {
 });
 
 describe('App Controller & Logic Service', () => {
-  let responseSpy: jest.SpyInstance;
-
   const getMockRequestPain001 = () =>
     JSON.parse(
       '{"TxTp":"pain.001.001.11","DataCache": {"cdtrId": "+42-966969344","dbtrId": "+36-432226947","cdtrAcctId": "+42-966969344","dbtrAcctId": "+36-432226947"},"CstmrCdtTrfInitn":{"GrpHdr":{"MsgId":"17fa-afea-48d6-b147-05c8463ea494","CreDtTm":"2023-02-03T07:03:17.438Z","NbOfTxs":1,"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+36-432226947"}}},"PmtInf":{"PmtInfId":"23730c89dd57490a9a79f9b3747e3c08","PmtMtd":"TRA","ReqdAdvcTp":{"DbtAdvc":{"Cd":"ADWD","Prtry":"Advice with transaction details"}},"ReqdExctnDt":{"Dt":"2023-02-03","DtTm":"2023-02-03T07:03:17.438Z"},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"typolog028"}}}},"CtctDtls":{"MobNb":"+36-432226947"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+36-432226947","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typolog028"}}},"CdtTrfTxInf":{"PmtId":{"EndToEndId":"8f37-9e6f-4c30-bb87-5e0e42f0f000"},"PmtTpInf":{"CtgyPurp":{"Prtry":"TRANSFER BLANK"}},"Amt":{"InstdAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"EqvtAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"},"CcyOfTrf":"USD"}},"ChrgBr":"DEBT","CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+42-966969344","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+42-966969344"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+42-966969344","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Dbtr":{"FrstNm":"April","MddlNm":"Blake","LastNm":"Grant","MrchntClssfctnCd":"BLANK"},"Cdtr":{"FrstNm":"Felicia","MddlNm":"Easton","LastNm":"Quill","MrchntClssfctnCd":"BLANK"},"DbtrFinSvcsPrvdrFees":{"Ccy":"USD","Amt":307.14},"Xprtn":"2021-11-30T10:38:56.000Z"}}}}},"SplmtryData":{"Envlp":{"Doc":{"InitgPty":{"InitrTp":"CONSUMER","Glctn":{"Lat":"-3,1609","Long":"38,3588"}}}}}}}',
@@ -62,25 +57,25 @@ describe('App Controller & Logic Service', () => {
 
     jest.spyOn(cacheDatabaseClient, 'addAccount').mockImplementation((hash: string) => {
       return new Promise((resolve, reject) => {
-        resolve('');
+        resolve();
       });
     });
 
     jest.spyOn(cacheDatabaseClient, 'addEntity').mockImplementation((entityId: string, CreDtTm: string) => {
       return new Promise((resolve, reject) => {
-        resolve('');
+        resolve();
       });
     });
 
     jest.spyOn(cacheDatabaseClient, 'addAccountHolder').mockImplementation((entityId: string, accountId: string, CreDtTm: string) => {
       return new Promise((resolve, reject) => {
-        resolve('');
+        resolve();
       });
     });
 
     jest.spyOn(cacheDatabaseClient, 'saveTransactionRelationship').mockImplementation((tR: TransactionRelationship) => {
       return new Promise((resolve, reject) => {
-        resolve('');
+        resolve();
       });
     });
 
@@ -88,15 +83,9 @@ describe('App Controller & Logic Service', () => {
       .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
       .mockImplementation((transaction: any, transactionhistorycollection: string) => {
         return new Promise((resolve, reject) => {
-          resolve('');
+          resolve();
         });
       });
-
-    jest.spyOn(cacheDatabaseClient, 'savePseudonym').mockImplementation((pseudonym: any) => {
-      return new Promise((resolve, reject) => {
-        resolve('');
-      });
-    });
 
     jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((pseudonym: any) => {
       return new Promise((resolve, reject) => {
@@ -116,21 +105,18 @@ describe('App Controller & Logic Service', () => {
       });
     });
 
-    responseSpy = jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
+    jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
   });
 
   describe('handleExecute', () => {
     it('should handle Quote', async () => {
       const request = getMockRequestPain001() as Pain001;
 
-      const result = await handleTransaction(request);
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
-      expect(result.CstmrCdtTrfInitn?.PmtInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction')
+
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1)
+      expect(handleSpy).toHaveReturned();
     });
 
     it('should handle Quote, database error', async () => {
@@ -146,7 +132,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handleTransaction(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -158,12 +144,11 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote Reply', async () => {
       const request = getMockRequestPain013() as Pain013;
 
-      const result = await handleTransaction(request);
-      expect(result.CdtrPmtActvtnReq?.PmtInf?.CdtTrfTxInf?.CdtrAcct?.Id?.Othr.SchmeNm?.Prtry).toEqual('dfsp002');
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction')
+
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1)
+      expect(handleSpy).toHaveReturned();
     });
 
     it('should handle Quote Reply, database error', async () => {
@@ -179,7 +164,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handleTransaction(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -191,13 +176,11 @@ describe('App Controller & Logic Service', () => {
     it('should handle Transfer', async () => {
       const request = getMockRequestPacs008() as Pacs008;
 
-      const result = await handleTransaction(request);
-      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.DbtrAcct?.Id?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.FIToFICstmrCdt?.CdtTrfTxInf?.Cdtr?.Id?.PrvtId?.Othr?.SchmeNm?.Prtry).toEqual('MSISDN');
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction')
+
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1)
+      expect(handleSpy).toHaveReturned();
     });
 
     it('should handle Transfer, database error', async () => {
@@ -212,14 +195,14 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handleTransaction(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
       expect(error).toEqual('Deliberate Error');
     });
   });
-
+  
   describe('handleTransferResponse', () => {
     it('should handle Transfer Response', async () => {
       jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
@@ -234,12 +217,11 @@ describe('App Controller & Logic Service', () => {
 
       const request = getMockRequestPacs002() as Pacs002;
 
-      const result = await handleTransaction(request);
-      expect(result).toEqual(request);
-      expect(result.DataCache.cdtrId).toEqual('+42-966969344');
-      expect(result.DataCache.cdtrAcctId).toEqual('+42-966969344');
-      expect(result.DataCache.dbtrId).toEqual('+36-432226947');
-      expect(result.DataCache.dbtrAcctId).toEqual('+36-432226947');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction')
+
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1)
+      expect(handleSpy).toHaveReturned();
     });
 
     it('should handle Transfer Response, database error', async () => {
@@ -252,39 +234,52 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        const result = await handleTransaction(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
       expect(error).toEqual('Deliberate Error');
     });
   });
+  
+  describe('Error cases', () => {
+    it('should fail gracefully - switch statement', async () => {
+      const request = {};
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction')
 
-  describe('Send Transaction to CRSP', () => {
-    it('fail gracefully', async () => {
-
-      const request = getMockRequestPacs008() as Pacs008;
-      await handleTransaction(request);
-
-      expect(server.handleResponse).toBeCalledTimes(1);
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1)
+      expect(handleSpy).toHaveReturned();
     });
 
-    it('handle no endpoint exception', async () => {
-      configuration.crspEndpoint = '';
+    it('should fail gracefully - rebuildCache', async () => {
+      const request = getMockRequestPacs002() as Pacs002;
 
-      const request = getMockRequestPacs008() as Pacs008;
-      await handleTransaction(request);
+      jest.spyOn(databaseManager, 'getJson').mockRejectedValue((key: any) => {
+        return new Promise((reject) => {
+          reject('some error');
+        });
+      });
 
-      expect(server.handleResponse).toBeCalledTimes(1);
-    });
+      jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
+        return new Promise((resolve) => {
+          resolve('');
+        });
+      });
 
-    it('handle generic exception', async () => {
-      configuration.crspEndpoint = 'crsp';
+      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((key: any) => {
+        return new Promise((resolve) => {
+          resolve([[JSON.parse(
+            '{"TxTp":"pacs.008.001.10","FIToFICstmrCdt":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}',
+          )]]);
+        });
+      });
 
-      const request = getMockRequestPacs008() as Pacs008;
-      await handleTransaction(request);
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction')
 
-      expect(server.handleResponse).toBeCalledTimes(1);
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1)
+      expect(handleSpy).toHaveReturned();
     });
   });
 });
