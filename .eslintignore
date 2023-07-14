@@ -3,3 +3,7 @@ templates
 build
 node_modules
 docs
+build
+__tests__
+cluster-setup.ts
+jest.config.ts
