@@ -15,14 +15,14 @@ export class RedisService {
   }
 
   async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.client.on('connect', () => {
         loggerService.log('✅ Redis connection is ready');
         resolve();
       });
       this.client.on('error', (error) => {
         loggerService.error('❌ Redis connection is not ready', error);
-        reject();
+        throw new Error('❌ Redis connection is not ready');
       });
     });
   }
@@ -33,8 +33,8 @@ export class RedisService {
     return redisInstance;
   }
 
-  getJson = (key: string): Promise<string[]> =>
-    new Promise((resolve) => {
+  getJson = async (key: string): Promise<string[]> =>
+    await new Promise((resolve) => {
       this.client.smembers(key, (err, res) => {
         if (err) {
           loggerService.error('Error while getting key from redis with message:', err, 'RedisService');
@@ -45,8 +45,8 @@ export class RedisService {
       });
     });
 
-  setJson = (key: string, value: string, expire: number): Promise<'OK' | undefined> =>
-    new Promise((resolve) => {
+  setJson = async (key: string, value: string, expire: number): Promise<'OK' | undefined> =>
+    await new Promise((resolve) => {
       this.client.set(key, value, 'EX', expire, (err, res) => {
         if (err) {
           loggerService.error('Error while setting key in redis with message:', err, 'RedisService');
@@ -57,8 +57,8 @@ export class RedisService {
       });
     });
 
-  deleteKey = (key: string): Promise<number> =>
-    new Promise((resolve) => {
+  deleteKey = async (key: string): Promise<number> =>
+    await new Promise((resolve) => {
       this.client.del(key, (err, res) => {
         if (err) {
           loggerService.error('Error while deleting key from redis with message:', err, 'RedisService');
@@ -69,8 +69,8 @@ export class RedisService {
       });
     });
 
-  addOneGetAll = (key: string, value: string): Promise<string[] | null> =>
-    new Promise((resolve) => {
+  addOneGetAll = async (key: string, value: string): Promise<string[] | null> =>
+    await new Promise((resolve) => {
       this.client
         .multi()
         .sadd(key, value)

@@ -1,44 +1,46 @@
 import { createHash } from 'node:crypto';
-import { Pacs008, Pain001, Pain013 } from '../classes/pain-pacs';
+import { type Pacs008 } from '../classes/pacs.008.001.10';
+import { type Pain001 } from '../classes/pain.001.001.11';
+import { type Pain013 } from '../classes/pain.013.001.09';
 
 export function calcCreditorHash(transaction: Pain001 | Pain013 | Pacs008): string {
   if ('CdtrPmtActvtnReq' in transaction) {
-    const Creditor_Identification = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-    const Creditor_MemberIdentification = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-    const Creditor_Proprietary = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry;
-    return createHash('sha256').update(`${Creditor_MemberIdentification}${Creditor_Identification}${Creditor_Proprietary}`).digest('hex');
+    const creditorIdentification = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+    const creditorMemberIdentification = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+    const creditorProprietary = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry;
+    return createHash('sha256').update(`${creditorMemberIdentification}${creditorIdentification}${creditorProprietary}`).digest('hex');
   }
 
   if ('FIToFICstmrCdt' in transaction) {
-    const Creditor_Identification = transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
-    const Creditor_MemberIdentification = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-    const Creditor_Proprietary = transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.SchmeNm.Prtry;
-    return createHash('sha256').update(`${Creditor_MemberIdentification}${Creditor_Identification}${Creditor_Proprietary}`).digest('hex');
+    const creditorIdentification = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+    const creditorMemberIdentification = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+    const creditorProprietary = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry;
+    return createHash('sha256').update(`${creditorMemberIdentification}${creditorIdentification}${creditorProprietary}`).digest('hex');
   }
 
-  const Creditor_Identification = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-  const Creditor_MemberIdentification = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const Creditor_Proprietary = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry;
-  return createHash('sha256').update(`${Creditor_MemberIdentification}${Creditor_Identification}${Creditor_Proprietary}`).digest('hex');
+  const creditorIdentification = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+  const creditorMemberIdentification = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const creditorProprietary = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.SchmeNm.Prtry;
+  return createHash('sha256').update(`${creditorMemberIdentification}${creditorIdentification}${creditorProprietary}`).digest('hex');
 }
 
 export const calcDebtorHash = (transaction: Pain001 | Pain013 | Pacs008): string => {
   if ('CdtrPmtActvtnReq' in transaction) {
-    const Debtor_Identification = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
-    const Debtor_MemberIdentification = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-    const Debtor_Proprietary = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry;
-    return createHash('sha256').update(`${Debtor_Proprietary}${Debtor_MemberIdentification}${Debtor_Identification}`).digest('hex');
+    const debtorIdentification = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
+    const debtorMemberIdentification = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+    const debtorProprietary = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry;
+    return createHash('sha256').update(`${debtorMemberIdentification}${debtorIdentification}${debtorProprietary}`).digest('hex');
   }
 
   if ('FIToFICstmrCdt' in transaction) {
-    const Debtor_Identification = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
-    const Debtor_MemberIdentification = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-    const Debtor_Proprietary = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry;
-    return createHash('sha256').update(`${Debtor_Proprietary}${Debtor_MemberIdentification}${Debtor_Identification}`).digest('hex');
+    const debtorIdentification = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
+    const debtorMemberIdentification = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+    const debtorProprietary = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.SchmeNm.Prtry;
+    return createHash('sha256').update(`${debtorMemberIdentification}${debtorIdentification}${debtorProprietary}`).digest('hex');
   }
 
-  const Debtor_Identification = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
-  const Debtor_MemberIdentification = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const Debtor_Proprietary = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry;
-  return createHash('sha256').update(`${Debtor_Proprietary}${Debtor_MemberIdentification}${Debtor_Identification}`).digest('hex');
+  const debtorIdentification = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
+  const debtorMemberIdentification = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const debtorProprietary = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.SchmeNm.Prtry;
+  return createHash('sha256').update(`${debtorMemberIdentification}${debtorIdentification}${debtorProprietary}`).digest('hex');
 };

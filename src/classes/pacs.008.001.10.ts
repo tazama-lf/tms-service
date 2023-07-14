@@ -1,11 +1,7 @@
-/* eslint-disable no-use-before-define */
-import { DataCache } from './data-cache';
-
 export interface Pacs008 {
   prcgTmDP: number;
   TxTp: string;
   FIToFICstmrCdt: FIToFICstmrCdt;
-  DataCache: DataCache;
   EndToEndId: string;
   DebtorAcctId: string;
   CreditorAcctId: string;

@@ -2,6 +2,7 @@ import NodeCache from 'node-cache';
 import { ArangoDBService, RedisService } from './clients';
 import { CacheDatabaseService } from './clients/cache-database';
 
+/* eslint-disable @typescript-eslint/no-extraneous-class */
 export class ServicesContainer {
   private static cache: NodeCache;
   private static databaseClient: ArangoDBService;

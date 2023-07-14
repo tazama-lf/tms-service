@@ -1,11 +1,11 @@
-import { Pacs002, Pacs008, Pain001, Pain013 } from '../classes/pain-pacs';
-import { TransactionRelationship } from '../interfaces/iTransactionRelationship';
-import { ArangoDBService } from './arango';
-import { RedisService } from './redis';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../classes/pain-pacs';
+import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
+import { type ArangoDBService } from './arango';
+import { type RedisService } from './redis';
 
 export class CacheDatabaseService {
-  private dbClient: ArangoDBService;
-  private cacheClient: RedisService;
+  private readonly dbClient: ArangoDBService;
+  private readonly cacheClient: RedisService;
   cacheExpireTime: number;
 
   private constructor(dbClient: ArangoDBService, cacheClient: RedisService, expire: number) {
@@ -24,41 +24,37 @@ export class CacheDatabaseService {
     this.cacheClient.quit();
   };
 
-  async getPseudonyms(hash: string): Promise<any> {
+  async getPseudonyms(hash: string): Promise<unknown> {
     return await this.dbClient.getPseudonyms(hash);
   }
 
-  async getTransactionHistoryPacs008(EndToEndId: string): Promise<any> {
+  async getTransactionHistoryPacs008(EndToEndId: string): Promise<unknown> {
     return await this.dbClient.getTransactionHistoryPacs008(EndToEndId);
   }
 
-  async addAccount(hash: string): Promise<any> {
-    return await this.dbClient.addAccount(hash);
+  async addAccount(hash: string): Promise<void> {
+    await this.dbClient.addAccount(hash);
   }
 
-  async addEntity(entityId: string, CreDtTm: string): Promise<any> {
-    return await this.dbClient.addEntity(entityId, CreDtTm);
+  async addEntity(entityId: string, CreDtTm: string): Promise<void> {
+    await this.dbClient.addEntity(entityId, CreDtTm);
   }
 
-  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string): Promise<any> {
-    return await this.dbClient.addAccountHolder(entityId, accountId, CreDtTm);
+  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string): Promise<void> {
+    await this.dbClient.addAccountHolder(entityId, accountId, CreDtTm);
   }
 
-  async saveTransactionRelationship(tR: TransactionRelationship): Promise<any> {
-    return await this.dbClient.saveTransactionRelationship(tR);
+  async saveTransactionRelationship(tR: TransactionRelationship): Promise<void> {
+    await this.dbClient.saveTransactionRelationship(tR);
   }
 
   async saveTransactionHistory(
     transaction: Pain001 | Pain013 | Pacs008 | Pacs002,
     transactionHistoryCollection: string,
     redisKey = '',
-  ): Promise<any> {
+  ): Promise<void> {
     if (redisKey) await this.cacheClient.setJson(redisKey, JSON.stringify(transaction), this.cacheExpireTime);
 
-    return await this.dbClient.saveTransactionHistory(transaction, transactionHistoryCollection);
-  }
-
-  async savePseudonym(pseudonym: any): Promise<any> {
-    return await this.dbClient.savePseudonym(pseudonym);
+    await this.dbClient.saveTransactionHistory(transaction, transactionHistoryCollection);
   }
 }
