@@ -1,6 +1,8 @@
-import { DataCache } from "./data-cache";
+/* eslint-disable no-use-before-define */
+import { DataCache } from './data-cache';
 
 export interface Pacs002 {
+  prcgTmDP: number;
   TxTp: string;
   FIToFIPmtSts: FIToFIPmtSts;
   DataCache: DataCache;

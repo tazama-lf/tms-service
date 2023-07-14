@@ -7,6 +7,10 @@ import { TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { cacheDatabaseClient } from './services-container';
 import { calcCreditorHash, calcDebtorHash } from './utils/transaction-tools';
 
+const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
+  return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
+};
+
 export const handleTransaction = async (transaction: unknown): Promise<any> => {
   const transObject = transaction as any;
   switch (transObject.TxTp) {
@@ -30,6 +34,7 @@ export const handleTransaction = async (transaction: unknown): Promise<any> => {
 const handlePain001 = async (transaction: Pain001): Promise<any> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
+  const startHrTime = process.hrtime();
   const creditorHash = calcCreditorHash(transaction);
   const debtorHash = calcDebtorHash(transaction);
 
@@ -96,6 +101,8 @@ const handlePain001 = async (transaction: Pain001): Promise<any> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     throw err;
+  } finally {
+    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
@@ -110,6 +117,7 @@ const handlePain001 = async (transaction: Pain001): Promise<any> => {
 const handlePain013 = async (transaction: Pain013): Promise<any> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
+  const startHrTime = process.hrtime();
   const creditorHash = calcCreditorHash(transaction);
   const debtorHash = calcDebtorHash(transaction);
 
@@ -160,6 +168,8 @@ const handlePain013 = async (transaction: Pain013): Promise<any> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     throw err;
+  } finally {
+    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
@@ -174,6 +184,7 @@ const handlePain013 = async (transaction: Pain013): Promise<any> => {
 const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
+  const startHrTime = process.hrtime();
   const creditorHash = calcCreditorHash(transaction);
   const debtorHash = calcDebtorHash(transaction);
 
@@ -225,6 +236,8 @@ const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     throw err;
+  } finally {
+    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
@@ -237,6 +250,7 @@ const handlePacs008 = async (transaction: Pacs008): Promise<any> => {
 const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
+  const startHrTime = process.hrtime();
 
   transaction.EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId;
   transaction.TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
@@ -286,6 +300,8 @@ const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     throw err;
+  } finally {
+    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
@@ -296,7 +312,6 @@ const handlePacs002 = async (transaction: Pacs002): Promise<any> => {
   loggerService.log('END - Handle transaction data');
   return transaction;
 };
-
 export const getDataCache = async (transaction: Pacs002 | Pacs008 | Pain013): Promise<Pacs002 | Pacs008 | Pain013> => {
   const currentPain001 = (await databaseManager.getTransactionPain001(transaction.EndToEndId)) as [Pain001[]];
   transaction.DataCache = currentPain001[0][0].DataCache;
