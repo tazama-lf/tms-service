@@ -12,7 +12,7 @@ const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>)
   return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
 };
 
-export const handlePain001 = async (transaction: Pain001): Promise<{ transaction: Pain001; DataCache: DataCache }> => {
+export const handlePain001 = async (transaction: Pain001): Promise<{ transaction: Pain001; DataCache: DataCache; metaData: unknown }> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
@@ -28,7 +28,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
   const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
   const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
-  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id
+  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
   const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
@@ -79,20 +79,25 @@ export const handlePain001 = async (transaction: Pain001): Promise<{ transaction
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  } finally {
-    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
+  const duration = calculateDuration(startHrTime, process.hrtime());
+  executePost(configuration.crspEndpoint, {
+    transaction,
+    DataCache: dataCache,
+    metaData: { prcgTmDP: duration },
+  });
   LoggerService.log('Transaction send to CRSP service');
 
   span?.end();
   LoggerService.log('END - Handle transaction data');
-  return { transaction, DataCache:dataCache };
+  return { transaction, DataCache: dataCache, metaData: { prcgTmDP: duration } };
 };
 
-export const handlePain013 = async (transaction: Pain013): Promise<{ transaction: Pain013; DataCache: DataCache | undefined }> => {
+export const handlePain013 = async (
+  transaction: Pain013,
+): Promise<{ transaction: Pain013; DataCache: DataCache | undefined; metaData: unknown }> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
@@ -108,7 +113,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<{ transaction
   const TxTp = transaction.TxTp;
 
   const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id
+  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorAcctId}`,
@@ -147,20 +152,25 @@ export const handlePain013 = async (transaction: Pain013): Promise<{ transaction
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  } finally {
-    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
+  const duration = calculateDuration(startHrTime, process.hrtime());
+  executePost(configuration.crspEndpoint, {
+    transaction,
+    DataCache: dataCache,
+    metaData: { prcgTmDP: duration },
+  });
   LoggerService.log('Transaction send to CRSP service');
 
   span?.end();
   LoggerService.log('END - Handle transaction data');
-  return { transaction, DataCache:dataCache };
+  return { transaction, DataCache: dataCache, metaData: { prcgTmDP: duration } };
 };
 
-export const handlePacs008 = async (transaction: Pacs008): Promise<{ transaction: Pacs008; DataCache: DataCache | undefined}> => {
+export const handlePacs008 = async (
+  transaction: Pacs008,
+): Promise<{ transaction: Pacs008; DataCache: DataCache | undefined; metaData: unknown }> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
@@ -217,19 +227,20 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<{ transaction
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  } finally {
-    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
 
   // Notify CRSP
-  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
+  const duration = calculateDuration(startHrTime, process.hrtime());
+  executePost(configuration.crspEndpoint, { transaction, DataCache: dataCache, metaData: { prcgTmDP: duration } });
   LoggerService.log('Transaction send to CRSP service');
   span?.end();
 
-  return { transaction, DataCache:dataCache };
+  return { transaction, DataCache: dataCache, metaData: { prcgTmDP: duration } };
 };
 
-export const handlePacs002 = async (transaction: Pacs002): Promise<{ transaction: Pacs002; DataCache: DataCache | undefined}> => {
+export const handlePacs002 = async (
+  transaction: Pacs002,
+): Promise<{ transaction: Pacs002; DataCache: DataCache | undefined; metaData: unknown }> => {
   LoggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startHrTime = process.hrtime();
@@ -274,7 +285,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<{ transaction
     );
 
     const result = await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId);
-   
+
     const debtorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
     const creditorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
 
@@ -285,21 +296,22 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<{ transaction
   } catch (err) {
     LoggerService.log(JSON.stringify(err));
     throw err;
-  } finally {
-    transaction.prcgTmDP = calculateDuration(startHrTime, process.hrtime());
   }
-
   // Notify CRSP
-  executePost(configuration.crspEndpoint, { transaction, DataCache:dataCache });
+  const duration = calculateDuration(startHrTime, process.hrtime());
+  executePost(configuration.crspEndpoint, { transaction, DataCache: dataCache, metaData: { prcgTmDP: duration } });
   LoggerService.log('Transaction send to CRSP service');
 
   span?.end();
   LoggerService.log('END - Handle transaction data');
-  return { transaction, DataCache:dataCache };
+  return { transaction, DataCache: dataCache, metaData: { prcgTmDP: duration } };
 };
 
 // Submit the transaction to CRSP
-const executePost = async (endpoint: string, request: { transaction: Pain001 | Pacs008 | Pacs002 | Pain013; DataCache: DataCache | undefined }) => {
+const executePost = async (
+  endpoint: string,
+  request: { transaction: Pain001 | Pacs008 | Pacs002 | Pain013; DataCache: DataCache | undefined; metaData: unknown },
+) => {
   const span = apm.startSpan(`POST ${endpoint}`);
   try {
     const crspRes = await axios.post(endpoint, request);
@@ -321,7 +333,7 @@ export const rebuildCache = async (endToEndId: string): Promise<DataCache | unde
     LoggerService.error('Could not find pain001 transaction to rebuild dataCache with');
     return undefined;
   }
-  let dataCache: DataCache = {
+  const dataCache: DataCache = {
     cdtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
     dbtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id,
     cdtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,

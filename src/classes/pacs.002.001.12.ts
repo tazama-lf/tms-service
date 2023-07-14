@@ -1,7 +1,6 @@
 /* eslint-disable no-use-before-define */
 
 export interface Pacs002 {
-  prcgTmDP: number;
   TxTp: string;
   FIToFIPmtSts: FIToFIPmtSts;
   EndToEndId: string;
