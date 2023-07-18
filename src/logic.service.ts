@@ -104,7 +104,7 @@ const handlePain001 = async (transaction: Pain001): Promise<void> => {
   }
 
   // Notify CRSP
-  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP : calculateDuration(startHrTime, process.hrtime())} });
+  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP: calculateDuration(startHrTime, process.hrtime()) } });
   loggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -170,7 +170,7 @@ const handlePain013 = async (transaction: Pain013): Promise<void> => {
   }
 
   // Notify CRSP
-  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP : calculateDuration(startHrTime, process.hrtime())} });
+  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP: calculateDuration(startHrTime, process.hrtime()) } });
   loggerService.log('Transaction send to CRSP service');
 
   span?.end();
@@ -237,7 +237,7 @@ const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   }
 
   // Notify CRSP
-  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP : calculateDuration(startHrTime, process.hrtime())} });
+  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP: calculateDuration(startHrTime, process.hrtime()) } });
   loggerService.log('Transaction send to CRSP service');
   span?.end();
 };
@@ -301,7 +301,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   }
 
   // Notify CRSP
-  server.handleResponse({ transaction, DataCache: dataCache,metaData: { prcgTmDP : calculateDuration(startHrTime, process.hrtime())} });
+  server.handleResponse({ transaction, DataCache: dataCache, metaData: { prcgTmDP: calculateDuration(startHrTime, process.hrtime()) } });
   loggerService.log('Transaction send to CRSP service');
 
   span?.end();
