@@ -101,7 +101,7 @@ describe('App Controller & Logic Service', () => {
 
     jest.spyOn(databaseManager, 'setJson').mockImplementation((pseudonym: any) => {
       return new Promise((resolve, reject) => {
-        resolve('OK');
+        resolve();
       });
     });
 
