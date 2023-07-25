@@ -62,6 +62,14 @@ export const runServer = async () => {
     }
 };
 
+process.on('uncaughtException', (err) => {
+  loggerService.error(`process on uncaughtException error: `, err);
+});
+
+process.on('unhandledRejection', (err) => {
+  loggerService.error(`process on unhandledRejection error: `, err);
+});
+
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
 
 if (cluster.isPrimary && configuration.maxCPU != 1) {
