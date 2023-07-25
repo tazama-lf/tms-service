@@ -74,7 +74,7 @@ export const configuration: IConfig = {
   port: parseInt(process.env.PORT!, 10) || 3000,
   redis: {
     db: parseInt(process.env.REDIS_DB!, 10) || 0,
-    servers : JSON.parse(process.env.REDIS_SERVERS as string),
+    servers : JSON.parse(process.env.REDIS_SERVERS as string || '[]'),
     password: process.env.REDIS_AUTH as string,
     isCluster: process.env.REDIS_IS_CLUSTER === "true" ? true : false,
   },
