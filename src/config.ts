@@ -2,6 +2,7 @@
 // config settings, env variables
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { type RedisConfig } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 // Load .env file into process.env if it exists. This is convenient for running locally.
 dotenv.config({
@@ -38,12 +39,7 @@ export interface IConfig {
     host: string;
     port: number;
   };
-  redis: {
-    auth: string;
-    db: number;
-    host: string;
-    port: number;
-  };
+  redis: RedisConfig
 }
 
 export const configuration: IConfig = {
@@ -77,9 +73,9 @@ export const configuration: IConfig = {
   },
   port: parseInt(process.env.PORT!, 10) || 3000,
   redis: {
-    auth: process.env.REDIS_AUTH as string,
     db: parseInt(process.env.REDIS_DB!, 10) || 0,
-    host: process.env.REDIS_HOST as string,
-    port: parseInt(process.env.REDIS_PORT!, 10),
+    servers : JSON.parse(process.env.REDIS_SERVERS as string),
+    password: process.env.REDIS_AUTH as string,
+    isCluster: process.env.REDIS_IS_CLUSTER === "true" ? true : false,
   },
 };

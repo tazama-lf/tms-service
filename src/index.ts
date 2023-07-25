@@ -1,18 +1,18 @@
-import { CreateDatabaseManager, type DatabaseManagerInstance, LoggerService } from '@frmscoe/frms-coe-lib';
+import { CreateDatabaseManager, LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
+import cluster from 'cluster';
 import apm from 'elastic-apm-node';
 import os from 'os';
 import { configuration } from './config';
 import { handleTransaction } from './logic.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
-import cluster from 'cluster';
-import { type IStartupService, StartupFactory } from '@frmscoe/frms-coe-startup-lib';
 
 const databaseManagerConfig = {
   redisConfig: {
     db: configuration.redis.db,
-    host: configuration.redis.host,
-    password: configuration.redis.auth,
-    port: configuration.redis.port,
+    servers: configuration.redis.servers,
+    password: configuration.redis.password,
+    isCluster: configuration.redis.isCluster
   },
   transactionHistory: {
     certPath: configuration.cert,
@@ -48,7 +48,7 @@ export const dbinit = async (): Promise<void> => {
 
 export const runServer = async (): Promise<void> => {
   await dbinit();
-  await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
+  await initCacheDatabase(configuration.cacheTTL, databaseManager); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
   if (configuration.env !== 'test')
     for (let retryCount = 0; retryCount < 10; retryCount++) {
