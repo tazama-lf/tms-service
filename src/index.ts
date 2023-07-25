@@ -12,7 +12,7 @@ const databaseManagerConfig = {
     db: configuration.redis.db,
     servers: configuration.redis.servers,
     password: configuration.redis.password,
-    isCluster: configuration.redis.isCluster
+    isCluster: configuration.redis.isCluster,
   },
   transactionHistory: {
     certPath: configuration.cert,
@@ -50,7 +50,7 @@ export const runServer = async (): Promise<void> => {
   await dbinit();
   await initCacheDatabase(configuration.cacheTTL, databaseManager); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
-  if (configuration.env !== 'test')
+  if (configuration.env !== 'test') {
     for (let retryCount = 0; retryCount < 10; retryCount++) {
       loggerService.log(`Connecting to nats server...`);
       if (!(await server.init(handleTransaction))) {
@@ -60,6 +60,7 @@ export const runServer = async (): Promise<void> => {
         break;
       }
     }
+  }
 };
 
 process.on('uncaughtException', (err) => {
