@@ -1,4 +1,4 @@
-import { RedisService } from '@frmscoe/frms-coe-lib';
+import { type RedisService } from '@frmscoe/frms-coe-lib';
 import NodeCache from 'node-cache';
 import { ArangoDBService } from './clients';
 import { CacheDatabaseService } from './clients/cache-database';

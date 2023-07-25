@@ -8,7 +8,7 @@ import { cacheDatabaseClient } from './services-container';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
-  return Number(endTime - startTime)
+  return Number(endTime - startTime);
 };
 
 export const handleTransaction = async (transaction: unknown): Promise<void> => {
