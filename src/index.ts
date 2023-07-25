@@ -12,7 +12,7 @@ const databaseManagerConfig = {
     db: configuration.redis.db,
     servers: configuration.redis.servers,
     password: configuration.redis.password,
-    isCluster: configuration.redis.isCluster
+    isCluster: configuration.redis.isCluster,
   },
   transactionHistory: {
     certPath: configuration.cert,
