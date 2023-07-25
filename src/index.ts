@@ -46,28 +46,34 @@ export const dbinit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 
+const connect = async () => {
+  for (let retryCount = 0; retryCount < 10; retryCount++) {
+    loggerService.log(`Connecting to nats server...`);
+    if (!(await server.init(handleTransaction))) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    } else {
+      loggerService.log(`Connected to nats`);
+      break;
+    }
+  }
+}
+
 export const runServer = async (): Promise<void> => {
   await dbinit();
   await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
   if (configuration.env !== 'test')
-    for (let retryCount = 0; retryCount < 10; retryCount++) {
-      loggerService.log(`Connecting to nats server...`);
-      if (!(await server.init(handleTransaction))) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      } else {
-        loggerService.log(`Connected to nats`);
-        break;
-      }
-    }
+    await connect();
 };
 
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', async (err) => {
   loggerService.error('process on uncaughtException error', err, 'index.ts');
+  await connect();
 });
 
-process.on('unhandledRejection', (err) => {
+process.on('unhandledRejection', async (err) => {
   loggerService.error(`process on unhandledRejection error: ${err ?? '[NoMetaData]'}`);
+  await connect();
 });
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
