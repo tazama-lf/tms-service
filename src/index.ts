@@ -68,12 +68,10 @@ export const runServer = async (): Promise<void> => {
 
 process.on('uncaughtException', async (err) => {
   loggerService.error('process on uncaughtException error', err, 'index.ts');
-  await connect();
 });
 
-process.on('unhandledRejection', async (err) => {
-  loggerService.error(`process on unhandledRejection error: ${err ?? '[NoMetaData]'}`);
-  await connect();
+process.on('unhandledRejection', (err) => {
+  loggerService.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
 });
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
