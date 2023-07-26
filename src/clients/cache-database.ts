@@ -1,7 +1,7 @@
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../classes/pain-pacs';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { type ArangoDBService } from './arango';
-import { type RedisService } from './redis';
+import { type RedisService } from '@frmscoe/frms-coe-lib';
 
 export class CacheDatabaseService {
   private readonly dbClient: ArangoDBService;

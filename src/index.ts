@@ -1,18 +1,18 @@
-import { CreateDatabaseManager, type DatabaseManagerInstance, LoggerService } from '@frmscoe/frms-coe-lib';
+import { CreateDatabaseManager, LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
+import cluster from 'cluster';
 import apm from 'elastic-apm-node';
 import os from 'os';
 import { configuration } from './config';
 import { handleTransaction } from './logic.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
-import cluster from 'cluster';
-import { type IStartupService, StartupFactory } from '@frmscoe/frms-coe-startup-lib';
 
 const databaseManagerConfig = {
   redisConfig: {
     db: configuration.redis.db,
-    host: configuration.redis.host,
-    password: configuration.redis.auth,
-    port: configuration.redis.port,
+    servers: configuration.redis.servers,
+    password: configuration.redis.password,
+    isCluster: configuration.redis.isCluster,
   },
   transactionHistory: {
     certPath: configuration.cert,
@@ -46,7 +46,7 @@ export const dbinit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 
-const connect = async () => {
+const connect = async (): Promise<void> => {
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     loggerService.log(`Connecting to nats server...`);
     if (!(await server.init(handleTransaction))) {
@@ -56,24 +56,21 @@ const connect = async () => {
       break;
     }
   }
-}
+};
 
 export const runServer = async (): Promise<void> => {
   await dbinit();
-  await initCacheDatabase(configuration.cacheTTL); // Deprecated - please use dbinit and the databasemanger for all future development.
+  await initCacheDatabase(configuration.cacheTTL, databaseManager); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
-  if (configuration.env !== 'test')
-    await connect();
+  if (configuration.env !== 'test') await connect();
 };
 
-process.on('uncaughtException', async (err) => {
+process.on('uncaughtException', (err) => {
   loggerService.error('process on uncaughtException error', err, 'index.ts');
-  await connect();
 });
 
-process.on('unhandledRejection', async (err) => {
-  loggerService.error(`process on unhandledRejection error: ${err ?? '[NoMetaData]'}`);
-  await connect();
+process.on('unhandledRejection', (err) => {
+  loggerService.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
 });
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
