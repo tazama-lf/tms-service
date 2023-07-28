@@ -12,10 +12,11 @@ const calculateDuration = (startTime: bigint): number => {
 };
 
 export const handleTransaction = async (transaction: unknown): Promise<void> => {
+  const apmTransaction = apm.startTransaction('handleTransaction');
   const transObject = transaction as Pain001 | Pain013 | Pacs008 | Pacs002;
   switch (transObject.TxTp) {
     case 'pain.001.001.11':
-      await handlePain001(transObject as Pain001);
+      await handlePain001(transObject as Pain001, apmTransaction?.ids['transaction.id']);
       break;
 
     case 'pain.013.001.09':
@@ -33,11 +34,15 @@ export const handleTransaction = async (transaction: unknown): Promise<void> => 
     default:
       break;
   }
+  apmTransaction?.end();
 };
 
-const handlePain001 = async (transaction: Pain001): Promise<void> => {
+const handlePain001 = async (transaction: Pain001, parentId?: string): Promise<void> => {
   loggerService.log('Start - Handle transaction data');
-  const span = apm.startSpan('transaction.pain001');
+  const span = apm.startSpan('transaction.pain001', {
+    childOf: parentId,
+  });
+
   const startTime = process.hrtime.bigint();
 
   transaction.EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
