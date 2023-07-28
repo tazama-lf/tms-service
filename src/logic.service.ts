@@ -11,31 +11,7 @@ const calculateDuration = (startTime: bigint): number => {
   return Number(endTime - startTime);
 };
 
-export const handleTransaction = async (transaction: unknown): Promise<void> => {
-  const transObject = transaction as Pain001 | Pain013 | Pacs008 | Pacs002;
-  switch (transObject.TxTp) {
-    case 'pain.001.001.11':
-      await handlePain001(transObject as Pain001);
-      break;
-
-    case 'pain.013.001.09':
-      await handlePain013(transObject as Pain013);
-      break;
-
-    case 'pacs.008.001.10':
-      await handlePacs008(transObject as Pacs008);
-      break;
-
-    case 'pacs.002.001.12':
-      await handlePacs002(transObject as Pacs002);
-      break;
-
-    default:
-      break;
-  }
-};
-
-const handlePain001 = async (transaction: Pain001): Promise<void> => {
+export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startTime = process.hrtime.bigint();
@@ -112,7 +88,7 @@ const handlePain001 = async (transaction: Pain001): Promise<void> => {
   loggerService.log('END - Handle transaction data');
 };
 
-const handlePain013 = async (transaction: Pain013): Promise<void> => {
+export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startTime = process.hrtime.bigint();
@@ -178,7 +154,7 @@ const handlePain013 = async (transaction: Pain013): Promise<void> => {
   loggerService.log('END - Handle transaction data');
 };
 
-const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
+export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   loggerService.log('Start - Handle transaction data');
   const span = apm.startSpan('Handle transaction data');
   const startTime = process.hrtime.bigint();
