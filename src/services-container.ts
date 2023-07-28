@@ -1,12 +1,12 @@
+import { type RedisService } from '@frmscoe/frms-coe-lib';
 import NodeCache from 'node-cache';
-import { ArangoDBService, RedisService } from './clients';
+import { ArangoDBService } from './clients';
 import { CacheDatabaseService } from './clients/cache-database';
 
 /* eslint-disable @typescript-eslint/no-extraneous-class */
 export class ServicesContainer {
   private static cache: NodeCache;
   private static databaseClient: ArangoDBService;
-  private static cacheClient: RedisService;
   private static cacheDatabaseClient: CacheDatabaseService;
 
   public static getCacheInstance(): NodeCache {
@@ -21,18 +21,9 @@ export class ServicesContainer {
     return ServicesContainer.databaseClient;
   }
 
-  public static async getCacheClientInstance(): Promise<RedisService> {
-    if (!ServicesContainer.cacheClient) {
-      ServicesContainer.cacheClient = await RedisService.create();
-    }
-
-    return ServicesContainer.cacheClient;
-  }
-
-  public static async getCacheDatabaseInstance(expire: number): Promise<CacheDatabaseService> {
+  public static async getCacheDatabaseInstance(expire: number, redisService: RedisService): Promise<CacheDatabaseService> {
     if (!ServicesContainer.cacheDatabaseClient) {
       const dbService = await this.getDatabaseInstance();
-      const redisService = await this.getCacheClientInstance();
       ServicesContainer.cacheDatabaseClient = await CacheDatabaseService.create(dbService, redisService, expire);
     }
 
@@ -40,8 +31,8 @@ export class ServicesContainer {
   }
 }
 
-export const initCacheDatabase = async (expire: number): Promise<void> => {
-  cacheDatabaseClient = await ServicesContainer.getCacheDatabaseInstance(expire);
+export const initCacheDatabase = async (expire: number, redisService: RedisService): Promise<void> => {
+  cacheDatabaseClient = await ServicesContainer.getCacheDatabaseInstance(expire, redisService);
 };
 
 export let cacheDatabaseClient: CacheDatabaseService;
