@@ -16,7 +16,7 @@ export const handleTransaction = async (transaction: unknown): Promise<void> => 
   const transObject = transaction as Pain001 | Pain013 | Pacs008 | Pacs002;
   switch (transObject.TxTp) {
     case 'pain.001.001.11':
-      await handlePain001(transObject as Pain001, apmTransaction?.ids['transaction.id']);
+      await handlePain001(transObject as Pain001);
       break;
 
     case 'pain.013.001.09':
@@ -37,11 +37,9 @@ export const handleTransaction = async (transaction: unknown): Promise<void> => 
   apmTransaction?.end();
 };
 
-const handlePain001 = async (transaction: Pain001, parentId?: string): Promise<void> => {
+const handlePain001 = async (transaction: Pain001): Promise<void> => {
   loggerService.log('Start - Handle transaction data');
-  const span = apm.startSpan('transaction.pain001', {
-    childOf: parentId,
-  });
+  const span = apm.startSpan('transaction.pain001');
 
   const startTime = process.hrtime.bigint();
 
@@ -85,9 +83,7 @@ const handlePain001 = async (transaction: Pain001, parentId?: string): Promise<v
     dbtrAcctId: debtorAcctId,
   };
 
-  const spanInsert = apm.startSpan('db.insert.pain001', {
-    childOf: span?.ids['span.id'],
-  });
+  const spanInsert = apm.startSpan('db.insert.pain001');
   try {
     await Promise.all([
       cacheDatabaseClient.saveTransactionHistory(
@@ -124,7 +120,7 @@ const handlePain001 = async (transaction: Pain001, parentId?: string): Promise<v
 
 const handlePain013 = async (transaction: Pain013): Promise<void> => {
   loggerService.log('Start - Handle transaction data');
-  const span = apm.startSpan('transaction.pain001');
+  const span = apm.startSpan('transaction.pain013');
   const startTime = process.hrtime.bigint();
 
   transaction.EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
