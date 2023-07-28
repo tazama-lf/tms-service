@@ -1,4 +1,4 @@
-import apm, { type Span } from 'elastic-apm-node';
+import apm from 'elastic-apm-node';
 import { databaseManager, loggerService, server } from '.';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../src/classes/pain-pacs';
 import { type DataCache } from './classes/data-cache';
@@ -154,14 +154,12 @@ const handlePain013 = async (transaction: Pain013): Promise<void> => {
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = await rebuildCache(transaction.EndToEndId, span);
+    dataCache = await rebuildCache(transaction.EndToEndId);
   }
 
   transaction._key = MsgId;
 
-  const spanInsert = apm.startSpan('db.insert.pain001', {
-    childOf: span?.ids['span.id'],
-  });
+  const spanInsert = apm.startSpan('db.insert.pain013');
   try {
     await Promise.all([
       cacheDatabaseClient.saveTransactionHistory(
@@ -223,22 +221,18 @@ const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   };
 
   let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache', {
-    childOf: span?.ids['span.id'],
-  });
+  const spanDataCache = apm.startSpan('req.get.dataCache');
   try {
     const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = await rebuildCache(transaction.EndToEndId, span);
+    dataCache = await rebuildCache(transaction.EndToEndId);
   } finally {
     spanDataCache?.end();
   }
 
-  const spanInsert = apm.startSpan('db.insert.pacs008', {
-    childOf: span?.ids['span.id'],
-  });
+  const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
     await Promise.all([
       cacheDatabaseClient.saveTransactionHistory(
@@ -291,24 +285,20 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   };
 
   let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache', {
-    childOf: span?.ids['span.id'],
-  });
+  const spanDataCache = apm.startSpan('req.get.dataCache');
   try {
     const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = await rebuildCache(transaction.EndToEndId, span);
+    dataCache = await rebuildCache(transaction.EndToEndId);
   } finally {
     spanDataCache?.end();
   }
 
   transaction._key = MsgId;
 
-  const spanInsert = apm.startSpan('db.insert.pacs002', {
-    childOf: span?.ids['span.id'],
-  });
+  const spanInsert = apm.startSpan('db.insert.pacs002');
   try {
     await cacheDatabaseClient.saveTransactionHistory(
       transaction,
@@ -340,10 +330,8 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   loggerService.log('END - Handle transaction data');
 };
 
-export const rebuildCache = async (endToEndId: string, parentSpan: Span | null): Promise<DataCache | undefined> => {
-  const span = apm.startSpan('db.cache.rebuild', {
-    childOf: parentSpan?.ids['span.id'],
-  });
+export const rebuildCache = async (endToEndId: string): Promise<DataCache | undefined> => {
+  const span = apm.startSpan('db.cache.rebuild');
   const currentPain001 = (await databaseManager.getTransactionPain001(endToEndId)) as [Pain001[]];
   if (!currentPain001 || !currentPain001[0] || !currentPain001[0][0]) {
     loggerService.error('Could not find pain001 transaction to rebuild dataCache with');
