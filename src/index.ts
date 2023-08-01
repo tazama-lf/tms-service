@@ -4,8 +4,8 @@ import cluster from 'cluster';
 import apm from 'elastic-apm-node';
 import os from 'os';
 import { configuration } from './config';
-import { handleTransaction } from './logic.service';
 import { ServicesContainer, initCacheDatabase } from './services-container';
+import App from './clients/koa';
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -47,15 +47,21 @@ export const dbinit = async (): Promise<void> => {
 };
 
 const connect = async (): Promise<void> => {
+  // Nats
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     loggerService.log(`Connecting to nats server...`);
-    if (!(await server.init(handleTransaction))) {
+    if (!(await server.initProducer())) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
       loggerService.log(`Connected to nats`);
       break;
     }
   }
+  // Koa
+  const app = new App();
+  app.listen(configuration.port, () => {
+    loggerService.log(`API restServer listening on PORT ${configuration.port}`);
+  });
 };
 
 export const runServer = async (): Promise<void> => {
