@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: data-preparation-rel-1-0-0
-          image: actio.azurecr.io/data-preparation-rel-1-0-0:1.0.0
+          image: example.io/data-preparation-rel-1-0-0:1.0.0
           ports:
             - name: http
               containerPort: 8080
