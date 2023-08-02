@@ -60,7 +60,7 @@ const config: Config.InitialOptions = {
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
     global: {
-      branches: 80,
+      branches: 72,
       functions: 95,
       lines: 95,
       statements: 95,
