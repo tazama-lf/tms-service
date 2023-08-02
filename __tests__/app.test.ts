@@ -112,9 +112,9 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote', async () => {
       const request = getMockRequestPain001() as Pain001;
 
-      const handleSpy = jest.spyOn(LogicService, 'handlePain001');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction');
 
-      await LogicService.handlePain001(request);
+      await LogicService.handleTransaction(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -132,7 +132,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePain001(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -144,9 +144,9 @@ describe('App Controller & Logic Service', () => {
     it('should handle Quote Reply', async () => {
       const request = getMockRequestPain013() as Pain013;
 
-      const handleSpy = jest.spyOn(LogicService, 'handlePain013');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction');
 
-      await LogicService.handlePain013(request);
+      await LogicService.handleTransaction(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -164,7 +164,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePain013(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -176,9 +176,9 @@ describe('App Controller & Logic Service', () => {
     it('should handle Transfer', async () => {
       const request = getMockRequestPacs008() as Pacs008;
 
-      const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction');
 
-      await LogicService.handlePacs008(request);
+      await LogicService.handleTransaction(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -195,7 +195,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePacs008(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -217,9 +217,9 @@ describe('App Controller & Logic Service', () => {
 
       const request = getMockRequestPacs002() as Pacs002;
 
-      const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction');
 
-      await LogicService.handlePacs002(request);
+      await LogicService.handleTransaction(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -234,7 +234,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePacs002(request);
+        await LogicService.handleTransaction(request);
       } catch (err: any) {
         error = err?.message;
       }
@@ -243,6 +243,15 @@ describe('App Controller & Logic Service', () => {
   });
 
   describe('Error cases', () => {
+    it('should fail gracefully - switch statement', async () => {
+      const request = {};
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction');
+
+      await LogicService.handleTransaction(request);
+      expect(handleSpy).toBeCalledTimes(1);
+      expect(handleSpy).toHaveReturned();
+    });
+
     it('should fail gracefully - rebuildCache', async () => {
       const request = getMockRequestPacs002() as Pacs002;
 
@@ -264,9 +273,9 @@ describe('App Controller & Logic Service', () => {
         ]);
       });
 
-      const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
+      const handleSpy = jest.spyOn(LogicService, 'handleTransaction');
 
-      await LogicService.handlePacs002(request);
+      await LogicService.handleTransaction(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
