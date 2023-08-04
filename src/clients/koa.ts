@@ -2,29 +2,37 @@
 import { type Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
-import helmet from 'koa-helmet';
+import { koaSwagger } from 'koa2-swagger-ui';
+import * as swagger from 'swagger2';
+import { validate } from 'swagger2-koa';
 import { loggerService } from '..';
 import router from '../router';
 
 class App extends Koa {
   public servers: Server[];
+
   constructor() {
     super();
-
-    // bodyparser needs to be loaded first in order to work
+    // bodyparser needs to be loaded first in order to work - in fact, order for all the below is very import!
     this.servers = [];
-    this._configureRoutes();
-  }
-
-  async _configureRoutes(): Promise<void> {
     this.use(bodyParser());
-    this.use(router.routes());
-    this.use(router.allowedMethods());
-    this.use(helmet());
+    this.configureMiddlewares();
+    this.configureRoutes();
   }
 
   configureMiddlewares(): void {
-    // LoggerService Middleware
+    const readSwagger = swagger.loadDocumentSync('./build/swagger.yaml');
+    const swaggerDocument: swagger.Document = readSwagger as swagger.Document;
+    this.use(
+      koaSwagger({
+        routePrefix: '/swagger', // host at /swagger instead of default /docs
+        swaggerOptions: {
+          url: './build/swagger.yaml', // example path to json
+        },
+      }),
+    );
+    this.use(validate(swaggerDocument));
+
     this.use(async (ctx, next) => {
       await next();
       const rt = ctx.response.get('X-Response-Time');
@@ -33,13 +41,19 @@ class App extends Koa {
       }
     });
 
-    // x-response-time
+    // x - response - time
     this.use(async (ctx, next) => {
       const start = Date.now();
       await next();
       const ms = Date.now() - start;
-      ctx.set('X-Response-Time', `${ms}ms`);
+      ctx.set('x-response-time', `${ms}ms`);
     });
+  }
+
+  configureRoutes(): void {
+    // Bootstrap application router
+    this.use(router.routes());
+    this.use(router.allowedMethods());
   }
 
   listen(...args: any[]): Server {

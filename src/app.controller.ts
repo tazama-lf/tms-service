@@ -12,6 +12,10 @@ export const handleExecute = async (ctx: Context, next: Next): Promise<Context> 
     await handlePain001(request);
 
     ctx.status = 200;
+    ctx.body = {
+      message: 'Transaction is valid',
+      data: request,
+    };
 
     await next();
     return ctx;
@@ -20,7 +24,9 @@ export const handleExecute = async (ctx: Context, next: Next): Promise<Context> 
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage;
+    ctx.body = {
+      err,
+    };
     return ctx;
   } finally {
     tx?.end();
@@ -36,6 +42,10 @@ export const handleQuoteReply = async (ctx: Context, next: Next): Promise<Contex
     handlePain013(request);
 
     ctx.status = 200;
+    ctx.body = {
+      message: 'Transaction is valid',
+      data: request,
+    };
 
     await next();
     return ctx;
@@ -60,6 +70,10 @@ export const handleTransfer = async (ctx: Context, next: Next): Promise<Context>
     await handlePacs008(request);
 
     ctx.status = 200;
+    ctx.body = {
+      message: 'Transaction is valid',
+      data: request,
+    };
 
     await next();
     return ctx;
@@ -68,7 +82,9 @@ export const handleTransfer = async (ctx: Context, next: Next): Promise<Context>
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage;
+    ctx.body = {
+      err,
+    };
     return ctx;
   } finally {
     tx?.end();
@@ -84,6 +100,10 @@ export const handleTransferResponse = async (ctx: Context, next: Next): Promise<
     await handlePacs002(request);
 
     ctx.status = 200;
+    ctx.body = {
+      message: 'Transaction is valid',
+      data: request,
+    };
 
     await next();
     return ctx;
@@ -92,7 +112,9 @@ export const handleTransferResponse = async (ctx: Context, next: Next): Promise<
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     ctx.status = 500;
-    ctx.body = failMessage;
+    ctx.body = {
+      err,
+    };
     return ctx;
   } finally {
     tx?.end();
