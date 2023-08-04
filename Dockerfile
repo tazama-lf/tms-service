@@ -9,6 +9,7 @@ WORKDIR /home/app
 COPY ./src ./src
 COPY ./package*.json ./
 COPY ./tsconfig.json ./
+COPY ./swagger.yaml ./
 COPY .npmrc ./
 ARG GH_TOKEN
 
@@ -43,8 +44,9 @@ ENV exec_timeout="10s"
 ENV write_timeout="15s"
 ENV read_timeout="15s"
 ENV prefix_logs="false"
-ENV FUNCTION_NAME=data-preparation-rel-1-0-0
+ENV FUNCTION_NAME=transaction-monitoring-service-rel-1-0-0
 ENV NODE_ENV=production
+ENV PORT=3000
 ENV SERVER_URL=
 ENV CACHE_TTL=30
 ENV CERT_PATH=
@@ -55,8 +57,6 @@ ENV REDIS_IS_CLUSTER=
 ENV SERVER_URL=0.0.0.0:4222
 ENV STARTUP_TYPE=nats
 ENV PRODUCER_STREAM=
-ENV CONSUMER_STREAM=
-ENV STREAM_SUBJECT=
 ENV ACK_POLICY=Explicit
 ENV PRODUCER_STORAGE=File
 ENV PRODUCER_RETENTION_POLICY=Workqueue
@@ -70,7 +70,7 @@ ENV TRANSACTIONHISTORY_PAIN013_COLLECTION=transactionHistoryPain013
 ENV TRANSACTIONHISTORY_PACS008_COLLECTION=transactionHistoryPacs008
 ENV TRANSACTIONHISTORY_PACS002_COLLECTION=transactionHistoryPacs002
 ENV APM_ACTIVE=true
-ENV APM_SERVICE_NAME=data-preparation
+ENV APM_SERVICE_NAME=transaction-monitoring-service
 ENV APM_URL=http://apm-server.development:8200
 ENV APM_SECRET_TOKEN=
 ENV LOGSTASH_HOST=logstash.development

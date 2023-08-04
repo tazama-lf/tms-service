@@ -1,7 +1,7 @@
 version: "2"
 services:
   node:
-    container_name: data-prep
+    container_name: tms-service
     build:
       context: .
       args:
