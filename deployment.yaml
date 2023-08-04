@@ -1,30 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-preparation-rel-1-0-0
+  name: transaction-monitoring-service-rel-1-0-0
   namespace: processor
   labels:
-    app: data-preparation
+    app: transaction-monitoring-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: data-preparation
+      app: transaction-monitoring-service
   template:
     metadata:
-      name: data-preparation-rel-1-0-0
+      name: transaction-monitoring-service-rel-1-0-0
       labels:
-        app: data-preparation
+        app: transaction-monitoring-service
       annotations:
         prometheus.io.scrape: 'false'
     spec:
       containers:
-        - name: data-preparation-rel-1-0-0
-          image: example.io/data-preparation-rel-1-0-0:1.0.0
+        - name: transaction-monitoring-service-rel-1-0-0
+          image: example.io/transaction-monitoring-service-rel-1-0-0:1.0.0
           ports:
             - name: http
-              containerPort: 8080
               protocol: TCP
+              containerPort: 3000
           resources: {}
           imagePullPolicy: Always
       restartPolicy: Always

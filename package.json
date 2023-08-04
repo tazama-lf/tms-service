@@ -1,7 +1,7 @@
 {
-  "name": "data-preparation",
+  "name": "tms-service",
   "version": "0.1.0",
-  "description": "data-preparation",
+  "description": "transaction monitoring service",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
