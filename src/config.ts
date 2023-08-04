@@ -39,7 +39,7 @@ export interface IConfig {
     host: string;
     port: number;
   };
-  redis: RedisConfig
+  redis: RedisConfig;
 }
 
 export const configuration: IConfig = {
@@ -74,8 +74,8 @@ export const configuration: IConfig = {
   port: parseInt(process.env.PORT!, 10) || 3000,
   redis: {
     db: parseInt(process.env.REDIS_DB!, 10) || 0,
-    servers : JSON.parse(process.env.REDIS_SERVERS as string || '[{"hostname": "127.0.0.1", "port":6379}]'),
+    servers: JSON.parse((process.env.REDIS_SERVERS as string) || '[{"hostname": "127.0.0.1", "port":6379}]'),
     password: process.env.REDIS_AUTH as string,
-    isCluster: process.env.REDIS_IS_CLUSTER === "true" ? true : false,
+    isCluster: process.env.REDIS_IS_CLUSTER === 'true',
   },
 };

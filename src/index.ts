@@ -46,8 +46,7 @@ export const dbinit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 
-const connect = async () => {
-  // Nats
+const connect = async (): Promise<void> => {
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     loggerService.log(`Connecting to nats server...`);
     if (!(await server.initProducer())) {
@@ -68,11 +67,10 @@ export const runServer = async (): Promise<void> => {
   await dbinit();
   await initCacheDatabase(configuration.cacheTTL, databaseManager); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
-  if (configuration.env !== 'test')
-    await connect();
+  if (configuration.env !== 'test') await connect();
 };
 
-process.on('uncaughtException', async (err) => {
+process.on('uncaughtException', (err) => {
   loggerService.error('process on uncaughtException error', err, 'index.ts');
 });
 
