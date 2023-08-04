@@ -9,6 +9,7 @@ WORKDIR /home/app
 COPY ./src ./src
 COPY ./package*.json ./
 COPY ./tsconfig.json ./
+COPY ./swagger.yaml ./
 COPY .npmrc ./
 ARG GH_TOKEN
 
