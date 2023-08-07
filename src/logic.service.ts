@@ -88,7 +88,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `traceparent: ${apm.currentTraceparent ?? ''}` },
+    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `${apm.currentTraceparent ?? ''}` },
   });
   loggerService.log('Transaction send to CRSP service');
 
@@ -161,7 +161,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `traceparent: ${apm.currentTraceparent ?? ''}` },
+    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `${apm.currentTraceparent ?? ''}` },
   });
   loggerService.log('Transaction send to CRSP service');
 
@@ -238,7 +238,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `traceparent: ${apm.currentTraceparent ?? ''}` },
+    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `${apm.currentTraceparent ?? ''}` },
   });
   loggerService.log('Transaction send to CRSP service');
   span?.end();
@@ -312,7 +312,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `traceparent: ${apm.currentTraceparent ?? ''}` },
+    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: `${apm.currentTraceparent ?? ''}` },
   });
   loggerService.log('Transaction send to CRSP service');
 
