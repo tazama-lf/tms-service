@@ -1,7 +1,7 @@
+import './apm';
 import { CreateDatabaseManager, LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
-import apm from 'elastic-apm-node';
 import os from 'os';
 import { configuration } from './config';
 import { ServicesContainer, initCacheDatabase } from './services-container';
@@ -25,19 +25,6 @@ const databaseManagerConfig = {
 
 export const loggerService: LoggerService = new LoggerService();
 export let server: IStartupService;
-/*
- * Initialize the APM Logging
- **/
-if (configuration.apm.active === 'true') {
-  apm.start({
-    serviceName: configuration.apm?.serviceName,
-    secretToken: configuration.apm?.secretToken,
-    serverUrl: configuration.apm?.url,
-    usePathAsTransactionName: true,
-    active: Boolean(configuration.apm?.active),
-    transactionIgnoreUrls: ['/health'],
-  });
-}
 
 export const cache = ServicesContainer.getCacheInstance();
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
