@@ -79,10 +79,10 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
     ]);
   } catch (err) {
     loggerService.log(JSON.stringify(err));
-    throw err;
-  } finally {
     spanInsert?.end();
+    throw err;
   }
+  spanInsert?.end();
 
   // Notify CRSP
   server.handleResponse({
@@ -127,12 +127,15 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   };
 
   let dataCache;
+  const spanDataCache = apm.startSpan('req.get.dataCache.pain013');
   try {
     const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
     dataCache = await rebuildCache(transaction.EndToEndId);
+  } finally {
+    spanDataCache?.end();
   }
 
   transaction._key = MsgId;
@@ -152,10 +155,11 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     loggerService.log(JSON.stringify(err));
-    throw err;
-  } finally {
     spanInsert?.end();
+    throw err;
   }
+
+  spanInsert?.end();
 
   // Notify CRSP
   server.handleResponse({
@@ -203,7 +207,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   };
 
   let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache');
+  const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
   try {
     const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
@@ -229,6 +233,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     loggerService.log(JSON.stringify(err));
+    spanInsert?.end();
     throw err;
   } finally {
     spanInsert?.end();
@@ -271,7 +276,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   };
 
   let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache');
+  const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
   try {
     const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
@@ -302,6 +307,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
+    spanInsert?.end();
     loggerService.log(JSON.stringify(err));
     throw err;
   } finally {
@@ -325,6 +331,7 @@ export const rebuildCache = async (endToEndId: string): Promise<DataCache | unde
   const currentPain001 = (await databaseManager.getTransactionPain001(endToEndId)) as [Pain001[]];
   if (!currentPain001 || !currentPain001[0] || !currentPain001[0][0]) {
     loggerService.error('Could not find pain001 transaction to rebuild dataCache with');
+    span?.end();
     return undefined;
   }
   const dataCache: DataCache = {
