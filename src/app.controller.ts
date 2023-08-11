@@ -6,7 +6,6 @@ import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './lo
 
 export const handleExecute = async (ctx: Context, next: Next): Promise<Context> => {
   loggerService.log('Start - Handle execute request');
-  const tx = apm.startTransaction('Handle execute request', 'Pain001.001.11');
   try {
     const request = ctx.request.body as Pain001;
     await handlePain001(request);
@@ -29,7 +28,6 @@ export const handleExecute = async (ctx: Context, next: Next): Promise<Context> 
     };
     return ctx;
   } finally {
-    tx?.end();
     loggerService.log('End - Handle execute request');
   }
 };
