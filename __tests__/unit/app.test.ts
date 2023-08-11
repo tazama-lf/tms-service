@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import apm from 'elastic-apm-node';
-import { Pacs002, Pacs008, Pain001, Pain013 } from '../src/classes/pain-pacs';
-import { cache, databaseManager, runServer, server } from '../src/index';
-import { TransactionRelationship } from '../src/interfaces/iTransactionRelationship';
-import * as LogicService from '../src/logic.service';
-import { cacheDatabaseClient } from '../src/services-container';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { cacheDatabaseClient, databaseManager, runServer, server } from '../../src/index';
+import { TransactionRelationship } from '../../src/interfaces/iTransactionRelationship';
+import * as LogicService from '../../src/logic.service';
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -22,7 +21,6 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  cache.close();
   cacheDatabaseClient.quit();
   databaseManager.quit();
 });
@@ -49,12 +47,6 @@ describe('App Controller & Logic Service', () => {
     );
 
   beforeEach(() => {
-    jest.spyOn(cacheDatabaseClient, 'getPseudonyms').mockImplementation((hash: string) => {
-      return new Promise((resolve, reject) => {
-        resolve('');
-      });
-    });
-
     jest.spyOn(cacheDatabaseClient, 'addAccount').mockImplementation((hash: string) => {
       return new Promise((resolve, reject) => {
         resolve();

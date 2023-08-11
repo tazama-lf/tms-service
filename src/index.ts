@@ -3,9 +3,9 @@ import { CreateDatabaseManager, LoggerService, type DatabaseManagerInstance } fr
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
 import os from 'os';
-import { configuration } from './config';
-import { ServicesContainer, initCacheDatabase } from './services-container';
+import { CacheDatabaseService } from './clients/cache-database';
 import App from './clients/koa';
+import { configuration } from './config';
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -26,11 +26,12 @@ const databaseManagerConfig = {
 export const loggerService: LoggerService = new LoggerService();
 export let server: IStartupService;
 
-export const cache = ServicesContainer.getCacheInstance();
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
+let cacheDatabaseClient: CacheDatabaseService;
 
 export const dbinit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
+  cacheDatabaseClient = await CacheDatabaseService.create(databaseManager, configuration.cacheTTL);
 };
 
 const connect = async (): Promise<void> => {
@@ -52,7 +53,6 @@ const connect = async (): Promise<void> => {
 
 export const runServer = async (): Promise<void> => {
   await dbinit();
-  await initCacheDatabase(configuration.cacheTTL, databaseManager); // Deprecated - please use dbinit and the databasemanger for all future development.
   server = new StartupFactory();
   if (configuration.env !== 'test') await connect();
 };
@@ -87,4 +87,4 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
   })();
 }
 
-export { databaseManager };
+export { cacheDatabaseClient, databaseManager };
