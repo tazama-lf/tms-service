@@ -80,6 +80,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     spanInsert?.end();
+    span?.end();
     throw err;
   }
   spanInsert?.end();
@@ -156,6 +157,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     spanInsert?.end();
+    span?.end();
     throw err;
   }
 
@@ -234,6 +236,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     spanInsert?.end();
+    span?.end();
     throw err;
   } finally {
     spanInsert?.end();
@@ -309,6 +312,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   } catch (err) {
     spanInsert?.end();
     loggerService.log(JSON.stringify(err));
+    span?.end();
     throw err;
   } finally {
     spanInsert?.end();
