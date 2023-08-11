@@ -1,4 +1,3 @@
-import apm from 'elastic-apm-node';
 import { type Context, type Next } from 'koa';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { loggerService } from '.';
