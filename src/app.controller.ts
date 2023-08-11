@@ -34,7 +34,6 @@ export const handleExecute = async (ctx: Context, next: Next): Promise<Context> 
 
 export const handleQuoteReply = async (ctx: Context, next: Next): Promise<Context> => {
   loggerService.log('Start - Handle quote reply request');
-  const tx = apm.startTransaction('Handle quote reply request', 'Pain013.001.09');
   try {
     const request = ctx.request.body as Pain013;
     handlePain013(request);
@@ -55,14 +54,12 @@ export const handleQuoteReply = async (ctx: Context, next: Next): Promise<Contex
     ctx.body = failMessage;
     return ctx;
   } finally {
-    tx?.end();
     loggerService.log('End - Handle quote reply request');
   }
 };
 
 export const handleTransfer = async (ctx: Context, next: Next): Promise<Context> => {
   loggerService.log('Start - Handle transfer request');
-  const tx = apm.startTransaction('Handle transfer request', 'Pacs008.001.10');
   try {
     const request = ctx.request.body as Pacs008;
     await handlePacs008(request);
@@ -85,14 +82,12 @@ export const handleTransfer = async (ctx: Context, next: Next): Promise<Context>
     };
     return ctx;
   } finally {
-    tx?.end();
     loggerService.log('End - Handle transfer request');
   }
 };
 
 export const handleTransferResponse = async (ctx: Context, next: Next): Promise<Context> => {
   loggerService.log('Start - Handle transfer response request');
-  const tx = apm.startTransaction('Handle transfer response request', 'Pacs002.001.12');
   try {
     const request = ctx.request.body as Pacs002;
     await handlePacs002(request);
@@ -115,7 +110,6 @@ export const handleTransferResponse = async (ctx: Context, next: Next): Promise<
     };
     return ctx;
   } finally {
-    tx?.end();
     loggerService.log('End - Handle transfer response request');
   }
 };
