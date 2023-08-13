@@ -21,6 +21,13 @@ const databaseManagerConfig = {
     password: configuration.db.password,
     url: configuration.db.url,
   },
+  pseudonyms: {
+    certPath: configuration.cert,
+    databaseName: configuration.db.pseudonymsdb,
+    user: configuration.db.user,
+    password: configuration.db.password,
+    url: configuration.db.url,
+  },
 };
 
 export const loggerService: LoggerService = new LoggerService();

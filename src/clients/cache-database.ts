@@ -52,6 +52,6 @@ export class CacheDatabaseService {
   ): Promise<void> {
     if (redisKey) await this.dbClient.setJson(redisKey, JSON.stringify(transaction), this.cacheExpireTime);
 
-    await this.dbClient.saveTransaction(transaction, transactionHistoryCollection);
+    await this.dbClient.saveTransactionHistory(transaction, transactionHistoryCollection);
   }
 }
