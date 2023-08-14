@@ -22,7 +22,6 @@ export interface IConfig {
   };
   db: {
     pseudonymsdb: string;
-    pseudonymscollection: string;
     transactionhistorydb: string;
     transactionhistory_pain001_collection: string;
     transactionhistory_pain013_collection: string;
@@ -55,7 +54,6 @@ export const configuration: IConfig = {
   crspEndpoint: process.env.CRSP_ENDPOINT as string,
   db: {
     pseudonymsdb: process.env.PSEUDONYMS_DATABASE as string,
-    pseudonymscollection: process.env.PSEUDONYMS_COLLECTION as string,
     transactionhistorydb: process.env.TRANSACTIONHISTORY_DATABASE as string,
     transactionhistory_pain001_collection: process.env.TRANSACTIONHISTORY_PAIN001_COLLECTION as string,
     transactionhistory_pain013_collection: process.env.TRANSACTIONHISTORY_PAIN013_COLLECTION as string,

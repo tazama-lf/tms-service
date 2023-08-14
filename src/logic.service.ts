@@ -1,10 +1,9 @@
 import apm from 'elastic-apm-node';
-import { databaseManager, loggerService, server } from '.';
+import { cacheDatabaseClient, databaseManager, loggerService, server } from '.';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../src/classes/pain-pacs';
 import { type DataCache } from './classes/data-cache';
 import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
-import { cacheDatabaseClient } from './services-container';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
