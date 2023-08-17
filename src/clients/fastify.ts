@@ -5,7 +5,7 @@ import Routes from '../router';
 
 const fastify = Fastify();
 
-export default async function initializeFasityClient(): Promise<FastifyInstance> {
+export default async function initializeFastifyClient(): Promise<FastifyInstance> {
   fastify.register(fastifySwagger, {
     specification: {
       path: './build/swagger.yaml',
@@ -16,7 +16,6 @@ export default async function initializeFasityClient(): Promise<FastifyInstance>
     },
     prefix: '/swagger',
   });
-
   fastify.register(Routes);
   await fastify.ready();
   fastify.swagger();
