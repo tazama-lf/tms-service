@@ -218,8 +218,16 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
 
   if (configuration.quoting) {
+    const dataCache: DataCache = {
+      cdtrId: creditorId,
+      dbtrId: debtorId,
+      cdtrAcctId: creditorAcctId,
+      dbtrAcctId: debtorAcctId,
+    };
+
     accountInserts.push(cacheDatabaseClient.addEntity(creditorId, CreDtTm));
     accountInserts.push(cacheDatabaseClient.addEntity(debtorId, CreDtTm));
+    accountInserts.push(databaseManager.setJson(transaction.EndToEndId, JSON.stringify(dataCache), 150));
     await Promise.all(accountInserts);
 
     await Promise.all([
