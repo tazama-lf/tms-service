@@ -34,6 +34,7 @@ export interface IConfig {
   cacheTTL: number;
   cert: string;
   crspEndpoint: string;
+  quoting: boolean;
   logger: {
     logstashHost: string;
     logstashPort: number;
@@ -44,6 +45,7 @@ export interface IConfig {
 
 export const configuration: IConfig = {
   maxCPU: parseInt(process.env.MAX_CPU!, 10) || 1,
+  quoting: process.env.QUOTING === 'true',
   apm: {
     serviceName: process.env.APM_SERVICE_NAME as string,
     url: process.env.APM_URL as string,
