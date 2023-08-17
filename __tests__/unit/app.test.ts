@@ -4,6 +4,7 @@ import { Pacs002, Pacs008, Pain001, Pain013 } from '@frmscoe/frms-coe-lib/lib/in
 import { cacheDatabaseClient, databaseManager, runServer, server } from '../../src/index';
 import { TransactionRelationship } from '../../src/interfaces/iTransactionRelationship';
 import * as LogicService from '../../src/logic.service';
+import { configuration } from '../../src/config';
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -161,6 +162,39 @@ describe('App Controller & Logic Service', () => {
       await LogicService.handlePacs008(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
+    });
+
+    it('should handle Transfer, database error', async () => {
+      jest
+        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .mockImplementation((transaction: Pain001 | Pain013 | Pacs008 | Pacs002, transactionhistorycollection: string) => {
+          return new Promise((resolve, reject) => {
+            throw new Error('Deliberate Error');
+          });
+        });
+      const request = getMockRequestPacs008() as Pacs008;
+
+      let error = '';
+      try {
+        await LogicService.handlePacs008(request);
+      } catch (err: any) {
+        error = err?.message;
+      }
+      expect(error).toEqual('Deliberate Error');
+    });
+  });
+
+  describe('handleTransfer, quoting enabled', () => {
+    it('should handle Transfer', async () => {
+      configuration.quoting = true;
+      const request = getMockRequestPacs008() as Pacs008;
+
+      const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
+
+      await LogicService.handlePacs008(request);
+      expect(handleSpy).toBeCalledTimes(1);
+      expect(handleSpy).toHaveReturned();
+      configuration.quoting = false;
     });
 
     it('should handle Transfer, database error', async () => {
