@@ -355,6 +355,12 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   loggerService.log('END - Handle transaction data');
 };
 
+/**
+ * Rebuilds the DataCache object using the given endToEndId to fetch a stored Pacs008 message
+ *
+ * @param {string} endToEndId
+ * @return {*}  {(Promise<DataCache | undefined>)}
+ */
 export const rebuildCache = async (endToEndId: string): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild');
   const currentPacs008 = (await databaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
