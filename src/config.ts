@@ -40,6 +40,7 @@ export interface IConfig {
     logstashLevel: string;
   };
   redis: RedisConfig;
+  quoting: boolean;
 }
 
 export const configuration: IConfig = {
@@ -78,4 +79,5 @@ export const configuration: IConfig = {
     password: process.env.REDIS_AUTH as string,
     isCluster: process.env.REDIS_IS_CLUSTER === 'true',
   },
+  quoting: process.env.QUOTING === 'true',
 };

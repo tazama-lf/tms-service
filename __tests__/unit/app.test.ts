@@ -4,6 +4,7 @@ import { Pacs002, Pacs008, Pain001, Pain013 } from '@frmscoe/frms-coe-lib/lib/in
 import { cacheDatabaseClient, databaseManager, runServer, server } from '../../src/index';
 import { TransactionRelationship } from '../../src/interfaces/iTransactionRelationship';
 import * as LogicService from '../../src/logic.service';
+import { configuration } from '../../src/config';
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -71,6 +72,10 @@ describe('App Controller & Logic Service', () => {
 
     jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((pseudonym: any) => {
       return Promise.resolve([[getMockRequestPain001() as Pain001]]);
+    });
+
+    jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((pseudonym: any) => {
+      return Promise.resolve([[getMockRequestPacs008() as Pacs008]]);
     });
 
     jest.spyOn(databaseManager, 'getJson').mockImplementation((key: any) => {
@@ -179,6 +184,20 @@ describe('App Controller & Logic Service', () => {
     });
   });
 
+  describe('handleTransfer, quoting enabled', () => {
+    it('should handle Transfer', async () => {
+      configuration.quoting = true;
+      const request = getMockRequestPacs008() as Pacs008;
+
+      const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
+
+      await LogicService.handlePacs008(request);
+      expect(handleSpy).toBeCalledTimes(1);
+      expect(handleSpy).toHaveReturned();
+      configuration.quoting = false;
+    });
+  });
+
   describe('handleTransferResponse', () => {
     it('should handle Transfer Response', async () => {
       jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
@@ -225,6 +244,10 @@ describe('App Controller & Logic Service', () => {
       });
 
       jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
+        return Promise.resolve('');
+      });
+
+      jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve('');
       });
 
