@@ -34,6 +34,7 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@fastify/cors": "^8.3.0",
     "@fastify/response-validation": "^2.5.0",
     "@fastify/swagger": "^8.8.0",
     "@fastify/under-pressure": "^8.3.0",
