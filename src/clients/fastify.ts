@@ -18,22 +18,9 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     prefix: '/swagger',
   });
   await fastify.register(fastifyCors, {
-    hook: 'preHandler',
-    delegator: (req, callback) => {
-      const corsOptions = {
-        origin: true,
-      };
-      if (/^localhost$/m.test(req.headers.origin ?? '')) {
-        corsOptions.origin = false;
-      }
-      callback(null, corsOptions);
-    },
-    origin: (origin, cb) => {
-      const hostname = new URL(origin ?? '').hostname;
-      if (hostname) {
-        cb(null, true);
-      }
-    },
+    origin: '*',
+    methods: ['POST'],
+    allowedHeaders: '*',
   });
   fastify.register(Routes);
   await fastify.ready();
