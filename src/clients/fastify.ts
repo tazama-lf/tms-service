@@ -28,6 +28,12 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
       }
       callback(null, corsOptions);
     },
+    origin: (origin, cb) => {
+      const hostname = new URL(origin ?? '').hostname;
+      if (hostname) {
+        cb(null, true);
+      }
+    },
   });
   fastify.register(Routes);
   await fastify.ready();
