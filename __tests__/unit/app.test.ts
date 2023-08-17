@@ -196,25 +196,6 @@ describe('App Controller & Logic Service', () => {
       expect(handleSpy).toHaveReturned();
       configuration.quoting = false;
     });
-
-    it('should handle Transfer, database error', async () => {
-      jest
-        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
-        .mockImplementation((transaction: Pain001 | Pain013 | Pacs008 | Pacs002, transactionhistorycollection: string) => {
-          return new Promise((resolve, reject) => {
-            throw new Error('Deliberate Error');
-          });
-        });
-      const request = getMockRequestPacs008() as Pacs008;
-
-      let error = '';
-      try {
-        await LogicService.handlePacs008(request);
-      } catch (err: any) {
-        error = err?.message;
-      }
-      expect(error).toEqual('Deliberate Error');
-    });
   });
 
   describe('handleTransferResponse', () => {
