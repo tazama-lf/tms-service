@@ -1,13 +1,15 @@
-import Router from 'koa-router';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { type FastifyInstance } from 'fastify';
 import { handleExecute, handleQuoteReply, handleTransfer, handleTransferResponse, handleHealthCheck } from './app.controller';
 
-const router = new Router();
+async function Routes(fastify: FastifyInstance, options: unknown): Promise<void> {
+  fastify.get('/', handleHealthCheck);
+  fastify.get('/health', handleHealthCheck);
+  fastify.post('/execute', handleExecute);
+  fastify.post('/quoteReply', handleQuoteReply);
+  fastify.post('/transfer', handleTransfer);
+  fastify.post('/transfer-response', handleTransferResponse);
+}
 
-router.get('/', handleHealthCheck);
-router.get('/health', handleHealthCheck);
-router.post('/execute', handleExecute);
-router.post('/quoteReply', handleQuoteReply);
-router.post('/transfer', handleTransfer);
-router.post('/transfer-response', handleTransferResponse);
-
-export default router;
+export default Routes;
