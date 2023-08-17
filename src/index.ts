@@ -52,7 +52,7 @@ const connect = async (): Promise<void> => {
     }
   }
   const fastify = await initializeFastifyClient();
-  fastify.listen({ port: 3000 }, (err, address) => {
+  fastify.listen({ port: configuration.port }, (err, address) => {
     if (err) {
       loggerService.error(err);
       throw Error(`${err.message}`);
