@@ -88,7 +88,10 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: apm.currentTraceparent },
+    metaData: {
+      prcgTmDP: calculateDuration(startTime),
+      traceParent: apm.currentTraceparent,
+    },
   });
   loggerService.log('Transaction send to CRSP service');
 
@@ -166,7 +169,10 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: apm.currentTraceparent },
+    metaData: {
+      prcgTmDP: calculateDuration(startTime),
+      traceParent: apm.currentTraceparent,
+    },
   });
   loggerService.log('Transaction send to CRSP service');
 
@@ -191,6 +197,8 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   const MsgId = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
   const TxTp = transaction.TxTp;
+  const debtorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id;
+  const creditorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
 
   const debtorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
   const creditorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
@@ -206,6 +214,22 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     PmtInfId,
     TxTp,
   };
+
+  const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
+
+  if (configuration.quoting) {
+    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, CreDtTm));
+    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, CreDtTm));
+    await Promise.all(accountInserts);
+
+    await Promise.all([
+      cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
+      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+    ]);
+  } else {
+    await Promise.all(accountInserts);
+  }
 
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
@@ -227,11 +251,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
         configuration.db.transactionhistory_pacs008_collection,
         `pacs008_${transaction.EndToEndId}`,
       ),
-      cacheDatabaseClient.addAccount(debtorAcctId),
-      cacheDatabaseClient.addAccount(creditorAcctId),
     ]);
-
-    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     loggerService.log(JSON.stringify(err));
     spanInsert?.end();
@@ -245,7 +265,10 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: apm.currentTraceparent },
+    metaData: {
+      prcgTmDP: calculateDuration(startTime),
+      traceParent: apm.currentTraceparent,
+    },
   });
   loggerService.log('Transaction send to CRSP service');
   span?.end();
@@ -321,7 +344,10 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   server.handleResponse({
     transaction,
     DataCache: dataCache,
-    metaData: { prcgTmDP: calculateDuration(startTime), traceParent: apm.currentTraceparent },
+    metaData: {
+      prcgTmDP: calculateDuration(startTime),
+      traceParent: apm.currentTraceparent,
+    },
   });
   loggerService.log('Transaction send to CRSP service');
 
@@ -331,19 +357,19 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
 
 export const rebuildCache = async (endToEndId: string): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild');
-  const currentPain001 = (await databaseManager.getTransactionPain001(endToEndId)) as [Pain001[]];
-  if (!currentPain001 || !currentPain001[0] || !currentPain001[0][0]) {
-    loggerService.error('Could not find pain001 transaction to rebuild dataCache with');
+  const currentPacs008 = (await databaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
+  if (!currentPacs008 || !currentPacs008[0] || !currentPacs008[0][0]) {
+    loggerService.error('Could not find pacs008 transaction to rebuild dataCache with');
     span?.end();
     return undefined;
   }
   const dataCache: DataCache = {
-    cdtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
-    dbtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id,
-    cdtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-    dbtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
+    cdtrId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
+    dbtrId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
+    cdtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
+    dbtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
   };
-  await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), 150);
+  await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), configuration.cacheTTL);
 
   span?.end();
   return dataCache;

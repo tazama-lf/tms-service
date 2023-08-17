@@ -73,6 +73,10 @@ describe('App Controller & Logic Service', () => {
       return Promise.resolve([[getMockRequestPain001() as Pain001]]);
     });
 
+    jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((pseudonym: any) => {
+      return Promise.resolve([[getMockRequestPacs008() as Pacs008]]);
+    });
+
     jest.spyOn(databaseManager, 'getJson').mockImplementation((key: any) => {
       return Promise.resolve(getMockRequestPain001().DataCache);
     });
@@ -225,6 +229,10 @@ describe('App Controller & Logic Service', () => {
       });
 
       jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
+        return Promise.resolve('');
+      });
+
+      jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve('');
       });
 
