@@ -3,10 +3,7 @@ import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
 import { type FastifyRequest, type FastifyReply } from 'fastify';
 
-export const handleExecute = async (
-  req: FastifyRequest,
-  reply: FastifyReply,
-): Promise<{ message?: string; data?: Pain001; err?: unknown }> => {
+export const handleExecute = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   loggerService.log('Start - Handle execute request');
 
   try {
@@ -19,24 +16,18 @@ export const handleExecute = async (
     };
     reply.code(200);
     reply.send(body);
-
-    return body;
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
     loggerService.error(failMessage, 'ApplicationService');
 
     reply.code(500);
     reply.send(failMessage);
-    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle execute request');
   }
 };
 
-export const handleQuoteReply = async (
-  req: FastifyRequest,
-  reply: FastifyReply,
-): Promise<{ message?: string; data?: Pain013; err?: unknown }> => {
+export const handleQuoteReply = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   loggerService.log('Start - Handle quote reply request');
   try {
     const request = req.body as Pain013;
@@ -48,24 +39,18 @@ export const handleQuoteReply = async (
     };
     reply.status(200);
     reply.send(body);
-
-    return body;
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify((err as Error).message, null, 4)}`;
     loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
     reply.send(failMessage);
-    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle quote reply request');
   }
 };
 
-export const handleTransfer = async (
-  req: FastifyRequest,
-  reply: FastifyReply,
-): Promise<{ message?: string; data?: Pacs008; err?: unknown }> => {
+export const handleTransfer = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   loggerService.log('Start - Handle transfer request');
   try {
     const request = req.body as Pacs008;
@@ -77,24 +62,18 @@ export const handleTransfer = async (
     };
     reply.status(200);
     reply.send(body);
-
-    return body;
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
     loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
     reply.send(failMessage);
-    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle transfer request');
   }
 };
 
-export const handleTransferResponse = async (
-  req: FastifyRequest,
-  reply: FastifyReply,
-): Promise<{ message?: string; data?: Pacs002; err?: unknown }> => {
+export const handleTransferResponse = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   loggerService.log('Start - Handle transfer response request');
   try {
     const request = req.body as Pacs002;
@@ -106,15 +85,12 @@ export const handleTransferResponse = async (
     };
     reply.status(200);
     reply.send(body);
-
-    return body;
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
     loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
     reply.send(failMessage);
-    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle transfer response request');
   }
