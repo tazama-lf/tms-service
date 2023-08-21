@@ -77,6 +77,7 @@ ENV APM_SECRET_TOKEN=
 ENV LOGSTASH_HOST=logstash.development
 ENV LOGSTASH_PORT=8080
 ENV LOGSTASH_LEVEL='info'
+ENV QUOTING='false'
 
 HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
 EXPOSE 4222
