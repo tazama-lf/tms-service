@@ -51,7 +51,7 @@ export const handleQuoteReply = async (
 
     return body;
   } catch (err) {
-    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
+    const failMessage = `Failed to process execution request. \n${JSON.stringify((err as Error).message, null, 4)}`;
     loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
