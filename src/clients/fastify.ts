@@ -28,7 +28,7 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     maxHeapUsedBytes: 100000000,
     maxRssBytes: 100000000,
     maxEventLoopUtilization: 0.98,
-    message: `Under pressure used heap : ` + String(fastify.memoryUsage().heapUsed),
+    message: `Under pressure!`,
   });
   fastify.register(Routes);
   await fastify.ready();
