@@ -4,7 +4,7 @@ import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-
 import cluster from 'cluster';
 import os from 'os';
 import { CacheDatabaseService } from './clients/cache-database';
-import App from './clients/koa';
+import initializeFastifyClient from './clients/fastify';
 import { configuration } from './config';
 
 const databaseManagerConfig = {
@@ -51,10 +51,13 @@ const connect = async (): Promise<void> => {
       break;
     }
   }
-  // Koa
-  const app = new App();
-  app.listen(configuration.port, () => {
-    loggerService.log(`API restServer listening on PORT ${configuration.port}`);
+  const fastify = await initializeFastifyClient();
+  fastify.listen({ port: configuration.port, host: '0.0.0.0' }, (err, address) => {
+    if (err) {
+      loggerService.error(err);
+      throw Error(`${err.message}`);
+    }
+    loggerService.log(`Fastify listening on ${address}`);
   });
 };
 
