@@ -2,7 +2,6 @@
 import { configuration } from './config';
 import { type FastifyInstance } from 'fastify';
 import { handleExecute, handleQuoteReply, handleTransfer, handleTransferResponse, handleHealthCheck } from './app.controller';
-import { configuration } from './config';
 
 async function Routes(fastify: FastifyInstance, options: unknown): Promise<void> {
   fastify.get('/', handleHealthCheck);
@@ -16,4 +15,3 @@ async function Routes(fastify: FastifyInstance, options: unknown): Promise<void>
 }
 
 export default Routes;
-
