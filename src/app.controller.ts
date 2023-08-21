@@ -22,12 +22,12 @@ export const handleExecute = async (
 
     return body;
   } catch (err) {
-    const failMessage = 'Failed to process execution request.';
-    loggerService.error(failMessage, err as Error, 'ApplicationService');
+    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
+    loggerService.error(failMessage, 'ApplicationService');
 
     reply.code(500);
-    reply.send((err as Error).message);
-    return { err };
+    reply.send(failMessage);
+    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle execute request');
   }
@@ -51,12 +51,12 @@ export const handleQuoteReply = async (
 
     return body;
   } catch (err) {
-    const failMessage = 'Failed to process execution request.';
-    loggerService.error(failMessage, err as Error, 'ApplicationService');
+    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
+    loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
-    reply.send((err as Error).message);
-    return { err };
+    reply.send(failMessage);
+    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle quote reply request');
   }
@@ -80,12 +80,12 @@ export const handleTransfer = async (
 
     return body;
   } catch (err) {
-    const failMessage = 'Failed to process execution request.';
-    loggerService.error(failMessage, err as Error, 'ApplicationService');
+    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
+    loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
-    reply.send((err as Error).message);
-    return { err };
+    reply.send(failMessage);
+    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle transfer request');
   }
@@ -109,12 +109,12 @@ export const handleTransferResponse = async (
 
     return body;
   } catch (err) {
-    const failMessage = 'Failed to process execution request.';
-    loggerService.error(failMessage, err as Error, 'ApplicationService');
+    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
+    loggerService.error(failMessage, 'ApplicationService');
 
     reply.status(500);
-    reply.send((err as Error).message);
-    return { err };
+    reply.send(failMessage);
+    return { err: failMessage };
   } finally {
     loggerService.log('End - Handle transfer response request');
   }
