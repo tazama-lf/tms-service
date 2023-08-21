@@ -26,7 +26,7 @@ export const handleExecute = async (
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     reply.code(500);
-    reply.send(err);
+    reply.send((err as Error).message);
     return { err };
   } finally {
     loggerService.log('End - Handle execute request');
@@ -55,7 +55,7 @@ export const handleQuoteReply = async (
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     reply.status(500);
-    reply.send(err);
+    reply.send((err as Error).message);
     return { err };
   } finally {
     loggerService.log('End - Handle quote reply request');
@@ -84,7 +84,7 @@ export const handleTransfer = async (
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     reply.status(500);
-    reply.send(err);
+    reply.send((err as Error).message);
     return { err };
   } finally {
     loggerService.log('End - Handle transfer request');
@@ -113,7 +113,7 @@ export const handleTransferResponse = async (
     loggerService.error(failMessage, err as Error, 'ApplicationService');
 
     reply.status(500);
-    reply.send(err);
+    reply.send((err as Error).message);
     return { err };
   } finally {
     loggerService.log('End - Handle transfer response request');
