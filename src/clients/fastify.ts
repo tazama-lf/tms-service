@@ -2,7 +2,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
 import { fastifyCors } from '@fastify/cors';
-import { fastifyUnderPressure } from '@fastify/under-pressure';
 import Routes from '../router';
 
 const fastify = Fastify();
