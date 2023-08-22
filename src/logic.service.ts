@@ -217,7 +217,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
 
   const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
 
-  if (configuration.quoting) {
+  if (!configuration.quoting) {
     const dataCache: DataCache = {
       cdtrId: creditorId,
       dbtrId: debtorId,
