@@ -49,7 +49,7 @@ ENV prefix_logs="false"
 ENV FUNCTION_NAME=transaction-monitoring-service-rel-1-0-0
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV QUOTING=true
+ENV QUOTING=false
 ENV SERVER_URL=
 ENV CERT_PATH=
 
