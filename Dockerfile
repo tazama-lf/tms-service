@@ -44,37 +44,49 @@ ENV exec_timeout="10s"
 ENV write_timeout="15s"
 ENV read_timeout="15s"
 ENV prefix_logs="false"
+
+# Service Based variables
 ENV FUNCTION_NAME=transaction-monitoring-service-rel-1-0-0
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV QUOTING=true
 ENV SERVER_URL=
-ENV CACHE_TTL=30
 ENV CERT_PATH=
+
+# Redis
 ENV REDIS_DB=0
 ENV REDIS_AUTH=
 ENV REDIS_SERVERS=
 ENV REDIS_IS_CLUSTER=
+
+# Nats
 ENV SERVER_URL=0.0.0.0:4222
 ENV STARTUP_TYPE=nats
 ENV PRODUCER_STREAM=
 ENV ACK_POLICY=Explicit
 ENV PRODUCER_STORAGE=File
 ENV PRODUCER_RETENTION_POLICY=Workqueue
-ENV PSEUDONYMS_DATABASE=pseudonyms
-ENV TRANSACTIONHISTORY_DATABASE=transactionHistory
+
+# Database
 ENV DATABASE_URL=
 ENV DATABASE_USER=root
 ENV DATABASE_PASSWORD=
+ENV PSEUDONYMS_DATABASE=pseudonyms
+ENV TRANSACTIONHISTORY_DATABASE=transactionHistory
 ENV TRANSACTIONHISTORY_PAIN001_COLLECTION=transactionHistoryPain001
 ENV TRANSACTIONHISTORY_PAIN013_COLLECTION=transactionHistoryPain013
 ENV TRANSACTIONHISTORY_PACS008_COLLECTION=transactionHistoryPacs008
 ENV TRANSACTIONHISTORY_PACS002_COLLECTION=transactionHistoryPacs002
+ENV CACHE_TTL=30
+
+# Apm
 ENV APM_ACTIVE=true
-ENV QUOTING=true
 ENV APM_SERVICE_NAME=transaction-monitoring-service
-ENV APM_URL=http://apm-server.development:8200
+ENV APM_URL=http://apm-server.development.svc.cluster.local:8200/
 ENV APM_SECRET_TOKEN=
-ENV LOGSTASH_HOST=logstash.development
+
+# Logstash
+ENV LOGSTASH_HOST=logstash.development.svc.cluster.local
 ENV LOGSTASH_PORT=8080
 ENV LOGSTASH_LEVEL='info'
 
