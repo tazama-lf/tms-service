@@ -34,17 +34,18 @@ export interface IConfig {
   cacheTTL: number;
   cert: string;
   crspEndpoint: string;
+  quoting: boolean;
   logger: {
     logstashHost: string;
     logstashPort: number;
     logstashLevel: string;
   };
   redis: RedisConfig;
-  quoting: boolean;
 }
 
 export const configuration: IConfig = {
   maxCPU: parseInt(process.env.MAX_CPU!, 10) || 1,
+  quoting: process.env.QUOTING === 'true',
   apm: {
     serviceName: process.env.APM_SERVICE_NAME as string,
     url: process.env.APM_URL as string,
@@ -79,5 +80,4 @@ export const configuration: IConfig = {
     password: process.env.REDIS_AUTH as string,
     isCluster: process.env.REDIS_IS_CLUSTER === 'true',
   },
-  quoting: process.env.QUOTING === 'true',
 };
