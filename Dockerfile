@@ -44,12 +44,13 @@ ENV exec_timeout="10s"
 ENV write_timeout="15s"
 ENV read_timeout="15s"
 ENV prefix_logs="false"
+
+# Service Based variables
 ENV FUNCTION_NAME=transaction-monitoring-service-rel-1-0-0
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV QUOTING=true
 ENV SERVER_URL=
-ENV CACHE_TTL=30
 ENV CERT_PATH=
 
 # Redis
@@ -76,6 +77,7 @@ ENV TRANSACTIONHISTORY_PAIN001_COLLECTION=transactionHistoryPain001
 ENV TRANSACTIONHISTORY_PAIN013_COLLECTION=transactionHistoryPain013
 ENV TRANSACTIONHISTORY_PACS008_COLLECTION=transactionHistoryPacs008
 ENV TRANSACTIONHISTORY_PACS002_COLLECTION=transactionHistoryPacs002
+ENV CACHE_TTL=30
 
 # Apm
 ENV APM_ACTIVE=true
