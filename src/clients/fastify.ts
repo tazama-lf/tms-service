@@ -23,13 +23,6 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     methods: ['POST'],
     allowedHeaders: '*',
   });
-  await fastify.register(fastifyUnderPressure, {
-    maxEventLoopDelay: 1000,
-    maxHeapUsedBytes: 100000000,
-    maxRssBytes: 100000000,
-    maxEventLoopUtilization: 0.98,
-    message: `Under pressure!`,
-  });
   fastify.register(Routes);
   await fastify.ready();
   fastify.swagger();
