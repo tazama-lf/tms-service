@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Fastify, { type FastifyInstance } from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
 import { fastifyCors } from '@fastify/cors';
 import Routes from '../router';
+import { pain001Schema, pacs008Schema, pacs002Schema, pain013Schema, requestHeaderSchema } from '@frmscoe/frms-coe-lib/lib/schemata';
 
 const fastify = Fastify();
 
@@ -22,6 +22,13 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     methods: ['POST'],
     allowedHeaders: '*',
   });
+
+  fastify.addSchema(pain001Schema);
+  fastify.addSchema(pacs002Schema);
+  fastify.addSchema(pacs008Schema);
+  fastify.addSchema(pain013Schema);
+  fastify.addSchema(requestHeaderSchema);
+
   fastify.register(Routes);
   await fastify.ready();
   fastify.swagger();

@@ -14,7 +14,6 @@ export const handleExecute = async (req: FastifyRequest, reply: FastifyReply): P
       message: 'Transaction is valid',
       data: request,
     };
-    reply.code(200);
     reply.send(body);
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
@@ -37,7 +36,6 @@ export const handleQuoteReply = async (req: FastifyRequest, reply: FastifyReply)
       message: 'Transaction is valid',
       data: request,
     };
-    reply.status(200);
     reply.send(body);
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify((err as Error).message, null, 4)}`;
@@ -60,7 +58,6 @@ export const handleTransfer = async (req: FastifyRequest, reply: FastifyReply): 
       message: 'Transaction is valid',
       data: request,
     };
-    reply.status(200);
     reply.send(body);
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
@@ -83,7 +80,6 @@ export const handleTransferResponse = async (req: FastifyRequest, reply: Fastify
       message: 'Transaction is valid',
       data: request,
     };
-    reply.status(200);
     reply.send(body);
   } catch (err) {
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
