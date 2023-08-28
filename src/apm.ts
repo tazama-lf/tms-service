@@ -8,12 +8,7 @@ const apm = new Apm({
   serverUrl: url,
   usePathAsTransactionName: true,
   active: Boolean(active),
+  transactionIgnoreUrls: ['/health'],
 });
 
 export default apm;
-
-// if (configuration.apm.active === 'true') {
-//  apm.start({
-//    //  transactionIgnoreUrls: ['/health'],
-//  });
-// }
