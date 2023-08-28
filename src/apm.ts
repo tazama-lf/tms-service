@@ -1,13 +1,19 @@
-import apm from 'elastic-apm-node';
+import { Apm } from '@frmscoe/frms-coe-lib/lib/services/apm';
 import { configuration } from './config';
 
-if (configuration.apm.active === 'true') {
-  apm.start({
-    serviceName: configuration.apm?.serviceName,
-    secretToken: configuration.apm?.secretToken,
-    serverUrl: configuration.apm?.url,
-    usePathAsTransactionName: true,
-    active: Boolean(configuration.apm?.active),
-    transactionIgnoreUrls: ['/health'],
-  });
-}
+const { serviceName, secretToken, url, active } = configuration.apm;
+const apm = new Apm({
+  serviceName,
+  secretToken,
+  serverUrl: url,
+  usePathAsTransactionName: true,
+  active: Boolean(active),
+});
+
+export default apm;
+
+// if (configuration.apm.active === 'true') {
+//  apm.start({
+//    //  transactionIgnoreUrls: ['/health'],
+//  });
+// }

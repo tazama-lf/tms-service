@@ -1,4 +1,4 @@
-import apm from 'elastic-apm-node';
+import apm from './apm';
 import { cacheDatabaseClient, databaseManager, loggerService, server } from '.';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../src/classes/pain-pacs';
 import { type DataCache } from './classes/data-cache';
@@ -90,7 +90,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
     DataCache: dataCache,
     metaData: {
       prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.currentTraceparent,
+      traceParent: apm.getCurrentTraceparent(),
     },
   });
   loggerService.log('Transaction send to CRSP service');
@@ -171,7 +171,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
     DataCache: dataCache,
     metaData: {
       prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.currentTraceparent,
+      traceParent: apm.getCurrentTraceparent(),
     },
   });
   loggerService.log('Transaction send to CRSP service');
@@ -275,7 +275,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     DataCache: dataCache,
     metaData: {
       prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.currentTraceparent,
+      traceParent: apm.getCurrentTraceparent(),
     },
   });
   loggerService.log('Transaction send to CRSP service');
@@ -354,7 +354,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
     DataCache: dataCache,
     metaData: {
       prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.currentTraceparent,
+      traceParent: apm.getCurrentTraceparent(),
     },
   });
   loggerService.log('Transaction send to CRSP service');
