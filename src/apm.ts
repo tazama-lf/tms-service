@@ -1,13 +1,12 @@
 import { Apm } from '@frmscoe/frms-coe-lib/lib/services/apm';
 import { configuration } from './config';
 
-const { serviceName, secretToken, url, active } = configuration.apm;
 const apm = new Apm({
-  serviceName,
-  secretToken,
-  serverUrl: url,
+  serviceName: configuration.apm.serviceName,
+  secretToken: configuration.apm.secretToken,
+  serverUrl: configuration.apm.url,
   usePathAsTransactionName: true,
-  active: Boolean(active),
+  active: Boolean(configuration.apm.active),
   transactionIgnoreUrls: ['/health'],
 });
 
