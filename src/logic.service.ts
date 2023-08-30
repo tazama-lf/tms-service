@@ -89,7 +89,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
     transaction,
     DataCache: dataCache,
     metaData: {
-      prcgTmTMS: calculateDuration(startTime),
+      prcgTmDP: calculateDuration(startTime),
       traceParent: apm.getCurrentTraceparent(),
     },
   });
@@ -170,7 +170,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
     transaction,
     DataCache: dataCache,
     metaData: {
-      prcgTmTMS: calculateDuration(startTime),
+      prcgTmDP: calculateDuration(startTime),
       traceParent: apm.getCurrentTraceparent(),
     },
   });
@@ -274,7 +274,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     transaction,
     DataCache: dataCache,
     metaData: {
-      prcgTmTMS: calculateDuration(startTime),
+      prcgTmDP: calculateDuration(startTime),
       traceParent: apm.getCurrentTraceparent(),
     },
   });
@@ -353,7 +353,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
     transaction,
     DataCache: dataCache,
     metaData: {
-      prcgTmTMS: calculateDuration(startTime),
+      prcgTmDP: calculateDuration(startTime),
       traceParent: apm.getCurrentTraceparent(),
     },
   });
