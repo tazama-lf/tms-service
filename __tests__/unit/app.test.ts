@@ -88,6 +88,9 @@ describe('App Controller & Logic Service', () => {
 
     jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
   });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   describe('handleExecute', () => {
     it('should handle Quote', async () => {
