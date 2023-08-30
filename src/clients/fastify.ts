@@ -3,9 +3,11 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
 import { fastifyCors } from '@fastify/cors';
 import Routes from '../router';
+import { messageSchema } from '@frmscoe/frms-coe-lib/lib/helpers/schemas/message';
 
 const fastify = Fastify();
 
+const schema = { ...messageSchema.properties.transaction, $id: 'transactionSchema' };
 export default async function initializeFastifyClient(): Promise<FastifyInstance> {
   fastify.register(fastifySwagger, {
     specification: {
@@ -17,6 +19,7 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     },
     prefix: '/swagger',
   });
+  fastify.addSchema(schema);
   await fastify.register(fastifyCors, {
     origin: '*',
     methods: ['POST'],
