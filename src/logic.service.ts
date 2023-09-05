@@ -231,13 +231,13 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     await Promise.all(accountInserts);
 
     await Promise.all([
-      cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
       cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
       cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } else {
     await Promise.all(accountInserts);
   }
+  cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
 
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
