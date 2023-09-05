@@ -136,7 +136,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = await rebuildCache(transaction.EndToEndId);
+    dataCache = await rebuildCachePain001(transaction.EndToEndId);
   } finally {
     spanDataCache?.end();
   }
@@ -231,13 +231,13 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     await Promise.all(accountInserts);
 
     await Promise.all([
-      cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
       cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
       cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } else {
     await Promise.all(accountInserts);
   }
+  cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
 
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
@@ -246,7 +246,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = await rebuildCache(transaction.EndToEndId);
+    dataCache = !configuration.quoting ? await rebuildCache(transaction.EndToEndId) : await rebuildCachePain001(transaction.EndToEndId);
   } finally {
     spanDataCache?.end();
   }
@@ -315,7 +315,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
     dataCache = JSON.parse(dataCacheJSON) as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = await rebuildCache(transaction.EndToEndId);
+    dataCache = !configuration.quoting ? await rebuildCache(transaction.EndToEndId) : await rebuildCachePain001(transaction.EndToEndId);
   } finally {
     spanDataCache?.end();
   }
@@ -382,6 +382,26 @@ export const rebuildCache = async (endToEndId: string): Promise<DataCache | unde
     dbtrId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
     cdtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
     dbtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
+  };
+  await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), configuration.cacheTTL);
+
+  span?.end();
+  return dataCache;
+};
+
+export const rebuildCachePain001 = async (endToEndId: string): Promise<DataCache | undefined> => {
+  const span = apm.startSpan('db.cache.rebuild');
+  const currentPain001 = (await databaseManager.getTransactionPain001(endToEndId)) as [Pain001[]];
+  if (!currentPain001 || !currentPain001[0] || !currentPain001[0][0]) {
+    loggerService.error('Could not find pacs008 transaction to rebuild dataCache with');
+    span?.end();
+    return undefined;
+  }
+  const dataCache: DataCache = {
+    cdtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
+    dbtrId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id,
+    cdtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
+    dbtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
   };
   await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), configuration.cacheTTL);
 
