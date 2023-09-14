@@ -13,7 +13,6 @@ COPY ./swagger.yaml ./
 COPY .npmrc ./
 ARG GH_TOKEN
 
-
 RUN npm ci --ignore-scripts
 RUN npm run build
 
