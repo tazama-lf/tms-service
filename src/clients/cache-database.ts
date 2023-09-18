@@ -1,6 +1,7 @@
 import { type DatabaseManagerType } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../classes/pain-pacs';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
+import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
 
 export class CacheDatabaseService {
   private readonly dbClient: DatabaseManagerType;
@@ -107,7 +108,9 @@ export class CacheDatabaseService {
     transactionHistoryCollection: string,
     redisKey = '',
   ): Promise<void> {
-    if (redisKey) await this.dbClient.setJson?.(redisKey, JSON.stringify(transaction), this.cacheExpireTime);
+    const buff = createMessageBuffer({ ...transaction });
+
+    if (redisKey && buff) await this.dbClient.set?.(redisKey, buff, this.cacheExpireTime);
 
     await this.dbClient.saveTransactionHistory?.(transaction, transactionHistoryCollection);
   }

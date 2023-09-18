@@ -4,6 +4,7 @@ import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../src/c
 import { type DataCache } from './classes/data-cache';
 import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
+import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
@@ -58,6 +59,10 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
 
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
+    const cacheBuffer = createMessageBuffer({ ...dataCache });
+    if (!cacheBuffer) {
+      throw new Error('[pain001] dataCache could not be serialised to buffer');
+    }
     await Promise.all([
       cacheDatabaseClient.saveTransactionHistory(
         transaction,
@@ -68,7 +73,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       cacheDatabaseClient.addAccount(creditorAcctId),
       cacheDatabaseClient.addEntity(creditorId, CreDtTm),
       cacheDatabaseClient.addEntity(debtorId, CreDtTm),
-      databaseManager.setJson(transaction.EndToEndId, JSON.stringify(dataCache), 150),
+      databaseManager.set(transaction.EndToEndId, cacheBuffer, 150),
     ]);
 
     await Promise.all([
@@ -132,8 +137,8 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pain013');
   try {
-    const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
-    dataCache = JSON.parse(dataCacheJSON) as DataCache;
+    const cache = await databaseManager.getBuffer(transaction.EndToEndId);
+    dataCache = cache as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
     dataCache = await rebuildCachePain001(transaction.EndToEndId);
@@ -225,9 +230,16 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       dbtrAcctId: debtorAcctId,
     };
 
+    const cacheBuffer = createMessageBuffer({ ...dataCache });
+
     accountInserts.push(cacheDatabaseClient.addEntity(creditorId, CreDtTm));
     accountInserts.push(cacheDatabaseClient.addEntity(debtorId, CreDtTm));
-    accountInserts.push(databaseManager.setJson(transaction.EndToEndId, JSON.stringify(dataCache), 150));
+    if (cacheBuffer) {
+      accountInserts.push(databaseManager.set(transaction.EndToEndId, cacheBuffer, 150));
+    } else {
+      // this is fatal
+      throw new Error('[pacs008] data cache could not be serialised');
+    }
     await Promise.all(accountInserts);
 
     await Promise.all([
@@ -242,8 +254,8 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
   try {
-    const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
-    dataCache = JSON.parse(dataCacheJSON) as DataCache;
+    const dataCacheJSON = await databaseManager.getBuffer(transaction.EndToEndId);
+    dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
     dataCache = !configuration.quoting ? await rebuildCache(transaction.EndToEndId) : await rebuildCachePain001(transaction.EndToEndId);
@@ -311,8 +323,8 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
   try {
-    const dataCacheJSON = await databaseManager.getJson(transaction.EndToEndId);
-    dataCache = JSON.parse(dataCacheJSON) as DataCache;
+    const dataCacheJSON = await databaseManager.getBuffer(transaction.EndToEndId);
+    dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
     dataCache = !configuration.quoting ? await rebuildCache(transaction.EndToEndId) : await rebuildCachePain001(transaction.EndToEndId);
@@ -383,7 +395,14 @@ export const rebuildCache = async (endToEndId: string): Promise<DataCache | unde
     cdtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
     dbtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
   };
-  await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), configuration.cacheTTL);
+
+  const buffer = createMessageBuffer({ ...dataCache });
+
+  if (buffer) {
+    await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+  } else {
+    loggerService.error('[pacs008] could not rebuild redis cache');
+  }
 
   span?.end();
   return dataCache;
@@ -403,7 +422,14 @@ export const rebuildCachePain001 = async (endToEndId: string): Promise<DataCache
     cdtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
     dbtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
   };
-  await databaseManager.setJson(endToEndId, JSON.stringify(dataCache), configuration.cacheTTL);
+
+  const buffer = createMessageBuffer({ ...dataCache });
+
+  if (buffer) {
+    await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+  } else {
+    loggerService.error('[pain001] could not rebuild redis cache');
+  }
 
   span?.end();
   return dataCache;
