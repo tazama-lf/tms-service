@@ -42,15 +42,22 @@ export const dbinit = async (): Promise<void> => {
 };
 
 const connect = async (): Promise<void> => {
+  let isConnected = false;
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     loggerService.log(`Connecting to nats server...`);
     if (!(await server.initProducer())) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
       loggerService.log(`Connected to nats`);
+      isConnected = true;
       break;
     }
   }
+
+  if (!isConnected) {
+    throw new Error('Unable to connect to nats after 10 retries');
+  }
+
   const fastify = await initializeFastifyClient();
   fastify.listen({ port: configuration.port, host: '0.0.0.0' }, (err, address) => {
     if (err) {
@@ -93,6 +100,7 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
       }
     } catch (err) {
       loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
+      process.exit(1);
     }
   })();
 }
