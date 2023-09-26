@@ -36,7 +36,7 @@ export let server: IStartupService;
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 let cacheDatabaseClient: CacheDatabaseService;
 
-export const dbinit = async (): Promise<void> => {
+export const dbInit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
   cacheDatabaseClient = await CacheDatabaseService.create(databaseManager, configuration.cacheTTL);
 };
@@ -69,7 +69,6 @@ const connect = async (): Promise<void> => {
 };
 
 export const runServer = async (): Promise<void> => {
-  await dbinit();
   server = new StartupFactory();
   if (configuration.env !== 'test') await connect();
 };
@@ -83,6 +82,18 @@ process.on('unhandledRejection', (err) => {
 });
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
+
+(async () => {
+  try {
+    if (process.env.NODE_ENV !== 'test' && cluster.isPrimary) {
+      // setup lib - create database instance
+      await dbInit();
+    }
+  } catch (err) {
+    loggerService.error('Error while starting Database Manager', err as Error);
+    process.exit(1);
+  }
+})();
 
 if (cluster.isPrimary && configuration.maxCPU !== 1) {
   for (let i = 1; i < numCPUs; i++) {
