@@ -1,11 +1,12 @@
 import './apm';
-import { CreateDatabaseManager, LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import { LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
 import os from 'os';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
 import { configuration } from './config';
+import { Singleton } from './utils/services';
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -37,7 +38,7 @@ let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 let cacheDatabaseClient: CacheDatabaseService;
 
 export const dbInit = async (): Promise<void> => {
-  databaseManager = await CreateDatabaseManager(databaseManagerConfig);
+  databaseManager = await Singleton.getDatabaseManager(databaseManagerConfig);
   cacheDatabaseClient = await CacheDatabaseService.create(databaseManager, configuration.cacheTTL);
 };
 
@@ -83,18 +84,6 @@ process.on('unhandledRejection', (err) => {
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
 
-(async () => {
-  try {
-    if (process.env.NODE_ENV !== 'test' && cluster.isPrimary) {
-      // setup lib - create database instance
-      await dbInit();
-    }
-  } catch (err) {
-    loggerService.error('Error while starting Database Manager', err as Error);
-    process.exit(1);
-  }
-})();
-
 if (cluster.isPrimary && configuration.maxCPU !== 1) {
   for (let i = 1; i < numCPUs; i++) {
     cluster.fork();
@@ -107,6 +96,7 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
   (async () => {
     try {
       if (process.env.NODE_ENV !== 'test') {
+        await dbInit();
         await runServer();
       }
     } catch (err) {
