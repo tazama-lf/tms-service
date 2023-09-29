@@ -20,6 +20,8 @@ RUN bun install
 FROM ${RUN_IMAGE} AS run-env
 LABEL stage=run
 
+USER bun
+
 WORKDIR /home/app
 COPY --from=builder /home/app/node_modules ./node_modules
 COPY ./src ./src
