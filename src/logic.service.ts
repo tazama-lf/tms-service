@@ -59,7 +59,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
 
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
-    const cacheBuffer = createMessageBuffer({ ...dataCache });
+    const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
     if (!cacheBuffer) {
       throw new Error('[pain001] dataCache could not be serialised to buffer');
     }
@@ -230,7 +230,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       dbtrAcctId: debtorAcctId,
     };
 
-    const cacheBuffer = createMessageBuffer({ ...dataCache });
+    const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
     accountInserts.push(cacheDatabaseClient.addEntity(creditorId, CreDtTm));
     accountInserts.push(cacheDatabaseClient.addEntity(debtorId, CreDtTm));
@@ -396,7 +396,7 @@ export const rebuildCache = async (endToEndId: string): Promise<DataCache | unde
     dbtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
   };
 
-  const buffer = createMessageBuffer({ ...dataCache });
+  const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
   if (buffer) {
     await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
@@ -423,7 +423,7 @@ export const rebuildCachePain001 = async (endToEndId: string): Promise<DataCache
     dbtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
   };
 
-  const buffer = createMessageBuffer({ ...dataCache });
+  const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
   if (buffer) {
     await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
