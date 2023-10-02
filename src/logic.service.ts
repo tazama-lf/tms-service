@@ -221,9 +221,9 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   };
 
   const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
-
+  let dataCache: DataCache | undefined;
   if (!configuration.quoting) {
-    const dataCache: DataCache = {
+    dataCache = {
       cdtrId: creditorId,
       dbtrId: debtorId,
       cdtrAcctId: creditorAcctId,
@@ -248,21 +248,19 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     ]);
   } else {
     await Promise.all(accountInserts);
+    const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
+    try {
+      const dataCacheJSON = await databaseManager.getBuffer(transaction.EndToEndId);
+      dataCache = dataCacheJSON as DataCache;
+    } catch (ex) {
+      loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
+      dataCache = await rebuildCachePain001(transaction.EndToEndId);
+    } finally {
+      spanDataCache?.end();
+    }
   }
+
   cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
-
-  let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
-  try {
-    const dataCacheJSON = await databaseManager.getBuffer(transaction.EndToEndId);
-    dataCache = dataCacheJSON as DataCache;
-  } catch (ex) {
-    loggerService.log(`Could not retrieve data cache for : ${transaction.EndToEndId} from redis. Proceeding with Arango Call.`);
-    dataCache = !configuration.quoting ? await rebuildCache(transaction.EndToEndId) : await rebuildCachePain001(transaction.EndToEndId);
-  } finally {
-    spanDataCache?.end();
-  }
-
   const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
     await Promise.all([
