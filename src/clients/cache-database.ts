@@ -1,5 +1,5 @@
 import { type DatabaseManagerType } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '../classes/pain-pacs';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
 
