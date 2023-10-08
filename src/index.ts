@@ -40,6 +40,7 @@ let cacheDatabaseClient: CacheDatabaseService;
 export const dbInit = async (): Promise<void> => {
   databaseManager = await Singleton.getDatabaseManager(databaseManagerConfig);
   cacheDatabaseClient = await CacheDatabaseService.create(databaseManager, configuration.cacheTTL);
+  loggerService.log(JSON.stringify(databaseManager.isReadyCheck()));
 };
 
 const connect = async (): Promise<void> => {
