@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import apm from 'elastic-apm-node';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { cacheDatabaseClient, databaseManager, dbInit, runServer, server } from '../../src/index';
 import { TransactionRelationship } from '../../src/interfaces/iTransactionRelationship';
 import * as LogicService from '../../src/logic.service';
