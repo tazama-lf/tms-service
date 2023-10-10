@@ -238,7 +238,6 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   }
   cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
 
-  let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
   try {
     const dataCacheJSON = await databaseManager.getBuffer(EndToEndId);
