@@ -215,7 +215,6 @@ describe('App Controller & Logic Service', () => {
       const request = getMockRequestPacs002() as Pacs002;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
-
       await LogicService.handlePacs002(request);
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
