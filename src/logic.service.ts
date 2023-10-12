@@ -129,7 +129,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pain013');
   try {
-    const cache = await databaseManager.getBuffer(EndToEndId);
+    const cache = (await databaseManager.getBuffer(EndToEndId)).DataCache;
     dataCache = cache as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${EndToEndId} from redis. Proceeding with Arango Call.`);
@@ -241,7 +241,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
   try {
-    const dataCacheJSON = await databaseManager.getBuffer(EndToEndId);
+    const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
     dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${EndToEndId} from redis. Proceeding with Arango Call.`);
@@ -307,7 +307,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
   try {
-    const dataCacheJSON = await databaseManager.getBuffer(EndToEndId);
+    const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
     dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.log(`Could not retrieve data cache for : ${EndToEndId} from redis. Proceeding with Arango Call.`);
