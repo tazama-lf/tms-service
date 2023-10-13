@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable */
 import { type RouteHandlerMethod } from 'fastify';
 import { type FastifySchema } from 'fastify/types/schema';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { CreateDatabaseManager } from '@frmscoe/frms-coe-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-extraneous-class */

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { type DatabaseManagerType } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
