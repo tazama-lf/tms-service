@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import apm from './apm';
 import { cacheDatabaseClient, databaseManager, loggerService, server } from '.';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache } from '@frmscoe/frms-coe-lib/lib/interfaces';

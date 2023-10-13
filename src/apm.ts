@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { Apm } from '@frmscoe/frms-coe-lib/lib/services/apm';
 import { configuration } from './config';
 
