@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import './apm';
 import { LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';

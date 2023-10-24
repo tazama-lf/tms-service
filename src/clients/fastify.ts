@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Fastify, { type FastifyInstance } from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
