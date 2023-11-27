@@ -42,6 +42,8 @@ export interface IConfig {
     logstashLevel: string;
   };
   redis: RedisConfig;
+  channelName: string;
+  sidecarHost: string;
 }
 
 export const configuration: IConfig = {
@@ -81,4 +83,6 @@ export const configuration: IConfig = {
     password: process.env.REDIS_AUTH as string,
     isCluster: process.env.REDIS_IS_CLUSTER === 'true',
   },
+  channelName: process.env.APP_NAME as string,
+  sidecarHost: process.env.SIDECAR_HOST as string,
 };
