@@ -28,6 +28,14 @@ spec:
               containerPort: 3000
           resources: {}
           imagePullPolicy: Always
+        - name: tms-sidecar-rel-1-0-0
+          image: example.io/sidecar-rel-1-0-0:1.0.0
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 5000
+          resources: {}
+          imagePullPolicy: Always
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
