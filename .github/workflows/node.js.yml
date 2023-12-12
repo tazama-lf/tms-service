@@ -2,6 +2,14 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
 name: Node.js CI
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NPM_SCOPE: "@frmscoe"
+  NPM_REGISTRY: "https://npm.pkg.github.com/"
+  NODE_ENV: 'test'
+  STARTUP_TYPE: 'nats'
+
 on:
   push:
     branches: [ "main" ]
@@ -10,28 +18,62 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: pnpm / install
+    name: run build
+    strategy:
+      matrix:
+        node-version: [16, 20]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          registry-url: ${{ env.NPM_REGISTRY }}
+          scope: ${{ env.NPM_SCOPE }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run build
+        run: npm run build
+
+  lint:
+    runs-on: ubuntu-latest
+    name: check style
     strategy:
       matrix:
         node-version: [20]
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 7
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          registry-url: https://npm.pkg.github.com/
-          scope: '@frmscoe'
+          registry-url: ${{ env.NPM_REGISTRY }}
+          scope: ${{ env.NPM_SCOPE }}
       - name: Install dependencies
         run: npm ci
-        env:
-          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-      - name: Run unit tests
-        run: npm run test
-        env:
-          NODE_ENV: 'test'
-          STARTUP_TYPE: 'nats'
+      - name: Check linting
+        run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    name: check tests
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          registry-url: ${{ env.NPM_REGISTRY }}
+          scope: ${{ env.NPM_SCOPE }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
