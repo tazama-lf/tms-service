@@ -2,14 +2,6 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
 name: Node.js CI
-
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  NPM_SCOPE: "@frmscoe"
-  NPM_REGISTRY: "https://npm.pkg.github.com/"
-  NODE_ENV: 'test'
-  STARTUP_TYPE: 'nats'
-
 on:
   push:
     branches: [ "main" ]
@@ -18,62 +10,126 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: run build
+    outputs:
+      responseAverage: ${{ steps.newman_test.outputs.responseAverage }}
+      responseMin: ${{ steps.newman_test.outputs.responseMin }}
+      responseMax: ${{ steps.newman_test.outputs.responseMax }}
+      responseSd: ${{ steps.newman_test.outputs.responseSd }}
+      numberOfTest: ${{ steps.newman_test.outputs.numberOfTest }}
+    name: install, build, test
+    permissions:
+      packages: write
+      contents: read
     strategy:
       matrix:
-        node-version: [16, 20]
+        node-version: [20]
+        redis-version: [6]
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          registry-url: ${{ env.NPM_REGISTRY }}
-          scope: ${{ env.NPM_SCOPE }}
+          version: 7
+
+      - name: Start Arango
+        uses: xinova/arangodb-action@v1
+        with:
+          arangodb version: 'latest'
+
+      - name: Setup Arango
+        run: newman run https://raw.githubusercontent.com/frmscoe/postman/indexes/ArangoDB%20Setup.json -e https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json --timeout-request 10200
+
+      - name: Startup Nats
+        uses: onichandame/nats-action@master
+        with:
+          port: 4222
+
+      - name: Startup Redis
+        uses: supercharge/redis-github-action@1.7.0
+        with:
+          redis-version: ${{ matrix.redis-version }}
+
+      - name: Setup Node.js (.npmrc)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          registry-url: https://npm.pkg.github.com/
+          scope: '@frmscoe'
+
       - name: Install dependencies
-        run: npm ci
-      - name: Run build
+        run: npm install -g newman && npm ci
+        env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+
+      - name: Run unit tests
+        run: npm run test
+        env:
+            NODE_ENV: 'test'
+            STARTUP_TYPE: 'nats'
+
+      - name: Processor Build
         run: npm run build
 
-  lint:
-    runs-on: ubuntu-latest
-    name: check style
-    strategy:
-      matrix:
-        node-version: [20]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          registry-url: ${{ env.NPM_REGISTRY }}
-          scope: ${{ env.NPM_SCOPE }}
-      - name: Install dependencies
-        run: npm ci
-      - name: Check linting
-        run: npm run lint
+      - name: Processor Start
+        run: npm run start &
+        env:
+          NODE_ENV: 'dev'
+          STARTUP_TYPE: 'nats'
+          SERVER_URL: 'nats://localhost:4222'
+          ACK_POLICY: 'None'
+          STREAM_SUBJECT:
+          APM_ACTIVE: false
+          APM_LOGGING: false
+          FUNCTION_NAME: 'transaction-monitoring-service'
+          REDIS_DB: 0
+          REDIS_AUTH:
+          REDIS_SERVERS: '[{"host":"127.0.0.1", "port":6379}]'
+          REDIS_IS_CLUSTER: false
+          DATABASE_NAME: Configuration
+          DATABASE_URL: 'http://localhost:8529/'
+          DATABASE_USER: root
+          DATABASE_PASSWORD:
+          PSEUDONYMS_DATABASE: pseudonyms
+          TRANSACTIONHISTORY_DATABASE: transactionHistory
+          DATABASE_CERT_PATH: ''
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'
+          TRANSACTIONHISTORY_PAIN001_COLLECTION: transactionHistoryPain001
+          TRANSACTIONHISTORY_PAIN013_COLLECTION: transactionHistoryPain013
+          TRANSACTIONHISTORY_PACS008_COLLECTION: transactionHistoryPacs008
+          TRANSACTIONHISTORY_PACS002_COLLECTION: transactionHistoryPacs002
+          QUOTING: true
+          PORT: 3000
 
-  test:
-    runs-on: ubuntu-latest
-    name: check tests
-    strategy:
-      matrix:
-        node-version: [20]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+
+      - name: Test Processor
+        run: newman run https://raw.githubusercontent.com/frmscoe/postman/indexes/RES_TMS_TEST.postman_collection.json -e https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json --timeout-request 10200 -r json --reporter-json-export fullReport.json
+
+      - name: Extract Specific Field
+        id: newman_test
+        run: |
+          echo "::set-output name=responseAverage::$(jq -r '.run.timings.responseAverage' fullReport.json)"
+          echo "::set-output name=responseMin::$(jq -r '.run.timings.responseMin' fullReport.json)"
+          echo "::set-output name=responseMax::$(jq -r '.run.timings.responseMax' fullReport.json)"
+          echo "::set-output name=responseSd::$(jq -r '.run.timings.responseSd' fullReport.json)"
+          echo "::set-output name=numberOfTest::$(jq -r '.run.stats.tests.total' fullReport.json)"
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          registry-url: ${{ env.NPM_REGISTRY }}
-          scope: ${{ env.NPM_SCOPE }}
-      - name: Install dependencies
-        run: npm ci
-      - name: Run tests
-        run: npm test
+          name: Full_Report.json
+          path: fullReport.json
+
+  output:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+      - name: Comment on PR
+
+        run: |
+              COMMENT_BODY="⚠️ Newman Test Results  <br /><br />Number of tests ${{ needs.build.outputs.numberOfTest }} <br /><br />Response stats<blockquote> <li> Response Average ${{ needs.build.outputs.responseAverage }}ms <br /><li>Response Min ${{ needs.build.outputs.responseMin }}ms <br /><li>Response max ${{ needs.build.outputs.responseMax }}ms <br /><li>Response standard dev ${{ needs.build.outputs.responseSd }}ms"
+
+              API_URL="https://api.github.com/repos/${{github.repository}}/issues/${{github.event.number}}/comments"
+              curl -X POST \
+                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Content-Type: application/json" \
+                --data-raw "{\"body\":\"$COMMENT_BODY\"}" \
+                $API_URL
