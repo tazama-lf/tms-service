@@ -118,12 +118,12 @@ jobs:
       - name: Get Results For each test
         id: output_test
         run: |
-              result=""
+              result="<br />"
               array_length=$(jq '.collection.item | length' fullReport.json)
               for ((index=0; index<array_length; index++))
               do
                 value=$(jq -r ".collection.item[$index].name" fullReport.json)
-                result="$result,$value"
+                result="$result, <br /> $value"
               done
               result=${result#,}
               echo "::set-output name=resultOutput::$result"
