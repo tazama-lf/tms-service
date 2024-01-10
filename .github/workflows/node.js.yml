@@ -114,6 +114,18 @@ jobs:
           echo "::set-output name=responseSd::$(jq -r '.run.timings.responseSd' fullReport.json)"
           echo "::set-output name=numberOfTest::$(jq -r '.run.stats.tests.total' fullReport.json)"
 
+      - name: Get Results For each test
+        run: |
+              result=""
+              array_length=$(jq '.collection.item | length' fullReport.json)
+              for ((index=0; index<array_length; index++))
+              do
+                value=$(jq -r ".collection.item[$index].name" fullReport.json)
+                result="$result,$value"
+              done
+              result=${result#,}
+              echo "::set-output name=numberOfTest::$result"
+
       - name: Upload Results
         uses: actions/upload-artifact@v3
         with:
