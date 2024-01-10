@@ -16,6 +16,7 @@ jobs:
       responseMax: ${{ steps.newman_test.outputs.responseMax }}
       responseSd: ${{ steps.newman_test.outputs.responseSd }}
       numberOfTest: ${{ steps.newman_test.outputs.numberOfTest }}
+      resultOutput: ${{ steps.newman_test.outputs.resultOutput }}
     name: install, build, test
     permissions:
       packages: write
@@ -124,7 +125,7 @@ jobs:
                 result="$result,$value"
               done
               result=${result#,}
-              echo "::set-output name=numberOfTest::$result"
+              echo "::set-output name=resultOutput::$result"
 
       - name: Upload Results
         uses: actions/upload-artifact@v3
@@ -139,7 +140,7 @@ jobs:
       - name: Comment on PR
 
         run: |
-              COMMENT_BODY="⚠️ Newman Test Results  <br /><br />Number of tests ${{ needs.build.outputs.numberOfTest }} <br /><br />Response stats<blockquote> <li> Response Average ${{ needs.build.outputs.responseAverage }}ms <br /><li>Response Min ${{ needs.build.outputs.responseMin }}ms <br /><li>Response max ${{ needs.build.outputs.responseMax }}ms <br /><li>Response standard dev ${{ needs.build.outputs.responseSd }}ms"
+              COMMENT_BODY="⚠️ Newman Test Results ${{ needs.build.outputs.resultOutput }}  <br /><br />Number of tests ${{ needs.build.outputs.numberOfTest }} <br /><br />Response stats<blockquote> <li> Response Average ${{ needs.build.outputs.responseAverage }}ms <br /><li>Response Min ${{ needs.build.outputs.responseMin }}ms <br /><li>Response max ${{ needs.build.outputs.responseMax }}ms <br /><li>Response standard dev ${{ needs.build.outputs.responseSd }}ms"
 
               API_URL="https://api.github.com/repos/${{github.repository}}/issues/${{github.event.number}}/comments"
               curl -X POST \
