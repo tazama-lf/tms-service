@@ -16,7 +16,7 @@ jobs:
       responseMax: ${{ steps.newman_test.outputs.responseMax }}
       responseSd: ${{ steps.newman_test.outputs.responseSd }}
       numberOfTest: ${{ steps.newman_test.outputs.numberOfTest }}
-      resultOutput: ${{ steps.newman_test.outputs.resultOutput }}
+      resultOutput: ${{ steps.output_test.outputs.resultOutput}}
     name: install, build, test
     permissions:
       packages: write
@@ -116,6 +116,7 @@ jobs:
           echo "::set-output name=numberOfTest::$(jq -r '.run.stats.tests.total' fullReport.json)"
 
       - name: Get Results For each test
+        id: output_test
         run: |
               result=""
               array_length=$(jq '.collection.item | length' fullReport.json)
