@@ -122,10 +122,9 @@ jobs:
               array_length=$(jq '.collection.item | length' fullReport.json)
               for ((index=0; index<array_length; index++))
               do
-                value=$(jq -r '.run.executions[$index].item.name' fullReport.json)
-                time=$(jq -r '.run.executions[$index].response.responseTime' fullReport.json)
-
-                result="$result <br /> $value took $time ms to complete"
+                value=$(jq -r ".collection.item[$index].name" fullReport.json)
+                time=$(jq -r ".run.executions[$index].response.responseTime" fullReport.json)
+                result="$result, <br /> $value took $time ms to complete"
               done
               result=${result#,}
               echo "::set-output name=resultOutput::$result"
