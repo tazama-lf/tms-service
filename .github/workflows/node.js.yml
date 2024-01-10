@@ -124,7 +124,7 @@ jobs:
               do
                 value=$(jq -r ".collection.item[$index].name" fullReport.json)
                 time=$(jq -r ".run.executions[$index].response.responseTime" fullReport.json)
-                result="$result <br /> ${index + 1}. $value took ${time}ms to complete"
+                result="$result <br /> $((index + 1)). $value took ${time}ms to complete"
               done
               result=${result#,}
               echo "::set-output name=resultOutput::$result"
