@@ -104,7 +104,7 @@ jobs:
 
 
       - name: Test Processor
-        run: newman run https://raw.githubusercontent.com/frmscoe/postman/indexes/RES_TMS_TEST.postman_collection.json -e https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json --timeout-request 10200 -r json --reporter-json-export fullReport.json
+        run: newman run https://raw.githubusercontent.com/frmscoe/postman/main/micro_processors/TransactionMessageSubmitterProcessor_Proxt_Test.postman_collection.json -e https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json --timeout-request 10200 -r json --reporter-json-export fullReport.json
 
       - name: Extract Specific Field
         id: newman_test
