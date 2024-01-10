@@ -75,6 +75,8 @@ jobs:
           NODE_ENV: 'dev'
           STARTUP_TYPE: 'nats'
           SERVER_URL: 'nats://localhost:4222'
+          PRODUCER_STREAM: CRSP
+          CONSUMER_STREAM: TMS
           ACK_POLICY: 'None'
           STREAM_SUBJECT:
           APM_ACTIVE: false
