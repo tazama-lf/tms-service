@@ -34,6 +34,7 @@ env:
   GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
   NPM_SCOPE: "@frmscoe"
   NPM_REGISTRY: "https://npm.pkg.github.com/"
+  ENV_NEWMAN: https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json
 on:
   push:
     branches: [ "main" ]
@@ -69,7 +70,7 @@ jobs:
           arangodb version: 'latest'
 
       - name: Setup Arango
-        run: newman run https://raw.githubusercontent.com/frmscoe/postman/indexes/ArangoDB%20Setup.json -e https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json --timeout-request 10200
+        run: newman run https://raw.githubusercontent.com/frmscoe/postman/indexes/ArangoDB%20Setup.json -e ${{ env.ENV_NEWMAN }} --timeout-request 10200
 
       - name: Startup Nats
         uses: onichandame/nats-action@master
@@ -100,7 +101,7 @@ jobs:
         run: npm run start &
 
       - name: Test Processor
-        run: newman run https://raw.githubusercontent.com/frmscoe/postman/main/micro_processors/TransactionMessageSubmitterProcessor_Proxt_Test.postman_collection.json -e https://raw.githubusercontent.com/frmscoe/postman/main/environments/Ekuta-LOCAL.postman_environment.json --timeout-request 10200 -r json --reporter-json-export fullReport.json
+        run: newman run https://raw.githubusercontent.com/frmscoe/postman/main/micro_processors/TransactionMessageSubmitterProcessor_Proxt_Test.postman_collection.json -e ${{ env.ENV_NEWMAN }} --timeout-request 10200 -r json --reporter-json-export fullReport.json
 
       - name: Extract Specific Field
         id: newman_test
