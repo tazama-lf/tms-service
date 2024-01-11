@@ -5,6 +5,7 @@ import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache 
 import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
+import { unwrap } from '@frmscoe/frms-coe-lib/lib/helpers/unwrap';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
@@ -222,6 +223,11 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       dbtrId: debtorId,
       cdtrAcctId: creditorAcctId,
       dbtrAcctId: debtorAcctId,
+      CreDtTm,
+      amt: {
+        Amt: parseFloat(Amt),
+        Ccy,
+      },
     };
 
     const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
@@ -381,16 +387,27 @@ export const rebuildCache = async (endToEndId: string, id?: string): Promise<Dat
   const span = apm.startSpan('db.cache.rebuild');
   const context = 'rebuildCache()';
   const currentPacs008 = (await databaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
-  if (!currentPacs008 || !currentPacs008[0] || !currentPacs008[0][0]) {
+
+  const pacs008 = unwrap(currentPacs008);
+
+  if (!pacs008) {
     loggerService.error('Could not find pacs008 transaction to rebuild dataCache with', context, id);
     span?.end();
     return undefined;
   }
+
+  const cdtTrfTxInf = pacs008.FIToFICstmrCdt.CdtTrfTxInf;
+
   const dataCache: DataCache = {
-    cdtrId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
-    dbtrId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
-    cdtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-    dbtrAcctId: currentPacs008[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id,
+    cdtrId: cdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
+    dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
+    cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr.Id,
+    dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr.Id,
+    CreDtTm: pacs008.FIToFICstmrCdt.GrpHdr.CreDtTm,
+    amt: {
+      Amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
+      Ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
+    },
   };
 
   const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
