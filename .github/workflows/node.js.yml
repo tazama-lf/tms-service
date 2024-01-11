@@ -60,10 +60,6 @@ jobs:
         redis-version: [6]
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 7
-
       - name: Start Arango
         uses: xinova/arangodb-action@v1
         with:
@@ -90,7 +86,7 @@ jobs:
           scope: '@frmscoe'
 
       - name: Install dependencies
-        run: npm install -g newman && npm ci
+        run: npm ci
         env:
           GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
 
