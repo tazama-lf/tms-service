@@ -49,7 +49,7 @@ jobs:
       responseSd: ${{ steps.newman_test.outputs.responseSd }}
       numberOfTest: ${{ steps.newman_test.outputs.numberOfTest }}
       resultOutput: ${{ steps.output_test.outputs.resultOutput}}
-    name: install, build, test
+    name: intergration test
     permissions:
       packages: write
       contents: read
