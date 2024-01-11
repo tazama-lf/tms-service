@@ -162,6 +162,8 @@ jobs:
           scope: ${{ env.NPM_SCOPE }}
       - name: Install dependencies
         run: npm ci
+      - name: Run test
+        run: npm run test
         env:
           NODE_ENV: 'test'
 
