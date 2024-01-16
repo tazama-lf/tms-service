@@ -160,6 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Comment on PR
+        if: github.event_name == 'pull_request'
         run: |
               difference=$((${{ needs.pastbench.outputs.responseMax }} - ${{ needs.build.outputs.responseMax }}))
 
@@ -187,6 +188,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Store data
+        if: github.event_name == 'pull_request'
         run: |
               # GitHub repository details
               repo_owner="${{ github.repository_owner }}"
