@@ -12,7 +12,7 @@ env:
   STREAM_SUBJECT:
   APM_ACTIVE: false
   APM_LOGGING: false
-  FUNCTION_NAME: 'transaction-monitoring-service'
+  FUNCTION_NAME: '${{ github.event.repository.name }}'
   REDIS_DB: 0
   REDIS_AUTH:
   REDIS_SERVERS: '[{"host":"127.0.0.1", "port":6379}]'
