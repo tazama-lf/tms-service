@@ -39,8 +39,9 @@ env:
   REPO_NAME: 'performance-benchmark'
 on:
   push:
-    branches:
-      - '*'
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 jobs:
   build:
     runs-on: ubuntu-latest
