@@ -21,19 +21,21 @@ export interface IConfig {
     url: string;
     active: string;
   };
-  db: {
-    pseudonymsdb: string;
-    transactionhistorydb: string;
-    transactionhistory_pain001_collection: string;
-    transactionhistory_pain013_collection: string;
-    transactionhistory_pacs008_collection: string;
-    transactionhistory_pacs002_collection: string;
-    password: string;
-    url: string;
-    user: string;
-  };
+  graphDb: string;
+  pseudonymsURL: string;
+  pseudonymsUser: string;
+  pseudonymsPassword: string;
+  pseudonymsCertPath: string;
+  transactionHistoryName: string;
+  transactionHistoryPassword: string;
+  transactionHistoryURL: string;
+  transactionHistoryUser: string;
+  transactionHistoryCertPath: string;
+  transactionHistoryPain001Collection: string;
+  transactionHistoryPain013Collection: string;
+  transactionHistoryPacs008Collection: string;
+  transactionHistoryPacs002Collection: string;
   cacheTTL: number;
-  cert: string;
   crspEndpoint: string;
   quoting: boolean;
   logger: {
@@ -55,19 +57,17 @@ export const configuration: IConfig = {
     active: process.env.APM_ACTIVE!,
   },
   cacheTTL: parseInt(process.env.CACHE_TTL!, 10) || 300,
-  cert: process.env.CERT_PATH!,
   crspEndpoint: process.env.CRSP_ENDPOINT!,
-  db: {
-    pseudonymsdb: process.env.PSEUDONYMS_DATABASE!,
-    transactionhistorydb: process.env.TRANSACTIONHISTORY_DATABASE!,
-    transactionhistory_pain001_collection: process.env.TRANSACTIONHISTORY_PAIN001_COLLECTION!,
-    transactionhistory_pain013_collection: process.env.TRANSACTIONHISTORY_PAIN013_COLLECTION!,
-    transactionhistory_pacs008_collection: process.env.TRANSACTIONHISTORY_PACS008_COLLECTION!,
-    transactionhistory_pacs002_collection: process.env.TRANSACTIONHISTORY_PACS002_COLLECTION!,
-    password: process.env.DATABASE_PASSWORD!,
-    url: process.env.DATABASE_URL!,
-    user: process.env.DATABASE_USER!,
-  },
+  transactionHistoryCertPath: process.env.CERT_PATH!,
+  graphDb: process.env.PSEUDONYMS_DATABASE!,
+  transactionHistoryName: process.env.TRANSACTIONHISTORY_DATABASE!,
+  transactionHistoryPain001Collection: process.env.TRANSACTIONHISTORY_PAIN001_COLLECTION!,
+  transactionHistoryPain013Collection: process.env.TRANSACTIONHISTORY_PAIN013_COLLECTION!,
+  transactionHistoryPacs008Collection: process.env.TRANSACTIONHISTORY_PACS008_COLLECTION!,
+  transactionHistoryPacs002Collection: process.env.TRANSACTIONHISTORY_PACS002_COLLECTION!,
+  transactionHistoryPassword: process.env.DATABASE_PASSWORD!,
+  transactionHistoryURL: process.env.DATABASE_URL!,
+  transactionHistoryUser: process.env.DATABASE_USER!,
   env: process.env.NODE_ENV!,
   functionName: process.env.FUNCTION_NAME!,
   logger: {
@@ -83,4 +83,8 @@ export const configuration: IConfig = {
     isCluster: process.env.REDIS_IS_CLUSTER === 'true',
   },
   sidecarHost: process.env.SIDECAR_HOST!,
+  pseudonymsURL: process.env.PSEUDONYMS_URL!,
+  pseudonymsUser: process.env.PSEUDONYMS_USER!,
+  pseudonymsPassword: process.env.PSEUDONYMS_PASSWORD!,
+  pseudonymsCertPath: process.env.PSEUDONYMS_CERT_PATH!,
 };

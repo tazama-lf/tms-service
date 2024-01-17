@@ -17,18 +17,18 @@ const databaseManagerConfig = {
     isCluster: configuration.redis.isCluster,
   },
   transactionHistory: {
-    certPath: configuration.cert,
-    databaseName: configuration.db.transactionhistorydb,
-    user: configuration.db.user,
-    password: configuration.db.password,
-    url: configuration.db.url,
+    certPath: configuration.transactionHistoryCertPath,
+    databaseName: configuration.transactionHistoryName,
+    user: configuration.transactionHistoryUser,
+    password: configuration.transactionHistoryPassword,
+    url: configuration.transactionHistoryURL,
   },
   pseudonyms: {
-    certPath: configuration.cert,
-    databaseName: configuration.db.pseudonymsdb,
-    user: configuration.db.user,
-    password: configuration.db.password,
-    url: configuration.db.url,
+    certPath: configuration.transactionHistoryCertPath,
+    databaseName: configuration.graphDb,
+    user: configuration.pseudonymsUser,
+    password: configuration.pseudonymsPassword,
+    url: configuration.pseudonymsURL,
   },
 };
 
