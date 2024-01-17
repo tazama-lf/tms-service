@@ -24,7 +24,7 @@ const databaseManagerConfig = {
     url: configuration.transactionHistoryURL,
   },
   pseudonyms: {
-    certPath: configuration.transactionHistoryCertPath,
+    certPath: configuration.pseudonymsCertPath,
     databaseName: configuration.graphDb,
     user: configuration.pseudonymsUser,
     password: configuration.pseudonymsPassword,
