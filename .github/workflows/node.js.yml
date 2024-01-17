@@ -31,7 +31,8 @@ env:
   TRANSACTIONHISTORY_PACS002_COLLECTION: transactionHistoryPacs002
   QUOTING: true
   PORT: 3000
-  GH_TOKEN: '${{ secrets.GH_WRITE_TOKEN }}'
+  GH_RW_TOKEN: '${{ secrets.GH_WRITE_TOKEN }}'
+  GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
   NPM_SCOPE: "@frmscoe"
   NPM_REGISTRY: "https://npm.pkg.github.com/"
   ENV_NEWMAN: https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json
@@ -89,8 +90,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        env:
-          GH_TOKEN : ${{ secrets.GITHUB_TOKEN }}
 
       - name: Processor Build
         run: npm run build
@@ -181,7 +180,7 @@ jobs:
 
               API_URL="https://api.github.com/repos/${{github.repository}}/issues/${{github.event.number}}/comments"
               curl -X POST \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ env.GH_TOKEN }}" \
               -H "Content-Type: application/json" \
               --data-raw "{\"body\":\"$COMMENT_BODY\",\"assignee\":\"actions-user\"}" \
               $API_URL
@@ -200,7 +199,7 @@ jobs:
               file_path="${{ env.FUNCTION_NAME }}".csv
 
               # Personal access token with repo scope
-              access_token="${{ env.GH_TOKEN }}"
+              access_token="${{ env.GH_RW_TOKEN }}"
 
               new_content="${{ needs.build.outputs.responseMax }};${{ needs.build.outputs.responseAverage }};${{ needs.build.outputs.responseMin }};${{ needs.build.outputs.numberOfTest }};${{ github.actor }};${{ github.event.pull_request.updated_at }};${{ github.event.number}}"
               updated_content="$new_content"
@@ -246,8 +245,6 @@ jobs:
           scope: ${{ env.NPM_SCOPE }}
       - name: Install dependencies
         run: npm ci
-        env:
-          GH_TOKEN : ${{ secrets.GITHUB_TOKEN }}
       - name: Run test
         run: npm run test
         env:
@@ -271,8 +268,6 @@ jobs:
           scope: ${{ env.NPM_SCOPE }}
       - name: Install dependencies
         run: npm ci
-        env:
-          GH_TOKEN : ${{ secrets.GITHUB_TOKEN }}
       - name: Check linting
         run: npm run lint
 
