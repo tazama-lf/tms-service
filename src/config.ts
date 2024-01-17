@@ -65,9 +65,9 @@ export const configuration: IConfig = {
   transactionHistoryPain013Collection: process.env.TRANSACTIONHISTORY_PAIN013_COLLECTION!,
   transactionHistoryPacs008Collection: process.env.TRANSACTIONHISTORY_PACS008_COLLECTION!,
   transactionHistoryPacs002Collection: process.env.TRANSACTIONHISTORY_PACS002_COLLECTION!,
-  transactionHistoryPassword: process.env.DATABASE_PASSWORD!,
-  transactionHistoryURL: process.env.DATABASE_URL!,
-  transactionHistoryUser: process.env.DATABASE_USER!,
+  transactionHistoryPassword: process.env.TRANSACTIONHISTORY_DATABASE_PASSWORD!,
+  transactionHistoryURL: process.env.TRANSACTIONHISTORY_DATABASE_URL!,
+  transactionHistoryUser: process.env.TRANSACTIONHISTORY_DATABASE_USER!,
   env: process.env.NODE_ENV!,
   functionName: process.env.FUNCTION_NAME!,
   logger: {
