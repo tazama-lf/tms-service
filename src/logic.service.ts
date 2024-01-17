@@ -61,11 +61,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       throw new Error('[pain001] dataCache could not be serialised to buffer');
     }
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(
-        transaction,
-        configuration.db.transactionhistory_pain001_collection,
-        `pain001_${EndToEndId}`,
-      ),
+      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain001Collection, `pain001_${EndToEndId}`),
       cacheDatabaseClient.addAccount(debtorAcctId),
       cacheDatabaseClient.addAccount(creditorAcctId),
       cacheDatabaseClient.addEntity(creditorId, CreDtTm),
@@ -149,11 +145,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   const spanInsert = apm.startSpan('db.insert.pain013');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(
-        transaction,
-        configuration.db.transactionhistory_pain013_collection,
-        `pain013_${EndToEndId}`,
-      ),
+      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain013Collection, `pain013_${EndToEndId}`),
       cacheDatabaseClient.addAccount(debtorAcctId),
       cacheDatabaseClient.addAccount(creditorAcctId),
     ]);
@@ -268,11 +260,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(
-        transaction,
-        configuration.db.transactionhistory_pacs008_collection,
-        `pacs008_${EndToEndId}`,
-      ),
+      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
     ]);
   } catch (err) {
     loggerService.error(JSON.stringify(err), logContext, id);
@@ -340,7 +328,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   try {
     await cacheDatabaseClient.saveTransactionHistory(
       transaction,
-      configuration.db.transactionhistory_pacs002_collection,
+      configuration.transactionHistoryPacs002Collection,
       `pacs002_${EndToEndId}`,
     );
 
