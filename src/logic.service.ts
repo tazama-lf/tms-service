@@ -310,29 +310,54 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   };
 
   let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
-  try {
-    const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
-    dataCache = dataCacheJSON as DataCache;
-  } catch (ex) {
-    loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
-    loggerService.log(`Proceeding with Arango Call`, logContext, id);
-    dataCache = !configuration.quoting ? await rebuildCache(EndToEndId, id) : await rebuildCachePain001(EndToEndId, id);
-  } finally {
-    spanDataCache?.end();
-  }
-
   transaction._key = MsgId;
 
-  const spanInsert = apm.startSpan('db.insert.pacs002');
-  try {
+  const result = (await Promise.all([
+    (await databaseManager.getBuffer(EndToEndId)).DataCache,
+    (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]],
     await cacheDatabaseClient.saveTransactionHistory(
       transaction,
       configuration.transactionHistoryPacs002Collection,
       `pacs002_${EndToEndId}`,
-    );
+    ),
+  ])
+    .then(async (results) => {
+      dataCache = results[0] as DataCache;
+      if (!dataCache) {
+        const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
+        loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
+        loggerService.log(`Proceeding with Arango Call`, logContext, id);
+        dataCache = !configuration.quoting ? await rebuildCache(EndToEndId, id) : await rebuildCachePain001(EndToEndId, id);
+        spanDataCache?.end();
+      }
+      return results[1];
+    })
+    .catch((error) => {
+      loggerService.error('One of the promises rejected:', error);
+    })) as [Pacs008[]];
 
-    const result = (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]];
+  // S
+  // const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
+  // try {
+  //   const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
+  //   dataCache = dataCacheJSON as DataCache; // 1
+  // } catch (ex) {
+  //   loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
+  //   loggerService.log(`Proceeding with Arango Call`, logContext, id);
+  //   dataCache = !configuration.quoting ? await rebuildCache(EndToEndId, id) : await rebuildCachePain001(EndToEndId, id);
+  // } finally {
+  //   spanDataCache?.end();
+  // }
+
+  const spanInsert = apm.startSpan('db.insert.pacs002');
+  try {
+    // await cacheDatabaseClient.saveTransactionHistory(
+    //   transaction,
+    //   configuration.transactionHistoryPacs002Collection,
+    //   `pacs002_${EndToEndId}`, // 2
+    // );
+
+    // const result = (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]]; // 3
 
     const debtorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
     const creditorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
@@ -343,13 +368,24 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     spanInsert?.end();
-    loggerService.log(`${JSON.stringify(err)}`, logContext, id);
+    loggerService.error(`${JSON.stringify(err)}`, logContext, id);
     span?.end();
     throw err;
   } finally {
     spanInsert?.end();
   }
 
+  loggerService.log(
+    'object sent to crsp',
+    JSON.stringify({
+      transaction,
+      DataCache: dataCache,
+      metaData: {
+        prcgTmDP: calculateDuration(startTime),
+        traceParent: apm.getCurrentTraceparent(),
+      },
+    }),
+  );
   // Notify CRSP
   server.handleResponse({
     transaction,

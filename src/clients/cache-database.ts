@@ -108,11 +108,11 @@ export class CacheDatabaseService {
     transaction: Pain001 | Pain013 | Pacs008 | Pacs002,
     transactionHistoryCollection: string,
     redisKey = '',
-  ): Promise<void> {
+  ): Promise<Promise<unknown>> {
     const buff = createMessageBuffer({ ...transaction });
 
     if (redisKey && buff) await this.dbClient.set?.(redisKey, buff, this.cacheExpireTime);
 
-    await this.dbClient.saveTransactionHistory?.(transaction, transactionHistoryCollection);
+    return await this.dbClient.saveTransactionHistory?.(transaction, transactionHistoryCollection);
   }
 }
