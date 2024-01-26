@@ -56,17 +56,12 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
 
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
-    const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
-    if (!cacheBuffer) {
-      throw new Error('[pain001] dataCache could not be serialised to buffer');
-    }
     await Promise.all([
       cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain001Collection, `pain001_${EndToEndId}`),
       cacheDatabaseClient.addAccount(debtorAcctId),
       cacheDatabaseClient.addAccount(creditorAcctId),
       cacheDatabaseClient.addEntity(creditorId, CreDtTm),
       cacheDatabaseClient.addEntity(debtorId, CreDtTm),
-      databaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL),
     ]);
 
     await Promise.all([
