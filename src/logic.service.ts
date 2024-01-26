@@ -115,8 +115,8 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
   const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
 
-  const cdtrId = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
-  const dbtrId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const dbtrId = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
+  const cdtrId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorAcctId}`,
@@ -131,8 +131,8 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   };
 
   const dataCache: DataCache = {
-    cdtrAcctId: debtorAcctId,
-    dbtrAcctId: creditorAcctId,
+    cdtrAcctId: creditorAcctId,
+    dbtrAcctId: debtorAcctId,
     cdtrId,
     dbtrId,
   };
