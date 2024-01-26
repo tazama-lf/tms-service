@@ -66,7 +66,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       cacheDatabaseClient.addAccount(creditorAcctId),
       cacheDatabaseClient.addEntity(creditorId, CreDtTm),
       cacheDatabaseClient.addEntity(debtorId, CreDtTm),
-      databaseManager.set(EndToEndId, cacheBuffer, 150),
+      databaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL),
     ]);
 
     await Promise.all([
@@ -135,7 +135,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
     loggerService.log(`Checking arango`, logContext, id);
-    dataCache = await rebuildCachePain001(EndToEndId, id);
+    dataCache = await rebuildCachePain001(EndToEndId, false, id);
   } finally {
     spanDataCache?.end();
   }
@@ -209,29 +209,28 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
 
   const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
 
+  const dataCache: DataCache = {
+    cdtrId: creditorId,
+    dbtrId: debtorId,
+    cdtrAcctId: creditorAcctId,
+    dbtrAcctId: debtorAcctId,
+    CreDtTm,
+    amt: {
+      Amt: parseFloat(Amt),
+      Ccy,
+    },
+  };
+  const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
+  if (cacheBuffer) {
+    accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
+  } else {
+    // this is fatal
+    throw new Error('[pacs008] data cache could not be serialised');
+  }
+
   if (!configuration.quoting) {
-    const dataCache: DataCache = {
-      cdtrId: creditorId,
-      dbtrId: debtorId,
-      cdtrAcctId: creditorAcctId,
-      dbtrAcctId: debtorAcctId,
-      CreDtTm,
-      amt: {
-        Amt: parseFloat(Amt),
-        Ccy,
-      },
-    };
-
-    const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
-
     accountInserts.push(cacheDatabaseClient.addEntity(creditorId, CreDtTm));
     accountInserts.push(cacheDatabaseClient.addEntity(debtorId, CreDtTm));
-    if (cacheBuffer) {
-      accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, 150));
-    } else {
-      // this is fatal
-      throw new Error('[pacs008] data cache could not be serialised');
-    }
     await Promise.all(accountInserts);
 
     await Promise.all([
@@ -242,20 +241,6 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     await Promise.all(accountInserts);
   }
   cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
-
-  let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
-  try {
-    const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
-    dataCache = dataCacheJSON as DataCache;
-  } catch (ex) {
-    loggerService.error(`Could not retrieve data cache for : ${EndToEndId} from redis`, logContext, id);
-    loggerService.log(`Calling arango`, logContext, id);
-
-    dataCache = !configuration.quoting ? await rebuildCache(EndToEndId, id) : await rebuildCachePain001(EndToEndId, id);
-  } finally {
-    spanDataCache?.end();
-  }
 
   const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
@@ -317,7 +302,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
     loggerService.log(`Proceeding with Arango Call`, logContext, id);
-    dataCache = !configuration.quoting ? await rebuildCache(EndToEndId, id) : await rebuildCachePain001(EndToEndId, id);
+    dataCache = !configuration.quoting ? await rebuildCache(EndToEndId, false, id) : await rebuildCachePain001(EndToEndId, false, id);
   } finally {
     spanDataCache?.end();
   }
@@ -371,7 +356,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
  * @param {string} endToEndId
  * @return {*}  {(Promise<DataCache | undefined>)}
  */
-export const rebuildCache = async (endToEndId: string, id?: string): Promise<DataCache | undefined> => {
+export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id?: string): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild');
   const context = 'rebuildCache()';
   const currentPacs008 = (await databaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
@@ -398,19 +383,21 @@ export const rebuildCache = async (endToEndId: string, id?: string): Promise<Dat
     },
   };
 
-  const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
+  if (writeToRedis) {
+    const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
-  if (buffer) {
-    await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
-  } else {
-    loggerService.error('[pacs008] could not rebuild redis cache', rebuildCache);
+    if (buffer) {
+      await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+    } else {
+      loggerService.error('[pacs008] could not rebuild redis cache');
+    }
   }
 
   span?.end();
   return dataCache;
 };
 
-export const rebuildCachePain001 = async (endToEndId: string, id?: string): Promise<DataCache | undefined> => {
+export const rebuildCachePain001 = async (endToEndId: string, writeToRedis: boolean, id?: string): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild');
   const context = 'rebuildCachePain001()';
   const currentPain001 = (await databaseManager.getTransactionPain001(endToEndId)) as [Pain001[]];
@@ -426,12 +413,14 @@ export const rebuildCachePain001 = async (endToEndId: string, id?: string): Prom
     dbtrAcctId: currentPain001[0][0].CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id,
   };
 
-  const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
+  if (writeToRedis) {
+    const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
-  if (buffer) {
-    await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
-  } else {
-    loggerService.error('[pain001] could not rebuild redis cache', context, id);
+    if (buffer) {
+      await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+    } else {
+      loggerService.error('[pain001] could not rebuild redis cache', context, id);
+    }
   }
 
   span?.end();
