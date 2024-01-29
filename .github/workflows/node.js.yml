@@ -42,6 +42,7 @@ env:
   ENV_NEWMAN: https://raw.githubusercontent.com/frmscoe/postman/indexes/environments/Ekuta-LOCAL.postman_environment.json
   THRESHOLD: 5
   REPO_NAME: 'performance-benchmark'
+  ITERATION_COUNT: 500
 on:
   push:
     branches: [ "main" ]
@@ -102,7 +103,7 @@ jobs:
         run: npm run start &
 
       - name: Test Processor
-        run: newman run https://raw.githubusercontent.com/frmscoe/postman/main/micro_processors/TransactionMessageSubmitterProcessor_Proxt_Test.postman_collection.json --iteration-count 100 -e ${{ env.ENV_NEWMAN }} --timeout-request 10200 -r json --reporter-json-export fullReport.json
+        run: newman run https://raw.githubusercontent.com/frmscoe/postman/main/micro_processors/TransactionMessageSubmitterProcessor_Proxt_Test.postman_collection.json --iteration-count ${{ env.ITERATION_COUNT }} -e ${{ env.ENV_NEWMAN }} --timeout-request 10200 -r json --reporter-json-export fullReport.json
 
       - name: Extract Specific Field
         id: newman_test
