@@ -184,7 +184,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
 
   const Amt = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Amt;
   const Ccy = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Ccy;
-  const CreDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
+  const creDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
   const EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
@@ -200,7 +200,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     to: `accounts/${creditorAcctId}`,
     Amt,
     Ccy,
-    CreDtTm,
+    CreDtTm: creDtTm,
     EndToEndId,
     MsgId,
     PmtInfId,
@@ -215,17 +215,17 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       dbtrId: debtorId,
       cdtrAcctId: creditorAcctId,
       dbtrAcctId: debtorAcctId,
-      CreDtTm,
+      creDtTm,
       amt: {
-        Amt: parseFloat(Amt),
-        Ccy,
+        amt: parseFloat(Amt),
+        ccy: Ccy,
       },
     };
 
     const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
-    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, CreDtTm));
-    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, CreDtTm));
+    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, creDtTm));
+    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, creDtTm));
     if (cacheBuffer) {
       accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, 150));
     } else {
@@ -235,8 +235,8 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     await Promise.all(accountInserts);
 
     await Promise.all([
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, creDtTm),
+      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, creDtTm),
     ]);
   } else {
     await Promise.all(accountInserts);
@@ -391,10 +391,10 @@ export const rebuildCache = async (endToEndId: string, id?: string): Promise<Dat
     dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
     cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr.Id,
     dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr.Id,
-    CreDtTm: pacs008.FIToFICstmrCdt.GrpHdr.CreDtTm,
+    creDtTm: pacs008.FIToFICstmrCdt.GrpHdr.CreDtTm,
     amt: {
-      Amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
-      Ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
+      amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
+      ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
     },
   };
 
