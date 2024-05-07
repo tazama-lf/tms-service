@@ -17,7 +17,7 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
 
 [https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service-Sequence.puml](https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service-Sequence.puml)
 
-![](./image-20230815-100606.png)
+![](./images/image-20230815-100606.png)
 
 Transaction monitoring is one of many risk management activities that an organization must perform to ensure healthy operations and also to remain compliant with relevant legislation or regulations.
 
@@ -29,13 +29,13 @@ The activity diagram below applies to Pain001, Pain013, Pacs008 and Pacs002 mess
 
 [https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service.plantuml](https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service.plantuml)
 
-![](./image-20230815-100624.png)
+![](./images/image-20230815-100624.png)
 
 ### Cache Interactions
 
 #### Pain013
 
-![](./Pain013_DB_High_Level_Interactions.png)
+![](./images/Pain013_DB_High_Level_Interactions.png)
 
 ```mermaid
 graph TD
