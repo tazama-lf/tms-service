@@ -478,7 +478,7 @@ graph TD
             "OrgnlInstrId": "5ab4fc7355de4ef8a75b78b00a681ed2255",
             "OrgnlEndToEndId": "2c516801007642dfb892944dde1cf845897",
             "TxSts": "ACCC",
-            "ChrgsInf": \[
+            "ChrgsInf": [
                 {
                     "Amt": {
                         "Amt": 307.14,
@@ -518,7 +518,7 @@ graph TD
                         }
                     }
                 }
-            \],
+            ],
             "AccptncDtTm": "2021-12-03T15:24:26.000Z",
             "InstgAgt": {
                 "FinInstnId": {
@@ -875,3 +875,17 @@ graph TD
         }
     }
 }
+
+## High Level Cache Interactions
+
+### Pain001
+![Pain001](https://github.com/frmscoe/tms-service/blob/assets/assets/pain001.svg)
+
+### Pain013
+![Pain013](https://github.com/frmscoe/tms-service/blob/assets/assets/pain013.svg)
+
+### Pain008
+![Pacs 008](https://github.com/frmscoe/tms-service/blob/assets/assets/pacs008.svg)
+
+### Pacs002
+![Pacs 002](https://github.com/frmscoe/tms-service/blob/assets/assets/pacs002.svg)
