@@ -77,7 +77,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   }
   spanInsert?.end();
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -86,7 +86,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, 'handlePain001()', id);
+  loggerService.log(`Transaction send to event-director service`, 'handlePain001()', id);
 
   span?.end();
   loggerService.log(`END - Handle transaction data`, 'handlePain001()', id);
@@ -152,7 +152,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
 
   spanInsert?.end();
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -161,7 +161,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, logContext, id);
+  loggerService.log(`Transaction send to event-director service`, logContext, id);
 
   span?.end();
   loggerService.log(`END - Handle transaction data`, logContext, id);
@@ -270,7 +270,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     spanInsert?.end();
   }
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -279,7 +279,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, logContext, id);
+  loggerService.log(`Transaction send to event-director service`, logContext, id);
   span?.end();
 };
 
@@ -349,7 +349,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
     spanInsert?.end();
   }
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -358,7 +358,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, logContext, id);
+  loggerService.log(`Transaction send to event-director service`, logContext, id);
 
   span?.end();
   loggerService.log(`END - Handle transaction data`, logContext, id);
