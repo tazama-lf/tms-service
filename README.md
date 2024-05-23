@@ -21,7 +21,7 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
 
 Transaction monitoring is one of many risk management activities that an organization must perform to ensure healthy operations and also to remain compliant with relevant legislation or regulations.
 
-Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.002.001.12 and pacs.008.001.10. For more information click here[https://github.com/frmscoe/docs/blob/main/Product/transaction-monitoring-service-api.md](https://github.com/frmscoe/docs/blob/dev/Knowledge-Articles/iso20022-and-tazama.md)
+Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.002.001.12 and pacs.008.001.10. For more information click [here]https://github.com/frmscoe/docs/blob/main/Product/transaction-monitoring-service-api.md)
 
 ## Activity Diagram
 
