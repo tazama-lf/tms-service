@@ -77,8 +77,12 @@ graph TD
 
 **Sample Request Body (ISO20022 Pain001)**
 
-```json
-{
+<details>
+  <summary>
+    Pain.001.001.11 Message
+  </summary>
+  ```json
+  {
   "TxTp": "pain.001.001.11",
   "CstmrCdtTrfInitn": {
     "GrpHdr": {
@@ -276,6 +280,8 @@ graph TD
   }
 }
 ```
+
+</details>
 
 ## Pain013 Message
 
@@ -654,167 +660,167 @@ graph TD
 
 ```json
 {
-    "TxTp": "pacs.008.001.10",
-    "FIToFICstmrCdt": {
-        "GrpHdr": {
-            "MsgId": "8cc4f6ffb4fd4e31b42aec0ed5d600a0123",
-            "CreDtTm": "2021-12-03T15:24:25.000Z",
-            "NbOfTxs": 1,
-            "SttlmInf": {
-                "SttlmMtd": "CLRG"
-            }
-        },
-        "CdtTrfTxInf": {
-            "PmtId": {
-                "InstrId": "5ab4fc7355de4ef8a75b78b00a681ed2879",
-                "EndToEndId": "2c516801007642dfb892944dde1cf845789"
-            },
-            "IntrBkSttlmAmt": {
-                "Amt": {
-                    "Amt": 31020.89,
-                    "Ccy": "USD"
-                }
-            },
-            "InstdAmt": {
-                "Amt": {
-                    "Amt": 31020.89,
-                    "Ccy": "USD"
-                }
-            },
-            "ChrgBr": "DEBT",
-            "ChrgsInf": {
-                "Amt": {
-                    "Amt": 307.14,
-                    "Ccy": "USD"
-                },
-                "Agt": {
-                    "FinInstnId": {
-                        "ClrSysMmbId": {
-                            "MmbId": "dfsp001"
-                        }
-                    }
-                }
-            },
-            "InitgPty": {
-                "Nm": "April Blake Grant",
-                "Id": {
-                    "PrvtId": {
-                        "DtAndPlcOfBirth": {
-                            "BirthDt": "1968-02-01",
-                            "CityOfBirth": "Unknown",
-                            "CtryOfBirth": "ZZ"
-                        },
-                        "Othr": {
-                            "Id": "+27730975224",
-                            "SchmeNm": {
-                                "Prtry": "MSISDN"
-                            }
-                        }
-                    }
-                },
-                "CtctDtls": {
-                    "MobNb": "+27-730975224"
-                }
-            },
-            "Dbtr": {
-                "Nm": "April Blake Grant",
-                "Id": {
-                    "PrvtId": {
-                        "DtAndPlcOfBirth": {
-                            "BirthDt": "1968-02-01",
-                            "CityOfBirth": "Unknown",
-                            "CtryOfBirth": "ZZ"
-                        },
-                        "Othr": {
-                            "Id": "+27730975224",
-                            "SchmeNm": {
-                                "Prtry": "MSISDN"
-                            }
-                        }
-                    }
-                },
-                "CtctDtls": {
-                    "MobNb": "+27-730975224"
-                }
-            },
-            "DbtrAcct": {
-                "Id": {
-                    "Othr": {
-                        "Id": "+27730975224",
-                        "SchmeNm": {
-                            "Prtry": "MSISDN"
-                        }
-                    }
-                },
-                "Nm": "April Grant"
-            },
-            "DbtrAgt": {
-                "FinInstnId": {
-                    "ClrSysMmbId": {
-                        "MmbId": "dfsp001"
-                    }
-                }
-            },
-            "CdtrAgt": {
-                "FinInstnId": {
-                    "ClrSysMmbId": {
-                        "MmbId": "dfsp002"
-                    }
-                }
-            },
-            "Cdtr": {
-                "Nm": "Felicia Easton Quill",
-                "Id": {
-                    "PrvtId": {
-                        "DtAndPlcOfBirth": {
-                            "BirthDt": "1935-05-08",
-                            "CityOfBirth": "Unknown",
-                            "CtryOfBirth": "ZZ"
-                        },
-                        "Othr": {
-                            "Id": "+27707650428",
-                            "SchmeNm": {
-                                "Prtry": "MSISDN"
-                            }
-                        }
-                    }
-                },
-                "CtctDtls": {
-                    "MobNb": "+27-707650428"
-                }
-            },
-            "CdtrAcct": {
-                "Id": {
-                    "Othr": {
-                        "Id": "+27707650428",
-                        "SchmeNm": {
-                            "Prtry": "MSISDN"
-                        }
-                    }
-                },
-                "Nm": "Felicia Quill"
-            },
-            "Purp": {
-                "Cd": "MP2P"
-            }
-        },
-        "RgltryRptg": {
-            "Dtls": {
-                "Tp": "BALANCE OF PAYMENTS",
-                "Cd": "100"
-            }
-        },
-        "RmtInf": {
-            "Ustrd": "Payment of USD 30713.75 from April to Felicia"
-        },
-        "SplmtryData": {
-            "Envlp": {
-                "Doc": {
-                    "Xprtn": "2021-11-30T10:38:56.000Z"
-                }
-            }
+  "TxTp": "pacs.008.001.10",
+  "FIToFICstmrCdt": {
+    "GrpHdr": {
+      "MsgId": "8cc4f6ffb4fd4e31b42aec0ed5d600a0123",
+      "CreDtTm": "2021-12-03T15:24:25.000Z",
+      "NbOfTxs": 1,
+      "SttlmInf": {
+        "SttlmMtd": "CLRG"
+      }
+    },
+    "CdtTrfTxInf": {
+      "PmtId": {
+        "InstrId": "5ab4fc7355de4ef8a75b78b00a681ed2879",
+        "EndToEndId": "2c516801007642dfb892944dde1cf845789"
+      },
+      "IntrBkSttlmAmt": {
+        "Amt": {
+          "Amt": 31020.89,
+          "Ccy": "USD"
         }
+      },
+      "InstdAmt": {
+        "Amt": {
+          "Amt": 31020.89,
+          "Ccy": "USD"
+        }
+      },
+      "ChrgBr": "DEBT",
+      "ChrgsInf": {
+        "Amt": {
+          "Amt": 307.14,
+          "Ccy": "USD"
+        },
+        "Agt": {
+          "FinInstnId": {
+            "ClrSysMmbId": {
+              "MmbId": "dfsp001"
+            }
+          }
+        }
+      },
+      "InitgPty": {
+        "Nm": "April Blake Grant",
+        "Id": {
+          "PrvtId": {
+            "DtAndPlcOfBirth": {
+              "BirthDt": "1968-02-01",
+              "CityOfBirth": "Unknown",
+              "CtryOfBirth": "ZZ"
+            },
+            "Othr": {
+              "Id": "+27730975224",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
+            }
+          }
+        },
+        "CtctDtls": {
+          "MobNb": "+27-730975224"
+        }
+      },
+      "Dbtr": {
+        "Nm": "April Blake Grant",
+        "Id": {
+          "PrvtId": {
+            "DtAndPlcOfBirth": {
+              "BirthDt": "1968-02-01",
+              "CityOfBirth": "Unknown",
+              "CtryOfBirth": "ZZ"
+            },
+            "Othr": {
+              "Id": "+27730975224",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
+            }
+          }
+        },
+        "CtctDtls": {
+          "MobNb": "+27-730975224"
+        }
+      },
+      "DbtrAcct": {
+        "Id": {
+          "Othr": {
+            "Id": "+27730975224",
+            "SchmeNm": {
+              "Prtry": "MSISDN"
+            }
+          }
+        },
+        "Nm": "April Grant"
+      },
+      "DbtrAgt": {
+        "FinInstnId": {
+          "ClrSysMmbId": {
+            "MmbId": "dfsp001"
+          }
+        }
+      },
+      "CdtrAgt": {
+        "FinInstnId": {
+          "ClrSysMmbId": {
+            "MmbId": "dfsp002"
+          }
+        }
+      },
+      "Cdtr": {
+        "Nm": "Felicia Easton Quill",
+        "Id": {
+          "PrvtId": {
+            "DtAndPlcOfBirth": {
+              "BirthDt": "1935-05-08",
+              "CityOfBirth": "Unknown",
+              "CtryOfBirth": "ZZ"
+            },
+            "Othr": {
+              "Id": "+27707650428",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
+            }
+          }
+        },
+        "CtctDtls": {
+          "MobNb": "+27-707650428"
+        }
+      },
+      "CdtrAcct": {
+        "Id": {
+          "Othr": {
+            "Id": "+27707650428",
+            "SchmeNm": {
+              "Prtry": "MSISDN"
+            }
+          }
+        },
+        "Nm": "Felicia Quill"
+      },
+      "Purp": {
+        "Cd": "MP2P"
+      }
+    },
+    "RgltryRptg": {
+      "Dtls": {
+        "Tp": "BALANCE OF PAYMENTS",
+        "Cd": "100"
+      }
+    },
+    "RmtInf": {
+      "Ustrd": "Payment of USD 30713.75 from April to Felicia"
+    },
+    "SplmtryData": {
+      "Envlp": {
+        "Doc": {
+          "Xprtn": "2021-11-30T10:38:56.000Z"
+        }
+      }
     }
+  }
 }
 ```
 
@@ -824,73 +830,73 @@ graph TD
 
 ```json
 {
-    "TxTp": "pacs.002.001.12",
-    "FIToFIPmtSts": {
-        "GrpHdr": {
-            "MsgId": "30bea71c5a054978ad0da7f94b2a40e9789",
-            "CreDtTm": "2021-12-03T15:24:27.000Z"
-        },
-        "TxInfAndSts": {
-            "OrgnlInstrId": "5ab4fc7355de4ef8a75b78b00a681ed2255",
-            "OrgnlEndToEndId": "2c516801007642dfb892944dde1cf845897",
-            "TxSts": "ACCC",
-            "ChrgsInf": [
-                {
-                    "Amt": {
-                        "Amt": 307.14,
-                        "Ccy": "USD"
-                    },
-                    "Agt": {
-                        "FinInstnId": {
-                            "ClrSysMmbId": {
-                                "MmbId": "dfsp001"
-                            }
-                        }
-                    }
-                },
-                {
-                    "Amt": {
-                        "Amt": 153.57,
-                        "Ccy": "USD"
-                    },
-                    "Agt": {
-                        "FinInstnId": {
-                            "ClrSysMmbId": {
-                                "MmbId": "dfsp001"
-                            }
-                        }
-                    }
-                },
-                {
-                    "Amt": {
-                        "Amt": 30.71,
-                        "Ccy": "USD"
-                    },
-                    "Agt": {
-                        "FinInstnId": {
-                            "ClrSysMmbId": {
-                                "MmbId": "dfsp002"
-                            }
-                        }
-                    }
-                }
-            ],
-            "AccptncDtTm": "2021-12-03T15:24:26.000Z",
-            "InstgAgt": {
-                "FinInstnId": {
-                    "ClrSysMmbId": {
-                        "MmbId": "dfsp001"
-                    }
-                }
-            },
-            "InstdAgt": {
-                "FinInstnId": {
-                    "ClrSysMmbId": {
-                        "MmbId": "dfsp002"
-                    }
-                }
+  "TxTp": "pacs.002.001.12",
+  "FIToFIPmtSts": {
+    "GrpHdr": {
+      "MsgId": "30bea71c5a054978ad0da7f94b2a40e9789",
+      "CreDtTm": "2021-12-03T15:24:27.000Z"
+    },
+    "TxInfAndSts": {
+      "OrgnlInstrId": "5ab4fc7355de4ef8a75b78b00a681ed2255",
+      "OrgnlEndToEndId": "2c516801007642dfb892944dde1cf845897",
+      "TxSts": "ACCC",
+      "ChrgsInf": [
+        {
+          "Amt": {
+            "Amt": 307.14,
+            "Ccy": "USD"
+          },
+          "Agt": {
+            "FinInstnId": {
+              "ClrSysMmbId": {
+                "MmbId": "dfsp001"
+              }
             }
+          }
+        },
+        {
+          "Amt": {
+            "Amt": 153.57,
+            "Ccy": "USD"
+          },
+          "Agt": {
+            "FinInstnId": {
+              "ClrSysMmbId": {
+                "MmbId": "dfsp001"
+              }
+            }
+          }
+        },
+        {
+          "Amt": {
+            "Amt": 30.71,
+            "Ccy": "USD"
+          },
+          "Agt": {
+            "FinInstnId": {
+              "ClrSysMmbId": {
+                "MmbId": "dfsp002"
+              }
+            }
+          }
         }
+      ],
+      "AccptncDtTm": "2021-12-03T15:24:26.000Z",
+      "InstgAgt": {
+        "FinInstnId": {
+          "ClrSysMmbId": {
+            "MmbId": "dfsp001"
+          }
+        }
+      },
+      "InstdAgt": {
+        "FinInstnId": {
+          "ClrSysMmbId": {
+            "MmbId": "dfsp002"
+          }
+        }
+      }
     }
+  }
 }
 ```
