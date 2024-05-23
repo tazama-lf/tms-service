@@ -21,7 +21,7 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
 
 Transaction monitoring is one of many risk management activities that an organization must perform to ensure healthy operations and also to remain compliant with relevant legislation or regulations.
 
-Currently, it accepts ISO20022 Pain001.001.11 message [https://lextego.atlassian.net/browse/AM-632](https://lextego.atlassian.net/browse/AM-632) , pain.013 message [https://lextego.atlassian.net/browse/AM-529](https://lextego.atlassian.net/browse/AM-529) , pacs.002.001.12 [https://lextego.atlassian.net/browse/AM-373](https://lextego.atlassian.net/browse/AM-373) and pacs.008.001.10 [https://lextego.atlassian.net/browse/AM-679?atlOrigin=eyJpIjoiMTFmNzYyOWZmZTk2NDlkNjhhZmVkODlhYTExMmJlM2IiLCJwIjoiaiJ9](https://lextego.atlassian.net/browse/AM-679?atlOrigin=eyJpIjoiMTFmNzYyOWZmZTk2NDlkNjhhZmVkODlhYTExMmJlM2IiLCJwIjoiaiJ9)
+Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.002.001.12 and pacs.008.001.10. For more information click here[https://github.com/frmscoe/docs/blob/main/Product/transaction-monitoring-service-api.md](https://github.com/frmscoe/docs/blob/dev/Knowledge-Articles/iso20022-and-tazama.md)
 
 ## Activity Diagram
 
@@ -81,6 +81,7 @@ graph TD
   <summary>
     Pain.001.001.11 Message
   </summary>
+  
   ```json
   {
   "TxTp": "pain.001.001.11",
@@ -279,13 +280,19 @@ graph TD
     }
   }
 }
-```
 
+```
 </details>
+
 
 ## Pain013 Message
 
 **Sample Request Body (ISO20022 Pain013)**
+
+<details>
+  <summary>
+    Pain.013.001.09 Message
+  </summary>
 
 ```json
 {
@@ -486,10 +493,17 @@ graph TD
 }
 ```
 
+</details>
+
 ## Pacs008 Message
 
 **Sample Request Body (ISO20022 Pacs008)**
 
+<details>
+  <summary>
+    pacs.008.001.10 Message
+  </summary>
+
 ```json
 {
   "TxTp": "pacs.008.001.10",
@@ -655,10 +669,17 @@ graph TD
   }
 }
 ```
+
+</details>
 
 **Expected Response for pacs008**
 
-```json
+<details>
+  <summary>
+    pacs.008.001.10 Response
+  </summary>
+
+  ```json
 {
   "TxTp": "pacs.008.001.10",
   "FIToFICstmrCdt": {
@@ -823,12 +844,21 @@ graph TD
   }
 }
 ```
+
+</details>
+
+
 
 ## Pacs002 Message
 
 **Sample Request Body (ISO20022 Pacs002)**
 
-```json
+<details>
+  <summary>
+    pacs.002.001.12 Message
+  </summary>
+  
+  ```json
 {
   "TxTp": "pacs.002.001.12",
   "FIToFIPmtSts": {
@@ -900,3 +930,4 @@ graph TD
   }
 }
 ```
+  </details>
