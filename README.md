@@ -21,13 +21,40 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
 
 Transaction monitoring is one of many risk management activities that an organization must perform to ensure healthy operations and also to remain compliant with relevant legislation or regulations.
 
-Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.002.001.12 and pacs.008.001.10. For more information click [here](https://github.com/frmscoe/docs/blob/main/Product/transaction-monitoring-service-api.md)
+Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.002.001.12 and pacs.008.001.10. For more information click [here](https://github.com/frmscoe/docs/blob/dev/Knowledge-Articles/iso20022-and-tazama.md)
 
 ## Activity Diagram
 
 The activity diagram below applies to Pain001, Pain013, Pacs008 and Pacs002 messages.
 
-[https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service.plantuml](https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service.plantuml)
+flowchart TD
+    start([Start])
+    acceptHttpRequest[Accept the HTTP POST request (JSON)]
+    requestAccepted{Request accepted?}
+    swagger1[Swagger]
+    note1[/"* Running as a middleware<br>* The request visits swagger the first time<br>* The config is defined in swagger.yml"/]
+    requestFormatValidated{Is request format validated?}
+    swagger2[Swagger]
+    throwError[Throw an error]
+    noteError1[/"* code: SWAGGER_REQUEST_VALIDATION_FAILED<br>* errors: error description"/]
+    errorResponse[Error]
+    noteError2[/"* HTTP 400 Bad Request"/]
+    createObject[Create object]
+    noteCreateObject[/"* Typescript object<br>* Valid object"/]
+    populateDatabase[Populate Database]
+    notePopulateDatabase[/"* The json body includes<br>  - The valid created object"/]
+    createRequest[Create Request to Channel Router Setup Processor]
+    noteCreateRequest[/"* HTTP Post request<br>* The json body includes<br>  - The valid created object"/]
+    response[Response]
+    noteResponse[/"* HTTP 200 Success<br>* message: Transaction is valid<br>* data: original transaction object"/]
+    end([End])
+
+    start --> acceptHttpRequest --> requestAccepted
+    requestAccepted --> |Yes| swagger1 --> note1 --> requestFormatValidated
+    requestFormatValidated --> |Yes| swagger2 --> createObject
+    requestFormatValidated --> |No| throwError --> noteError1 --> end
+    requestAccepted --> |No| errorResponse --> noteError2 --> end
+    createObject --> noteCreateObject --> populateDatabase --> notePopulateDatabase --> createRequest --> noteCreateRequest --> response --> noteResponse --> end
 
 ![](./images/image-20230815-100624.png)
 
