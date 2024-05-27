@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # 1. Transaction Monitoring Service (TMS)
 
 See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlassian.net/wiki/spaces/ACTIO/pages/1737938/Actio+Transaction+Monitoring+Service+overview)
@@ -15,7 +17,116 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
 
 ## Sequence Diagram ISO Messages
 
-[https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service-Sequence.puml](https://github.com/frmscoe/uml-diagrams/blob/main/services/Transaction-Monitoring-Service-Sequence.puml)
+```mermaid
+sequenceDiagram
+    participant Client as "External Client"
+    participant TMS as "Transaction Monitoring Service"
+    participant log as "Logger"
+    participant Ara as "ArangoDB"
+    participant Cache as "Redis Cache"
+    participant CRSP as "Channel Router Setup Processor"
+
+    %% ISO20022 Message Pain001
+    rect rgb(105, 105, 105)
+        Client ->>+ TMS: POST /execute: Pain001.001.11 Message
+        TMS ->> TMS: Validate Pain001
+        TMS ->> log: Logging of receipt
+        alt Validation Error
+        TMS ->> log: Logging of error
+        TMS ->> Client: /execute POST Result
+        end
+
+        rect rgb(173, 216, 230)
+            rect rgb(138, 43, 226)
+                par save in ArangoDB and Redis Cache
+                    TMS ->> Ara: saveTransactionHistory(pain001)
+                    TMS ->> Ara: addAccount(debtor)
+                    TMS ->> Ara: addAccount(creditor)
+                    TMS ->> Ara: addEntity(debtor)
+                    TMS ->> Ara: addEntity(creditor)
+                    TMS ->> Cache: setJson(DataCache)
+                end
+            end
+            TMS ->> CRSP: NATS handleResponse: Pain001 Message
+        end
+        alt Error
+        TMS ->> log: Logging of error
+        TMS ->> TMS: Throw error
+        end
+        TMS ->> log: Transaction sent to CRSP service
+        TMS ->> Client: /execute POST Result
+    end
+
+    %% ISO20022 Message Pain013
+    rect rgb(105, 105, 105)
+        Client ->>+ TMS: POST /quoteReply: Pain013.001.09 Message
+        TMS ->> TMS: Validate Pain013
+        TMS ->> log: Logging of receipt
+        alt Validation Error
+        TMS ->> log: Logging of error
+        TMS ->> Client: /quoteReply POST Result
+        end
+
+        rect rgb(173, 216, 230)
+            TMS ->> Cache: getJson(DataCache)
+            alt rebuild Cache
+                TMS ->> Ara: getTransactionPain001
+                alt Error
+                    TMS ->> TMS: Throw error
+                end
+                TMS ->> TMS: rebuildCache
+                TMS ->> Cache: setJson(DataCache)
+            end
+            par save in ArangoDB
+                TMS ->> Ara: saveTransactionHistory(pain013)
+                TMS ->> Ara: addAccount(debtor)
+                TMS ->> Ara: addAccount(creditor)
+            end
+            TMS ->> CRSP: NATS handleResponse: Pain013 Message
+        end
+        alt Error
+        TMS ->> log: Logging of error
+        TMS ->> TMS: Throw error
+        end
+        TMS ->> log: Transaction sent to CRSP service
+        TMS ->> Client: /quoteReply POST Result
+    end
+
+    %% ISO20022 Message Pacs008
+    rect rgb(105, 105, 105)
+        Client ->>+ TMS: POST /transfer: Pacs008.001.10 Message
+        TMS ->> TMS: Validate Pacs008
+        TMS ->> log: Logging of receipt
+        alt Validation Error
+        TMS ->> log: Logging of error
+        TMS ->> Client: /transfer POST Result
+        end
+
+        rect rgb(173, 216, 230)
+            TMS ->> Cache: getJson(DataCache)
+            alt rebuild Cache
+                TMS ->> Ara: getTransactionPain001
+                alt Error
+                    TMS ->> TMS: Throw error
+                end
+                TMS ->> TMS: rebuildCache
+                TMS ->> Cache: setJson(DataCache)
+            end
+            par save in ArangoDB
+                TMS ->> Ara: saveTransactionHistory(pacs008)
+                TMS ->> Ara: addAccount(debtor)
+                TMS ->> Ara: addAccount(creditor)
+            end
+            TMS ->> CRSP: NATS handleResponse: Pacs008 Message
+        end
+        alt Error
+        TMS ->> log: Logging of error
+        TMS ->> TMS: Throw error
+        end
+        TMS ->> log: Transaction sent to CRSP service
+        TMS ->> Client: /transfer POST Result
+    end
+```
 
 ![](./images/image-20230815-100606.png)
 
@@ -27,34 +138,32 @@ Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.
 
 The activity diagram below applies to Pain001, Pain013, Pacs008 and Pacs002 messages.
 
+```mermaid
 flowchart TD
-    start([Start])
-    acceptHttpRequest[Accept the HTTP POST request (JSON)]
-    requestAccepted{Request accepted?}
-    swagger1[Swagger]
-    note1[/"* Running as a middleware<br>* The request visits swagger the first time<br>* The config is defined in swagger.yml"/]
-    requestFormatValidated{Is request format validated?}
-    swagger2[Swagger]
-    throwError[Throw an error]
-    noteError1[/"* code: SWAGGER_REQUEST_VALIDATION_FAILED<br>* errors: error description"/]
-    errorResponse[Error]
-    noteError2[/"* HTTP 400 Bad Request"/]
-    createObject[Create object]
-    noteCreateObject[/"* Typescript object<br>* Valid object"/]
-    populateDatabase[Populate Database]
-    notePopulateDatabase[/"* The json body includes<br>  - The valid created object"/]
-    createRequest[Create Request to Channel Router Setup Processor]
-    noteCreateRequest[/"* HTTP Post request<br>* The json body includes<br>  - The valid created object"/]
-    response[Response]
-    noteResponse[/"* HTTP 200 Success<br>* message: Transaction is valid<br>* data: original transaction object"/]
-    end([End])
-
-    start --> acceptHttpRequest --> requestAccepted
-    requestAccepted --> |Yes| swagger1 --> note1 --> requestFormatValidated
-    requestFormatValidated --> |Yes| swagger2 --> createObject
-    requestFormatValidated --> |No| throwError --> noteError1 --> end
-    requestAccepted --> |No| errorResponse --> noteError2 --> end
-    createObject --> noteCreateObject --> populateDatabase --> notePopulateDatabase --> createRequest --> noteCreateRequest --> response --> noteResponse --> end
+    start([Start]) --> acceptHttpRequest["Accept the HTTP POST request (JSON)"]
+    acceptHttpRequest --> requestAccepted{Request accepted?}
+    requestAccepted --> |Yes| swagger1[Swagger]
+    swagger1 --> note1["* Running as a middleware\n* The request visits swagger the first time\n* The config is defined in swagger.yml"]
+    note1 --> requestFormatValidated{Is request format validated?}
+    requestFormatValidated --> |Yes| swagger2[Swagger]
+    requestFormatValidated --> |No| throwError[Throw an error]
+    throwError --> stop1([Stop])
+    stop1 --> noteError1["* code: SWAGGER_REQUEST_VALIDATION_FAILED\n* errors: error description"]
+    
+    requestAccepted --> |No| errorResponse[Error]
+    errorResponse --> stop2([Stop])
+    stop2 --> noteError2["* HTTP 400 Bad Request"]
+    
+    swagger2 --> createObject[Create object]
+    createObject --> noteCreateObject["* Typescript object\n* Valid object"]
+    noteCreateObject --> populateDatabase[Populate Database]
+    populateDatabase --> notePopulateDatabase["* The json body includes\n - The valid created object"]
+    notePopulateDatabase --> createRequest[Create Request to Channel Router Setup Processor]
+    createRequest --> noteCreateRequest["* HTTP Post request\n* The json body includes\n - The valid created object"]
+    noteCreateRequest --> response[Response]
+    response --> noteResponse["* HTTP 200 Success\n* message: Transaction is valid\n* data: original transaction object"]
+    noteResponse --> stop3([Stop])
+```
 
 ![](./images/image-20230815-100624.png)
 
@@ -519,7 +628,6 @@ graph TD
   }
 }
 ```
-
 </details>
 
 ## Pacs008 Message
@@ -536,8 +644,8 @@ graph TD
   "TxTp": "pacs.008.001.10",
   "FIToFICstmrCdt": {
     "GrpHdr": {
-      "MsgId": "8cc4f6ffb4fd4e31b42aec0ed5d600a0123",
-      "CreDtTm": "2021-12-03T15:24:25.000Z",
+      "MsgId": "24e80c9836f6437e8aa46cbb3fbdd5b1",
+      "CreDtTm": "2024-05-27T13:57:33.890Z",
       "NbOfTxs": 1,
       "SttlmInf": {
         "SttlmMtd": "CLRG"
@@ -545,26 +653,26 @@ graph TD
     },
     "CdtTrfTxInf": {
       "PmtId": {
-        "InstrId": "5ab4fc7355de4ef8a75b78b00a681ed2879",
-        "EndToEndId": "2c516801007642dfb892944dde1cf845789"
+        "InstrId": "5ab4fc7355de4ef8a75b78b00a681ed2",
+        "EndToEndId": "fe252acd9f1742d0ad9d74000ecc57d8"
       },
       "IntrBkSttlmAmt": {
         "Amt": {
-          "Amt": 31020.89,
-          "Ccy": "USD"
+          "Amt": 531.81,
+          "Ccy": "XTS"
         }
       },
       "InstdAmt": {
         "Amt": {
-          "Amt": 31020.89,
-          "Ccy": "USD"
+          "Amt": 531.81,
+          "Ccy": "XTS"
         }
       },
       "ChrgBr": "DEBT",
       "ChrgsInf": {
         "Amt": {
-          "Amt": 307.14,
-          "Ccy": "USD"
+          "Amt": 0,
+          "Ccy": "XTS"
         },
         "Agt": {
           "FinInstnId": {
@@ -600,14 +708,14 @@ graph TD
         "Id": {
           "PrvtId": {
             "DtAndPlcOfBirth": {
-              "BirthDt": "1968-02-01",
+              "BirthDt": "1999-05-09",
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
             "Othr": {
-              "Id": "+27730975224",
+              "Id": "60409827ba274853a2ec2475c64566d5",
               "SchmeNm": {
-                "Prtry": "MSISDN"
+                "Prtry": "TAZAMA_EID"
               }
             }
           }
@@ -619,7 +727,7 @@ graph TD
       "DbtrAcct": {
         "Id": {
           "Othr": {
-            "Id": "+27730975224",
+            "Id": "7473251533b34fe891fa8b0d1691d375",
             "SchmeNm": {
               "Prtry": "MSISDN"
             }
@@ -651,9 +759,9 @@ graph TD
               "CtryOfBirth": "ZZ"
             },
             "Othr": {
-              "Id": "+27707650428",
+              "Id": "1d495a2f710e436089677dcc789f279d",
               "SchmeNm": {
-                "Prtry": "MSISDN"
+                "Prtry": "TAZAMA_EID"
               }
             }
           }
@@ -665,7 +773,7 @@ graph TD
       "CdtrAcct": {
         "Id": {
           "Othr": {
-            "Id": "+27707650428",
+            "Id": "f58d206a6ada4a34a372dfbd66b17c6f",
             "SchmeNm": {
               "Prtry": "MSISDN"
             }
@@ -684,197 +792,25 @@ graph TD
       }
     },
     "RmtInf": {
-      "Ustrd": "Payment of USD 30713.75 from April to Felicia"
+      "Ustrd": "Generic payment description"
     },
     "SplmtryData": {
       "Envlp": {
         "Doc": {
-          "Xprtn": "2021-11-30T10:38:56.000Z"
+          "Xprtn": "2021-11-30T10:38:56.000Z",
+          "InitgPty": {
+            "Glctn": {
+              "Lat": "-3.1609",
+              "Long": "38.3588"
+            }
+          }
         }
       }
     }
   }
 }
 ```
-
 </details>
-
-**Expected Response for pacs008**
-
-<details>
-  <summary>
-    pacs.008.001.10 Response
-  </summary>
-
-  ```json
-{
-  "TxTp": "pacs.008.001.10",
-  "FIToFICstmrCdt": {
-    "GrpHdr": {
-      "MsgId": "8cc4f6ffb4fd4e31b42aec0ed5d600a0123",
-      "CreDtTm": "2021-12-03T15:24:25.000Z",
-      "NbOfTxs": 1,
-      "SttlmInf": {
-        "SttlmMtd": "CLRG"
-      }
-    },
-    "CdtTrfTxInf": {
-      "PmtId": {
-        "InstrId": "5ab4fc7355de4ef8a75b78b00a681ed2879",
-        "EndToEndId": "2c516801007642dfb892944dde1cf845789"
-      },
-      "IntrBkSttlmAmt": {
-        "Amt": {
-          "Amt": 31020.89,
-          "Ccy": "USD"
-        }
-      },
-      "InstdAmt": {
-        "Amt": {
-          "Amt": 31020.89,
-          "Ccy": "USD"
-        }
-      },
-      "ChrgBr": "DEBT",
-      "ChrgsInf": {
-        "Amt": {
-          "Amt": 307.14,
-          "Ccy": "USD"
-        },
-        "Agt": {
-          "FinInstnId": {
-            "ClrSysMmbId": {
-              "MmbId": "dfsp001"
-            }
-          }
-        }
-      },
-      "InitgPty": {
-        "Nm": "April Blake Grant",
-        "Id": {
-          "PrvtId": {
-            "DtAndPlcOfBirth": {
-              "BirthDt": "1968-02-01",
-              "CityOfBirth": "Unknown",
-              "CtryOfBirth": "ZZ"
-            },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
-              }
-            }
-          }
-        },
-        "CtctDtls": {
-          "MobNb": "+27-730975224"
-        }
-      },
-      "Dbtr": {
-        "Nm": "April Blake Grant",
-        "Id": {
-          "PrvtId": {
-            "DtAndPlcOfBirth": {
-              "BirthDt": "1968-02-01",
-              "CityOfBirth": "Unknown",
-              "CtryOfBirth": "ZZ"
-            },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
-              }
-            }
-          }
-        },
-        "CtctDtls": {
-          "MobNb": "+27-730975224"
-        }
-      },
-      "DbtrAcct": {
-        "Id": {
-          "Othr": {
-            "Id": "+27730975224",
-            "SchmeNm": {
-              "Prtry": "MSISDN"
-            }
-          }
-        },
-        "Nm": "April Grant"
-      },
-      "DbtrAgt": {
-        "FinInstnId": {
-          "ClrSysMmbId": {
-            "MmbId": "dfsp001"
-          }
-        }
-      },
-      "CdtrAgt": {
-        "FinInstnId": {
-          "ClrSysMmbId": {
-            "MmbId": "dfsp002"
-          }
-        }
-      },
-      "Cdtr": {
-        "Nm": "Felicia Easton Quill",
-        "Id": {
-          "PrvtId": {
-            "DtAndPlcOfBirth": {
-              "BirthDt": "1935-05-08",
-              "CityOfBirth": "Unknown",
-              "CtryOfBirth": "ZZ"
-            },
-            "Othr": {
-              "Id": "+27707650428",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
-              }
-            }
-          }
-        },
-        "CtctDtls": {
-          "MobNb": "+27-707650428"
-        }
-      },
-      "CdtrAcct": {
-        "Id": {
-          "Othr": {
-            "Id": "+27707650428",
-            "SchmeNm": {
-              "Prtry": "MSISDN"
-            }
-          }
-        },
-        "Nm": "Felicia Quill"
-      },
-      "Purp": {
-        "Cd": "MP2P"
-      }
-    },
-    "RgltryRptg": {
-      "Dtls": {
-        "Tp": "BALANCE OF PAYMENTS",
-        "Cd": "100"
-      }
-    },
-    "RmtInf": {
-      "Ustrd": "Payment of USD 30713.75 from April to Felicia"
-    },
-    "SplmtryData": {
-      "Envlp": {
-        "Doc": {
-          "Xprtn": "2021-11-30T10:38:56.000Z"
-        }
-      }
-    }
-  }
-}
-```
-
-</details>
-
-
 
 ## Pacs002 Message
 
@@ -890,17 +826,17 @@ graph TD
   "TxTp": "pacs.002.001.12",
   "FIToFIPmtSts": {
     "GrpHdr": {
-      "MsgId": "30bea71c5a054978ad0da7f94b2a40e9789",
-      "CreDtTm": "2021-12-03T15:24:27.000Z"
+      "MsgId": "e24562287a264651b0c42a3de9ea44fe",
+      "CreDtTm": "2024-05-27T14:02:33.890Z"
     },
     "TxInfAndSts": {
-      "OrgnlInstrId": "5ab4fc7355de4ef8a75b78b00a681ed2255",
-      "OrgnlEndToEndId": "2c516801007642dfb892944dde1cf845897",
+      "OrgnlInstrId": "5ab4fc7355de4ef8a75b78b00a681ed2",
+      "OrgnlEndToEndId": "fe252acd9f1742d0ad9d74000ecc57d8",
       "TxSts": "ACCC",
       "ChrgsInf": [
         {
           "Amt": {
-            "Amt": 307.14,
+            "Amt": 0,
             "Ccy": "USD"
           },
           "Agt": {
@@ -913,7 +849,7 @@ graph TD
         },
         {
           "Amt": {
-            "Amt": 153.57,
+            "Amt": 0,
             "Ccy": "USD"
           },
           "Agt": {
@@ -926,7 +862,7 @@ graph TD
         },
         {
           "Amt": {
-            "Amt": 30.71,
+            "Amt": 0,
             "Ccy": "USD"
           },
           "Agt": {
@@ -938,7 +874,7 @@ graph TD
           }
         }
       ],
-      "AccptncDtTm": "2021-12-03T15:24:26.000Z",
+      "AccptncDtTm": "2023-06-02T07:52:31.000Z",
       "InstgAgt": {
         "FinInstnId": {
           "ClrSysMmbId": {
