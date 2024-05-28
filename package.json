@@ -5,8 +5,7 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
-    "build": "tsc --project tsconfig.json && npm run copy-files",
-    "copy-files": "copyfiles ./swagger.yaml build/",
+    "build": "tsc --project tsconfig.json",
     "start": "node -r dotenv/config build/index.js",
     "cleanup": "rm -rf dist template jest.config.js jest.config.js.map node_modules",
     "fix": "npm run fix:prettier && npm run fix:eslint",
