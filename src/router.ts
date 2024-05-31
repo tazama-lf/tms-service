@@ -9,11 +9,11 @@ async function Routes(fastify: FastifyInstance, options: unknown): Promise<void>
   fastify.get('/', handleHealthCheck);
   fastify.get('/health', handleHealthCheck);
   if (configuration.quoting) {
-    fastify.post('/execute', SetOptions(handleExecute));
-    fastify.post('/quoteReply', SetOptions(handleQuoteReply));
+    fastify.post('/execute', SetOptions(handleExecute, 'messageSchemaPain001'));
+    fastify.post('/quoteReply', SetOptions(handleQuoteReply, 'messageSchemaPain013'));
   }
-  fastify.post('/transfer', SetOptions(handleTransfer));
-  fastify.post('/transfer-response', SetOptions(handleTransferResponse));
+  fastify.post('/transfer', SetOptions(handleTransfer, 'messageSchemaPacs008'));
+  fastify.post('/transfer-response', SetOptions(handleTransferResponse, 'messageSchemaPacs002'));
 }
 
 export default Routes;
