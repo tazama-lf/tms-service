@@ -6,10 +6,10 @@ import { fastifyCors } from '@fastify/cors';
 import Routes from '../router';
 import Ajv from 'ajv';
 import { fastifySwaggerUi } from '@fastify/swagger-ui';
-import messageSchemaPacs002 from '@frmscoe/frms-coe-lib/lib/helpers/schemas/pacs.002.json';
-import messageSchemaPacs008 from '@frmscoe/frms-coe-lib/lib/helpers/schemas/pacs.008.json';
-import messageSchemaPain001 from '@frmscoe/frms-coe-lib/lib/helpers/schemas/pain.001.json';
-import messageSchemaPain013 from '@frmscoe/frms-coe-lib/lib/helpers/schemas/pain.013.json';
+import messageSchemaPacs002 from '../schemas/pacs.002.json';
+import messageSchemaPacs008 from '../schemas/pacs.008.json';
+import messageSchemaPain001 from '../schemas/pain.001.json';
+import messageSchemaPain013 from '../schemas/pain.013.json';
 
 const fastify = Fastify();
 
