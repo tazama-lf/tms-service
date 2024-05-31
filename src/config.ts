@@ -36,7 +36,6 @@ export interface IConfig {
   transactionHistoryPacs008Collection: string;
   transactionHistoryPacs002Collection: string;
   cacheTTL: number;
-  crspEndpoint: string;
   quoting: boolean;
   logger: {
     logstashHost: string;
@@ -57,7 +56,6 @@ export const configuration: IConfig = {
     active: process.env.APM_ACTIVE!,
   },
   cacheTTL: parseInt(process.env.CACHE_TTL!, 10) || 300,
-  crspEndpoint: process.env.CRSP_ENDPOINT!,
   transactionHistoryCertPath: process.env.TRANSACTION_HISTORY_DATABASE_CERT_PATH!,
   graphDb: process.env.PSEUDONYMS_DATABASE!,
   transactionHistoryName: process.env.TRANSACTION_HISTORY_DATABASE!,
