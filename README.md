@@ -24,7 +24,7 @@ sequenceDiagram
     participant log as "Logger"
     participant Ara as "ArangoDB"
     participant Cache as "Redis Cache"
-    participant CRSP as "Channel Router Setup Processor"
+    participant ED as "Event-Director"
 
     %% ISO20022 Message Pain001
     rect rgb(105, 105, 105)
@@ -47,13 +47,13 @@ sequenceDiagram
                     TMS ->> Cache: setJson(DataCache)
                 end
             end
-            TMS ->> CRSP: NATS handleResponse: Pain001 Message
+            TMS ->> ED: NATS handleResponse: Pain001 Message
         end
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
         end
-        TMS ->> log: Transaction sent to CRSP service
+        TMS ->> log: Transaction sent to ED service
         TMS ->> Client: /execute POST Result
     end
 
@@ -82,13 +82,13 @@ sequenceDiagram
                 TMS ->> Ara: addAccount(debtor)
                 TMS ->> Ara: addAccount(creditor)
             end
-            TMS ->> CRSP: NATS handleResponse: Pain013 Message
+            TMS ->> ED: NATS handleResponse: Pain013 Message
         end
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
         end
-        TMS ->> log: Transaction sent to CRSP service
+        TMS ->> log: Transaction sent to ED service
         TMS ->> Client: /quoteReply POST Result
     end
 
@@ -117,13 +117,13 @@ sequenceDiagram
                 TMS ->> Ara: addAccount(debtor)
                 TMS ->> Ara: addAccount(creditor)
             end
-            TMS ->> CRSP: NATS handleResponse: Pacs008 Message
+            TMS ->> ED: NATS handleResponse: Pacs008 Message
         end
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
         end
-        TMS ->> log: Transaction sent to CRSP service
+        TMS ->> log: Transaction sent to ED service
         TMS ->> Client: /transfer POST Result
     end
 ```
@@ -158,7 +158,7 @@ flowchart TD
     createObject --> noteCreateObject["* Typescript object\n* Valid object"]
     noteCreateObject --> populateDatabase[Populate Database]
     populateDatabase --> notePopulateDatabase["* The json body includes\n - The valid created object"]
-    notePopulateDatabase --> createRequest[Create Request to Channel Router Setup Processor]
+    notePopulateDatabase --> createRequest[Create Request to Event-Director]
     createRequest --> noteCreateRequest["* HTTP Post request\n* The json body includes\n - The valid created object"]
     noteCreateRequest --> response[Response]
     response --> noteResponse["* HTTP 200 Success\n* message: Transaction is valid\n* data: original transaction object"]
@@ -201,7 +201,7 @@ graph TD
     E --> F
     F --> G[Insert Creditor and Debtor Accounts]
     G --> H[Save Transaction Relationship]
-    H --> I[Send to CRSP]
+    H --> I[Send to ED]
     I --> J([End])
 ```
 
