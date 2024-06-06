@@ -70,11 +70,18 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
-    const strErr = JSON.stringify(err);
-    loggerService.error(strErr);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.error(strErr);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
     span?.end();
-    throw new Error(strErr);
+    throw error;
   }
   spanInsert?.end();
 
@@ -145,11 +152,18 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
-    const strErr = JSON.stringify(err);
-    loggerService.error(strErr, logContext, id);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      error = new Error(strErr);
+      loggerService.error(strErr, logContext, id);
+    }
     spanInsert?.end();
     span?.end();
-    throw new Error(strErr);
+    throw error;
   }
 
   spanInsert?.end();
@@ -264,11 +278,18 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
     ]);
   } catch (err) {
-    const strErr = JSON.stringify(err);
-    loggerService.error(strErr, logContext, id);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.error(strErr, logContext, id);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
     span?.end();
-    throw new Error(strErr);
+    throw error;
   } finally {
     spanInsert?.end();
   }
@@ -344,11 +365,18 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.log(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.log(strErr, logContext, id);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
-    const strErr = JSON.stringify(err);
-    loggerService.log(strErr, logContext, id);
     span?.end();
-    throw new Error(strErr);
+    throw error;
   } finally {
     spanInsert?.end();
   }

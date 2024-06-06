@@ -167,7 +167,7 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
       await LogicService.handlePacs002(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
 
