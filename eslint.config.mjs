@@ -26,6 +26,7 @@ export default [
     rules: {
       ...eslintStandard.rules,
       ...eslintPluginEslintComments.configs.recommended.rules,
+      'eslint-comments/require-description': ['warn', { 'ignore': [] }],
       'eslint-comments/disable-enable-pair': 'warn',
       'no-console': 'warn',
       '@typescript-eslint/restrict-template-expressions': 'error',
