@@ -7,8 +7,6 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
 - [1. Transaction Monitoring Service (TMS)](#1-transaction-monitoring-service-tms)
   - [Sequence Diagram ISO Messages](#sequence-diagram-iso-messages)
   - [Activity Diagram](#activity-diagram)
-    - [Cache Interactions](#cache-interactions)
-      - [Pain013](#pain013)
   - [Repository](#repository)
   - [Pain001 Message](#pain001-message)
   - [Pain013 Message](#pain013-message)
@@ -158,7 +156,7 @@ flowchart TD
     createObject --> noteCreateObject["* Typescript object\n* Valid object"]
     noteCreateObject --> populateDatabase[Populate Database]
     populateDatabase --> notePopulateDatabase["* The json body includes\n - The valid created object"]
-    notePopulateDatabase --> createRequest[Create Request to Event-Director]
+    notePopulateDatabase --> createRequest[Send Message to Event-Director]
     createRequest --> noteCreateRequest["* HTTP Post request\n* The json body includes\n - The valid created object"]
     noteCreateRequest --> response[Response]
     response --> noteResponse["* HTTP 200 Success\n* message: Transaction is valid\n* data: original transaction object"]
@@ -166,30 +164,6 @@ flowchart TD
 ```
 
 ![](./images/image-20230815-100624.png)
-
-## High Level Cache Interactions
-
-### Pain001
-
-![Pain001](https://github.com/frmscoe/tms-service/blob/assets/assets/pain001.svg)
-
-### Pain013
-
-![Pain013](https://github.com/frmscoe/tms-service/blob/assets/assets/pain013.svg)
-
-### Pain008
-
-![Pacs 008](https://github.com/frmscoe/tms-service/blob/assets/assets/pacs008.svg)
-
-### Pacs002
-
-![Pacs 002](https://github.com/frmscoe/tms-service/blob/assets/assets/pacs002.svg)
-
-### Cache Interactions
-
-#### Pain013
-
-![](./images/Pain013_DB_High_Level_Interactions.png)
 
 ```mermaid
 graph TD
