@@ -14,7 +14,7 @@ const calculateDuration = (startTime: bigint): number => {
 
 export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, 'handlePain001()', id);
+  loggerService.log('Start - Handle transaction data', 'handlePain001()', id);
   const span = apm.startSpan('transaction.pain001');
 
   const startTime = process.hrtime.bigint();
@@ -70,10 +70,18 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
-    loggerService.error(JSON.stringify(err));
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.error(strErr);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
     span?.end();
-    throw err;
+    throw error;
   }
   spanInsert?.end();
 
@@ -86,16 +94,16 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to event-director service`, 'handlePain001()', id);
+  loggerService.log('Transaction send to event-director service', 'handlePain001()', id);
 
   span?.end();
-  loggerService.log(`END - Handle transaction data`, 'handlePain001()', id);
+  loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
 export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, logContext, id);
+  loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pain013');
   const startTime = process.hrtime.bigint();
 
@@ -144,10 +152,18 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
-    loggerService.error(JSON.stringify(err), logContext, id);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      error = new Error(strErr);
+      loggerService.error(strErr, logContext, id);
+    }
     spanInsert?.end();
     span?.end();
-    throw err;
+    throw error;
   }
 
   spanInsert?.end();
@@ -161,16 +177,16 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to event-director service`, logContext, id);
+  loggerService.log('Transaction send to event-director service', logContext, id);
 
   span?.end();
-  loggerService.log(`END - Handle transaction data`, logContext, id);
+  loggerService.log('END - Handle transaction data', logContext, id);
 };
 
 export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   const logContext = 'handlePacs008()';
   const id = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, logContext, id);
+  loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pacs008');
   const startTime = process.hrtime.bigint();
 
@@ -262,10 +278,18 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
     ]);
   } catch (err) {
-    loggerService.error(JSON.stringify(err), logContext, id);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.error(strErr, logContext, id);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
     span?.end();
-    throw err;
+    throw error;
   } finally {
     spanInsert?.end();
   }
@@ -279,14 +303,14 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to event-director service`, logContext, id);
+  loggerService.log('Transaction send to event-director service', logContext, id);
   span?.end();
 };
 
 export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, logContext, id);
+  loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transactions.pacs002');
   const startTime = process.hrtime.bigint();
 
@@ -315,7 +339,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
     dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
-    loggerService.log(`Proceeding with Arango Call`, logContext, id);
+    loggerService.log('Proceeding with Arango Call', logContext, id);
     dataCache = await rebuildCache(EndToEndId, false, id);
   } finally {
     spanDataCache?.end();
@@ -341,10 +365,18 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
 
     await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.log(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.log(strErr, logContext, id);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
-    loggerService.log(`${JSON.stringify(err)}`, logContext, id);
     span?.end();
-    throw err;
+    throw error;
   } finally {
     spanInsert?.end();
   }
@@ -358,10 +390,10 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to event-director service`, logContext, id);
+  loggerService.log('Transaction send to event-director service', logContext, id);
 
   span?.end();
-  loggerService.log(`END - Handle transaction data`, logContext, id);
+  loggerService.log('END - Handle transaction data', logContext, id);
 };
 
 /**

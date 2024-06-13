@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-/* eslint-disable */
 import { type RouteHandlerMethod } from 'fastify';
 import { type FastifySchema } from 'fastify/types/schema';
 
-const reposnseSchema = async (schemaTransactionName: string) => {
+const reposnseSchema = (schemaTransactionName: string): Record<string, unknown> => {
   return {
     '2xx': {
       type: 'object',

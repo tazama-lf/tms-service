@@ -47,11 +47,11 @@ export const dbInit = async (): Promise<void> => {
 const connect = async (): Promise<void> => {
   let isConnected = false;
   for (let retryCount = 0; retryCount < 10; retryCount++) {
-    loggerService.log(`Connecting to nats server...`);
+    loggerService.log('Connecting to nats server...');
     if (!(await server.initProducer())) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
-      loggerService.log(`Connected to nats`);
+      loggerService.log('Connected to nats');
       isConnected = true;
       break;
     }
