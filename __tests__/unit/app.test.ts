@@ -35,7 +35,7 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePain001');
 
-      await LogicService.handlePain001(request);
+      await LogicService.handlePain001(request, 'pain.001.001.11');
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -53,7 +53,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePain001(request);
+        await LogicService.handlePain001(request, 'pain.001.001.11');
       } catch (err: any) {
         error = err?.message;
       }
@@ -67,7 +67,7 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePain013');
 
-      await LogicService.handlePain013(request);
+      await LogicService.handlePain013(request, 'pain.013.001.09');
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -85,7 +85,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePain013(request);
+        await LogicService.handlePain013(request, 'pain.013.001.09');
       } catch (err: any) {
         error = err?.message;
       }
@@ -99,7 +99,7 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
 
-      await LogicService.handlePacs008(request);
+      await LogicService.handlePacs008(request, 'pacs.008.001.10');
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -116,7 +116,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePacs008(request);
+        await LogicService.handlePacs008(request, 'pacs.008.001.10');
       } catch (err: any) {
         error = err?.message;
       }
@@ -131,7 +131,7 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
 
-      await LogicService.handlePacs008(request);
+      await LogicService.handlePacs008(request, 'pacs.008.001.10');
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
       configuration.quoting = false;
@@ -151,7 +151,7 @@ describe('App Controller & Logic Service', () => {
       const request = Pacs002Sample as Pacs002;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
-      await LogicService.handlePacs002(request);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
       expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
@@ -166,7 +166,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePacs002(request);
+        await LogicService.handlePacs002(request, 'pacs.002.001.12');
       } catch (err: any) {
         error = err?.message;
       }
@@ -202,14 +202,14 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
 
-      await LogicService.handlePacs002(request);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
       expect(handleSpy).toBeCalledTimes(1);
       expect(handleSpy).toHaveReturned();
 
       jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve([[Pacs008Sample]]);
       });
-      await LogicService.handlePacs002(request);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
       expect(handleSpy).toBeCalledTimes(2);
       expect(handleSpy).toHaveReturned();
     });
@@ -242,7 +242,7 @@ describe('App Controller & Logic Service', () => {
         return Promise.resolve([[Pain001Sample]]);
       });
 
-      await LogicService.handlePain013(request);
+      await LogicService.handlePain013(request, 'pain.013.001.09');
     });
   });
 });
