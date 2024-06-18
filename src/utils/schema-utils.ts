@@ -11,6 +11,7 @@ const reposnseSchema = (schemaTransactionName: string): Record<string, unknown> 
           type: 'string',
         },
         data: {
+          type: 'object',
           $ref: `${schemaTransactionName}#`,
         },
       },
