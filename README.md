@@ -26,12 +26,12 @@ sequenceDiagram
 
     %% ISO20022 Message Pain001
     rect rgb(105, 105, 105)
-        Client ->>+ TMS: POST /execute: Pain001.001.11 Message
+        Client ->>+ TMS: POST /v1/Pain001.001.11: Pain001.001.11 Message
         TMS ->> TMS: Validate Pain001
         TMS ->> log: Logging of receipt
         alt Validation Error
         TMS ->> log: Logging of error
-        TMS ->> Client: /execute POST Result
+        TMS ->> Client: /v1/Pain001.001.11 POST Result
         end
 
         rect rgb(173, 216, 230)
@@ -52,17 +52,17 @@ sequenceDiagram
         TMS ->> TMS: Throw error
         end
         TMS ->> log: Transaction sent to ED service
-        TMS ->> Client: /execute POST Result
+        TMS ->> Client: /v1/Pain001.001.11 POST Result
     end
 
     %% ISO20022 Message Pain013
     rect rgb(105, 105, 105)
-        Client ->>+ TMS: POST /quoteReply: Pain013.001.09 Message
+        Client ->>+ TMS: POST /v1/Pain013.001.09: Pain013.001.09 Message
         TMS ->> TMS: Validate Pain013
         TMS ->> log: Logging of receipt
         alt Validation Error
         TMS ->> log: Logging of error
-        TMS ->> Client: /quoteReply POST Result
+        TMS ->> Client: /v1/Pain013.001.09 POST Result
         end
 
         rect rgb(173, 216, 230)
@@ -87,17 +87,17 @@ sequenceDiagram
         TMS ->> TMS: Throw error
         end
         TMS ->> log: Transaction sent to ED service
-        TMS ->> Client: /quoteReply POST Result
+        TMS ->> Client: /v1/Pain013.001.09 POST Result
     end
 
     %% ISO20022 Message Pacs008
     rect rgb(105, 105, 105)
-        Client ->>+ TMS: POST /transfer: Pacs008.001.10 Message
+        Client ->>+ TMS: POST /v1/Pacs008.001.10: Pacs008.001.10 Message
         TMS ->> TMS: Validate Pacs008
         TMS ->> log: Logging of receipt
         alt Validation Error
         TMS ->> log: Logging of error
-        TMS ->> Client: /transfer POST Result
+        TMS ->> Client: /v1/Pacs008.001.10 POST Result
         end
 
         rect rgb(173, 216, 230)
@@ -122,7 +122,7 @@ sequenceDiagram
         TMS ->> TMS: Throw error
         end
         TMS ->> log: Transaction sent to ED service
-        TMS ->> Client: /transfer POST Result
+        TMS ->> Client: /v1/Pacs008.001.10 POST Result
     end
 ```
 

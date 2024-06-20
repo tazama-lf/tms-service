@@ -67,6 +67,7 @@ const connect = async (): Promise<void> => {
       loggerService.error(err);
       throw Error(`${err.message}`);
     }
+
     loggerService.log(`Fastify listening on ${address}`);
   });
 };

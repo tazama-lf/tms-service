@@ -2,9 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "TxTp": {
-      "type": "string"
-    },
     "FIToFICstmrCdt": {
       "type": "object",
       "properties": {
@@ -646,7 +643,6 @@
     }
   },
   "required": [
-    "TxTp",
     "FIToFICstmrCdt"
   ]
 }

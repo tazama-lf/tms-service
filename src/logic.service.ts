@@ -12,13 +12,13 @@ const calculateDuration = (startTime: bigint): number => {
   return Number(endTime - startTime);
 };
 
-export const handlePain001 = async (transaction: Pain001): Promise<void> => {
+export const handlePain001 = async (transaction: Pain001, transactionType: string): Promise<void> => {
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
   loggerService.log('Start - Handle transaction data', 'handlePain001()', id);
   const span = apm.startSpan('transaction.pain001');
-
   const startTime = process.hrtime.bigint();
-
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
   const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
@@ -31,7 +31,6 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
   const MsgId = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
   const PmtInfId = transaction.CstmrCdtTrfInitn.PmtInf.PmtInfId;
-  const TxTp = transaction.TxTp;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
@@ -53,7 +52,6 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
     cdtrAcctId: creditorAcctId,
     dbtrAcctId: debtorAcctId,
   };
-
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
     await Promise.all([
@@ -100,20 +98,21 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
-export const handlePain013 = async (transaction: Pain013): Promise<void> => {
+export const handlePain013 = async (transaction: Pain013, transactionType: string): Promise<void> => {
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
   loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pain013');
   const startTime = process.hrtime.bigint();
 
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const Amt = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
   const CreDtTm = transaction.CdtrPmtActvtnReq.GrpHdr.CreDtTm;
   const EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
-  const TxTp = transaction.TxTp;
 
   const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
   const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
@@ -183,20 +182,21 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   loggerService.log('END - Handle transaction data', logContext, id);
 };
 
-export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
+export const handlePacs008 = async (transaction: Pacs008, transactionType: string): Promise<void> => {
   const logContext = 'handlePacs008()';
   const id = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
   loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pacs008');
   const startTime = process.hrtime.bigint();
 
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const Amt = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Amt;
   const Ccy = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Ccy;
   const creDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
   const EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
-  const TxTp = transaction.TxTp;
   const debtorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id;
   const creditorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
 
@@ -307,19 +307,20 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   span?.end();
 };
 
-export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
+export const handlePacs002 = async (transaction: Pacs002, transactionType: string): Promise<void> => {
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
   loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transactions.pacs002');
   const startTime = process.hrtime.bigint();
 
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
   const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId;
   const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlInstrId;
   const TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
-  const TxTp = transaction.TxTp;
 
   const transactionRelationship: TransactionRelationship = {
     from: '',
