@@ -38,7 +38,7 @@ paths:
             $ref: '#/definitions/Health'
         500:
           $ref: '#/responses/500'
-  /v1/pain.001.001.11:
+  /v1/evaluate/iso20022/pain.001.001.11:
     post:
       summary: 'pain.001.001.11 Transaction'
       description: 'ISO20022 pain.001.001.11 formatted message expected. Historically Mojaloop Quote message.'
@@ -64,7 +64,7 @@ paths:
           $ref: '#/responses/401'
         500:
           $ref: '#/responses/500'
-  /v1/pain.013.001.09:
+  /v1/evaluate/iso20022/pain.013.001.09:
     post:
       summary: 'pain.013.001.09 Transaction'
       description: 'ISO20022 pain.013.001.09 formatted message expected. Historically Mojaloop Quote Response message.'
@@ -90,7 +90,7 @@ paths:
           $ref: '#/responses/401'
         500:
           $ref: '#/responses/500'
-  /v1/pacs.008.001.10:
+  /v1/evaluate/iso20022/pacs.008.001.10:
     post:
       summary: 'pacs.008.001.10'
       description: 'ISO20022 pacs.008.001.10 formatted message expected. Historically Mojaloop Transfer message.'
@@ -116,7 +116,7 @@ paths:
           $ref: '#/responses/401'
         500:
           $ref: '#/responses/500'
-  /v1/pacs.002.001.12:
+  /v1/evaluate/iso20022/pacs.002.001.12:
     post:
       summary: 'pacs.002.001.12'
       description: 'ISO20022 pacs.002.001.12 formatted message expected.'

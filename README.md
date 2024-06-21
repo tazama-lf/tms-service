@@ -26,12 +26,12 @@ sequenceDiagram
 
     %% ISO20022 Message Pain001
     rect rgb(105, 105, 105)
-        Client ->>+ TMS: POST /v1/Pain001.001.11: Pain001.001.11 Message
+        Client ->>+ TMS: POST /v1/evaluate/iso20022/pain.001.001.11: Pain001.001.11 Message
         TMS ->> TMS: Validate Pain001
         TMS ->> log: Logging of receipt
         alt Validation Error
         TMS ->> log: Logging of error
-        TMS ->> Client: /v1/Pain001.001.11 POST Result
+        TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
         end
 
         rect rgb(173, 216, 230)
@@ -52,17 +52,17 @@ sequenceDiagram
         TMS ->> TMS: Throw error
         end
         TMS ->> log: Transaction sent to ED service
-        TMS ->> Client: /v1/Pain001.001.11 POST Result
+        TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
     end
 
     %% ISO20022 Message Pain013
     rect rgb(105, 105, 105)
-        Client ->>+ TMS: POST /v1/Pain013.001.09: Pain013.001.09 Message
+        Client ->>+ TMS: POST /v1/evaluate/iso20022/pain.013.001.09: Pain013.001.09 Message
         TMS ->> TMS: Validate Pain013
         TMS ->> log: Logging of receipt
         alt Validation Error
         TMS ->> log: Logging of error
-        TMS ->> Client: /v1/Pain013.001.09 POST Result
+        TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
         end
 
         rect rgb(173, 216, 230)
@@ -87,17 +87,17 @@ sequenceDiagram
         TMS ->> TMS: Throw error
         end
         TMS ->> log: Transaction sent to ED service
-        TMS ->> Client: /v1/Pain013.001.09 POST Result
+        TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
     end
 
     %% ISO20022 Message Pacs008
     rect rgb(105, 105, 105)
-        Client ->>+ TMS: POST /v1/Pacs008.001.10: Pacs008.001.10 Message
+        Client ->>+ TMS: POST /v1/evaluate/iso20022/pacs.008.001.10: Pacs008.001.10 Message
         TMS ->> TMS: Validate Pacs008
         TMS ->> log: Logging of receipt
         alt Validation Error
         TMS ->> log: Logging of error
-        TMS ->> Client: /v1/Pacs008.001.10 POST Result
+        TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
         end
 
         rect rgb(173, 216, 230)
@@ -122,7 +122,7 @@ sequenceDiagram
         TMS ->> TMS: Throw error
         end
         TMS ->> log: Transaction sent to ED service
-        TMS ->> Client: /v1/Pacs008.001.10 POST Result
+        TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
     end
 ```
 
@@ -194,7 +194,6 @@ graph TD
   
   ```json
   {
-  "TxTp": "pain.001.001.11",
   "CstmrCdtTrfInitn": {
     "GrpHdr": {
       "MsgId": "24988b914e3d4cf98a7659b2c45ce063258",
@@ -406,7 +405,6 @@ graph TD
 
 ```json
 {
-  "TxTp": "pain.013.001.09",
   "CdtrPmtActvtnReq": {
     "GrpHdr": {
       "MsgId": "42665509efd844da90caf468e891aa52256",
@@ -615,7 +613,6 @@ graph TD
 
 ```json
 {
-  "TxTp": "pacs.008.001.10",
   "FIToFICstmrCdt": {
     "GrpHdr": {
       "MsgId": "24e80c9836f6437e8aa46cbb3fbdd5b1",
@@ -797,7 +794,6 @@ graph TD
   
   ```json
 {
-  "TxTp": "pacs.002.001.12",
   "FIToFIPmtSts": {
     "GrpHdr": {
       "MsgId": "e24562287a264651b0c42a3de9ea44fe",
