@@ -612,7 +612,7 @@
                                   "type": "object",
                                   "properties": {
                                     "Amt": {
-                                      "type": "integer"
+                                      "type": "number"
                                     },
                                     "Ccy": {
                                       "type": "string"
@@ -635,7 +635,7 @@
                                   "type": "object",
                                   "properties": {
                                     "Amt": {
-                                      "type": "integer"
+                                      "type": "number"
                                     },
                                     "Ccy": {
                                       "type": "string"
@@ -658,7 +658,7 @@
                                   "type": "object",
                                   "properties": {
                                     "Amt": {
-                                      "type": "integer"
+                                      "type": "number"
                                     },
                                     "Ccy": {
                                       "type": "string"
