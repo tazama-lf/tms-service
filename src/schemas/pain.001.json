@@ -662,7 +662,7 @@
                                   "type": "string"
                                 },
                                 "Amt": {
-                                  "type": "integer"
+                                  "type": "number"
                                 }
                               },
                               "required": [
