@@ -1,7 +1,7 @@
 {
   "type": "object",
   "properties": {
-    "FIToFICstmrCdt": {
+    "FIToFICstmrCdtTrf": {
       "type": "object",
       "properties": {
         "GrpHdr": {
@@ -23,17 +23,10 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "SttlmMtd"
-              ]
+              "required": ["SttlmMtd"]
             }
           },
-          "required": [
-            "MsgId",
-            "CreDtTm",
-            "NbOfTxs",
-            "SttlmInf"
-          ]
+          "required": ["MsgId", "CreDtTm", "NbOfTxs", "SttlmInf"]
         },
         "CdtTrfTxInf": {
           "type": "object",
@@ -48,10 +41,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "InstrId",
-                "EndToEndId"
-              ]
+              "required": ["InstrId", "EndToEndId"]
             },
             "IntrBkSttlmAmt": {
               "type": "object",
@@ -66,15 +56,10 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "Amt",
-                    "Ccy"
-                  ]
+                  "required": ["Amt", "Ccy"]
                 }
               },
-              "required": [
-                "Amt"
-              ]
+              "required": ["Amt"]
             },
             "InstdAmt": {
               "type": "object",
@@ -89,15 +74,10 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "Amt",
-                    "Ccy"
-                  ]
+                  "required": ["Amt", "Ccy"]
                 }
               },
-              "required": [
-                "Amt"
-              ]
+              "required": ["Amt"]
             },
             "ChrgBr": {
               "type": "string"
@@ -115,10 +95,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "Amt",
-                    "Ccy"
-                  ]
+                  "required": ["Amt", "Ccy"]
                 },
                 "Agt": {
                   "type": "object",
@@ -133,25 +110,16 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "MmbId"
-                          ]
+                          "required": ["MmbId"]
                         }
                       },
-                      "required": [
-                        "ClrSysMmbId"
-                      ]
+                      "required": ["ClrSysMmbId"]
                     }
                   },
-                  "required": [
-                    "FinInstnId"
-                  ]
+                  "required": ["FinInstnId"]
                 }
               },
-              "required": [
-                "Amt",
-                "Agt"
-              ]
+              "required": ["Amt", "Agt"]
             },
             "InitgPty": {
               "type": "object",
@@ -178,45 +146,36 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "BirthDt",
-                            "CityOfBirth",
-                            "CtryOfBirth"
-                          ]
+                          "required": ["BirthDt", "CityOfBirth", "CtryOfBirth"]
                         },
                         "Othr": {
-                          "type": "object",
-                          "properties": {
-                            "Id": {
-                              "type": "string"
-                            },
-                            "SchmeNm": {
+                          "type": "array",
+                          "items": [
+                            {
                               "type": "object",
                               "properties": {
-                                "Prtry": {
+                                "Id": {
                                   "type": "string"
+                                },
+                                "SchmeNm": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Prtry": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["Prtry"]
                                 }
                               },
-                              "required": [
-                                "Prtry"
-                              ]
+                              "required": ["Id", "SchmeNm"]
                             }
-                          },
-                          "required": [
-                            "Id",
-                            "SchmeNm"
                           ]
                         }
                       },
-                      "required": [
-                        "DtAndPlcOfBirth",
-                        "Othr"
-                      ]
+                      "required": ["DtAndPlcOfBirth", "Othr"]
                     }
                   },
-                  "required": [
-                    "PrvtId"
-                  ]
+                  "required": ["PrvtId"]
                 },
                 "CtctDtls": {
                   "type": "object",
@@ -225,16 +184,10 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "MobNb"
-                  ]
+                  "required": ["MobNb"]
                 }
               },
-              "required": [
-                "Nm",
-                "Id",
-                "CtctDtls"
-              ]
+              "required": ["Nm", "Id", "CtctDtls"]
             },
             "Dbtr": {
               "type": "object",
@@ -261,13 +214,59 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "BirthDt",
-                            "CityOfBirth",
-                            "CtryOfBirth"
-                          ]
+                          "required": ["BirthDt", "CityOfBirth", "CtryOfBirth"]
                         },
                         "Othr": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "Id": {
+                                  "type": "string"
+                                },
+                                "SchmeNm": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Prtry": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["Prtry"]
+                                }
+                              },
+                              "required": ["Id", "SchmeNm"]
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["DtAndPlcOfBirth", "Othr"]
+                    }
+                  },
+                  "required": ["PrvtId"]
+                },
+                "CtctDtls": {
+                  "type": "object",
+                  "properties": {
+                    "MobNb": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["MobNb"]
+                }
+              },
+              "required": ["Nm", "Id", "CtctDtls"]
+            },
+            "DbtrAcct": {
+              "type": "object",
+              "properties": {
+                "Id": {
+                  "type": "object",
+                  "properties": {
+                    "Othr": {
+                      "type": "array",
+                      "items": [
+                        {
                           "type": "object",
                           "properties": {
                             "Id": {
@@ -280,87 +279,21 @@
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "Prtry"
-                              ]
+                              "required": ["Prtry"]
                             }
                           },
-                          "required": [
-                            "Id",
-                            "SchmeNm"
-                          ]
+                          "required": ["Id", "SchmeNm"]
                         }
-                      },
-                      "required": [
-                        "DtAndPlcOfBirth",
-                        "Othr"
                       ]
                     }
                   },
-                  "required": [
-                    "PrvtId"
-                  ]
-                },
-                "CtctDtls": {
-                  "type": "object",
-                  "properties": {
-                    "MobNb": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "MobNb"
-                  ]
-                }
-              },
-              "required": [
-                "Nm",
-                "Id",
-                "CtctDtls"
-              ]
-            },
-            "DbtrAcct": {
-              "type": "object",
-              "properties": {
-                "Id": {
-                  "type": "object",
-                  "properties": {
-                    "Othr": {
-                      "type": "object",
-                      "properties": {
-                        "Id": {
-                          "type": "string"
-                        },
-                        "SchmeNm": {
-                          "type": "object",
-                          "properties": {
-                            "Prtry": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "Prtry"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "Id",
-                        "SchmeNm"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "Othr"
-                  ]
+                  "required": ["Othr"]
                 },
                 "Nm": {
                   "type": "string"
                 }
               },
-              "required": [
-                "Id",
-                "Nm"
-              ]
+              "required": ["Id", "Nm"]
             },
             "DbtrAgt": {
               "type": "object",
@@ -375,19 +308,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "MmbId"
-                      ]
+                      "required": ["MmbId"]
                     }
                   },
-                  "required": [
-                    "ClrSysMmbId"
-                  ]
+                  "required": ["ClrSysMmbId"]
                 }
               },
-              "required": [
-                "FinInstnId"
-              ]
+              "required": ["FinInstnId"]
             },
             "CdtrAgt": {
               "type": "object",
@@ -402,19 +329,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "MmbId"
-                      ]
+                      "required": ["MmbId"]
                     }
                   },
-                  "required": [
-                    "ClrSysMmbId"
-                  ]
+                  "required": ["ClrSysMmbId"]
                 }
               },
-              "required": [
-                "FinInstnId"
-              ]
+              "required": ["FinInstnId"]
             },
             "Cdtr": {
               "type": "object",
@@ -441,13 +362,59 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "BirthDt",
-                            "CityOfBirth",
-                            "CtryOfBirth"
-                          ]
+                          "required": ["BirthDt", "CityOfBirth", "CtryOfBirth"]
                         },
                         "Othr": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "Id": {
+                                  "type": "string"
+                                },
+                                "SchmeNm": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Prtry": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["Prtry"]
+                                }
+                              },
+                              "required": ["Id", "SchmeNm"]
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["DtAndPlcOfBirth", "Othr"]
+                    }
+                  },
+                  "required": ["PrvtId"]
+                },
+                "CtctDtls": {
+                  "type": "object",
+                  "properties": {
+                    "MobNb": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["MobNb"]
+                }
+              },
+              "required": ["Nm", "Id", "CtctDtls"]
+            },
+            "CdtrAcct": {
+              "type": "object",
+              "properties": {
+                "Id": {
+                  "type": "object",
+                  "properties": {
+                    "Othr": {
+                      "type": "array",
+                      "items": [
+                        {
                           "type": "object",
                           "properties": {
                             "Id": {
@@ -460,87 +427,21 @@
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "Prtry"
-                              ]
+                              "required": ["Prtry"]
                             }
                           },
-                          "required": [
-                            "Id",
-                            "SchmeNm"
-                          ]
+                          "required": ["Id", "SchmeNm"]
                         }
-                      },
-                      "required": [
-                        "DtAndPlcOfBirth",
-                        "Othr"
                       ]
                     }
                   },
-                  "required": [
-                    "PrvtId"
-                  ]
-                },
-                "CtctDtls": {
-                  "type": "object",
-                  "properties": {
-                    "MobNb": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "MobNb"
-                  ]
-                }
-              },
-              "required": [
-                "Nm",
-                "Id",
-                "CtctDtls"
-              ]
-            },
-            "CdtrAcct": {
-              "type": "object",
-              "properties": {
-                "Id": {
-                  "type": "object",
-                  "properties": {
-                    "Othr": {
-                      "type": "object",
-                      "properties": {
-                        "Id": {
-                          "type": "string"
-                        },
-                        "SchmeNm": {
-                          "type": "object",
-                          "properties": {
-                            "Prtry": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "Prtry"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "Id",
-                        "SchmeNm"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "Othr"
-                  ]
+                  "required": ["Othr"]
                 },
                 "Nm": {
                   "type": "string"
                 }
               },
-              "required": [
-                "Id",
-                "Nm"
-              ]
+              "required": ["Id", "Nm"]
             },
             "Purp": {
               "type": "object",
@@ -549,9 +450,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "Cd"
-              ]
+              "required": ["Cd"]
             }
           },
           "required": [
@@ -583,15 +482,10 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "Tp",
-                "Cd"
-              ]
+              "required": ["Tp", "Cd"]
             }
           },
-          "required": [
-            "Dtls"
-          ]
+          "required": ["Dtls"]
         },
         "RmtInf": {
           "type": "object",
@@ -600,9 +494,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "Ustrd"
-          ]
+          "required": ["Ustrd"]
         },
         "SplmtryData": {
           "type": "object",
@@ -617,31 +509,17 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "Xprtn"
-                  ]
+                  "required": ["Xprtn"]
                 }
               },
-              "required": [
-                "Doc"
-              ]
+              "required": ["Doc"]
             }
           },
-          "required": [
-            "Envlp"
-          ]
+          "required": ["Envlp"]
         }
       },
-      "required": [
-        "GrpHdr",
-        "CdtTrfTxInf",
-        "RgltryRptg",
-        "RmtInf",
-        "SplmtryData"
-      ]
+      "required": ["GrpHdr", "CdtTrfTxInf", "RgltryRptg", "RmtInf", "SplmtryData"]
     }
   },
-  "required": [
-    "FIToFICstmrCdt"
-  ]
+  "required": ["FIToFICstmrCdtTrf"]
 }

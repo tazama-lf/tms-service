@@ -21,11 +21,11 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   transaction.TxTp = TxTp;
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
-  const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-  const creditorId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
+  const creditorId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id;
   const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
-  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
-  const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
+  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0].Id;
+  const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0].Id;
   const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
@@ -114,11 +114,11 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   const MsgId = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
 
-  const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
+  const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
+  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr[0].Id;
 
-  const dbtrId = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
-  const cdtrId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const dbtrId = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr[0].Id;
+  const cdtrId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorAcctId}`,
@@ -184,24 +184,24 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
 
 export const handlePacs008 = async (transaction: Pacs008, transactionType: string): Promise<void> => {
   const logContext = 'handlePacs008()';
-  const id = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
+  const id = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
   loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pacs008');
   const startTime = process.hrtime.bigint();
 
   const TxTp = transactionType;
   transaction.TxTp = TxTp;
-  const Amt = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Amt;
-  const Ccy = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Ccy;
-  const creDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
-  const EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
-  const MsgId = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
-  const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
-  const debtorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id;
-  const creditorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const Amt = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Amt;
+  const Ccy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Ccy;
+  const creDtTm = transaction.FIToFICstmrCdtTrf.GrpHdr.CreDtTm;
+  const EndToEndId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.EndToEndId;
+  const MsgId = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
+  const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
+  const debtorId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0].Id;
+  const creditorId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id;
 
-  const debtorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
-  const creditorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+  const debtorAcctId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0].Id;
+  const creditorAcctId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
@@ -358,8 +358,8 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
 
     const result = (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]];
 
-    const debtorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
-    const creditorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+    const debtorAcctId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0].Id;
+    const creditorAcctId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
 
     transactionRelationship.to = `accounts/${debtorAcctId}`;
     transactionRelationship.from = `accounts/${creditorAcctId}`;
@@ -416,14 +416,14 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
     return undefined;
   }
 
-  const cdtTrfTxInf = pacs008.FIToFICstmrCdt.CdtTrfTxInf;
+  const cdtTrfTxInf = pacs008.FIToFICstmrCdtTrf.CdtTrfTxInf;
 
   const dataCache: DataCache = {
-    cdtrId: cdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
-    dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
-    cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-    dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr.Id,
-    creDtTm: pacs008.FIToFICstmrCdt.GrpHdr.CreDtTm,
+    cdtrId: cdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id,
+    dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0].Id,
+    cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr[0].Id,
+    dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr[0].Id,
+    creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
     amt: {
       amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
       ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,

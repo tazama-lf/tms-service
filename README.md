@@ -613,7 +613,7 @@ graph TD
 
 ```json
 {
-  "FIToFICstmrCdt": {
+  "IToFICstmrCdtTrf": {
     "GrpHdr": {
       "MsgId": "24e80c9836f6437e8aa46cbb3fbdd5b1",
       "CreDtTm": "2024-05-27T13:57:33.890Z",
