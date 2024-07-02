@@ -147,11 +147,11 @@ flowchart TD
     requestFormatValidated --> |No| throwError[Throw an error]
     throwError --> stop1([Stop])
     stop1 --> noteError1["* code: SWAGGER_REQUEST_VALIDATION_FAILED\n* errors: error description"]
-    
+
     requestAccepted --> |No| errorResponse[Error]
     errorResponse --> stop2([Stop])
     stop2 --> noteError2["* HTTP 400 Bad Request"]
-    
+
     swagger2 --> createObject[Create object]
     createObject --> noteCreateObject["* Typescript object\n* Valid object"]
     noteCreateObject --> populateDatabase[Populate Database]
@@ -208,12 +208,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27730975224",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -243,12 +245,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27730975224",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -257,12 +261,14 @@ graph TD
       },
       "DbtrAcct": {
         "Id": {
-          "Othr": {
-            "Id": "+27730975224",
-            "SchmeNm": {
-              "Prtry": "MSISDN"
+          "Othr": [
+            {
+              "Id": "+27730975224",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
             }
-          }
+          ]
         },
         "Nm": "April Grant"
       },
@@ -314,12 +320,14 @@ graph TD
                 "CityOfBirth": "Unknown",
                 "CtryOfBirth": "ZZ"
               },
-              "Othr": {
-                "Id": "+27707650428",
-                "SchmeNm": {
-                  "Prtry": "MSISDN"
+              "Othr": [
+                {
+                  "Id": "+27707650428",
+                  "SchmeNm": {
+                    "Prtry": "MSISDN"
+                  }
                 }
-              }
+              ]
             }
           },
           "CtctDtls": {
@@ -328,12 +336,14 @@ graph TD
         },
         "CdtrAcct": {
           "Id": {
-            "Othr": {
-              "Id": "+27707650428",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27707650428",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           },
           "Nm": "Felicia Quill"
         },
@@ -419,12 +429,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27730975224",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -456,12 +468,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27730975224",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -470,12 +484,14 @@ graph TD
       },
       "DbtrAcct": {
         "Id": {
-          "Othr": {
-            "Id": "+27730975224",
-            "SchmeNm": {
-              "Prtry": "MSISDN"
+          "Othr": [
+            {
+              "Id": "+27730975224",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
             }
-          }
+          ]
         },
         "Nm": "April Grant"
       },
@@ -527,12 +543,14 @@ graph TD
                 "CityOfBirth": "Unknown",
                 "CtryOfBirth": "ZZ"
               },
-              "Othr": {
-                "Id": "+27707650428",
-                "SchmeNm": {
-                  "Prtry": "MSISDN"
+              "Othr": [
+                {
+                  "Id": "+27707650428",
+                  "SchmeNm": {
+                    "Prtry": "MSISDN"
+                  }
                 }
-              }
+              ]
             }
           },
           "CtctDtls": {
@@ -541,12 +559,14 @@ graph TD
         },
         "CdtrAcct": {
           "Id": {
-            "Othr": {
-              "Id": "+27707650428",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27707650428",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           },
           "Nm": "Felicia Quill"
         },
@@ -600,6 +620,7 @@ graph TD
   }
 }
 ```
+
 </details>
 
 ## Pacs008 Message
@@ -613,7 +634,7 @@ graph TD
 
 ```json
 {
-  "FIToFICstmrCdt": {
+  "FIToFICstmrCdtTrf": {
     "GrpHdr": {
       "MsgId": "24e80c9836f6437e8aa46cbb3fbdd5b1",
       "CreDtTm": "2024-05-27T13:57:33.890Z",
@@ -662,12 +683,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "+27730975224",
-              "SchmeNm": {
-                "Prtry": "MSISDN"
+            "Othr": [
+              {
+                "Id": "+27730975224",
+                "SchmeNm": {
+                  "Prtry": "MSISDN"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -683,12 +706,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "60409827ba274853a2ec2475c64566d5",
-              "SchmeNm": {
-                "Prtry": "TAZAMA_EID"
+            "Othr": [
+              {
+                "Id": "60409827ba274853a2ec2475c64566d5",
+                "SchmeNm": {
+                  "Prtry": "TAZAMA_EID"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -697,12 +722,14 @@ graph TD
       },
       "DbtrAcct": {
         "Id": {
-          "Othr": {
-            "Id": "7473251533b34fe891fa8b0d1691d375",
-            "SchmeNm": {
-              "Prtry": "MSISDN"
+          "Othr": [
+            {
+              "Id": "7473251533b34fe891fa8b0d1691d375",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
             }
-          }
+          ]
         },
         "Nm": "April Grant"
       },
@@ -729,12 +756,14 @@ graph TD
               "CityOfBirth": "Unknown",
               "CtryOfBirth": "ZZ"
             },
-            "Othr": {
-              "Id": "1d495a2f710e436089677dcc789f279d",
-              "SchmeNm": {
-                "Prtry": "TAZAMA_EID"
+            "Othr": [
+              {
+                "Id": "1d495a2f710e436089677dcc789f279d",
+                "SchmeNm": {
+                  "Prtry": "TAZAMA_EID"
+                }
               }
-            }
+            ]
           }
         },
         "CtctDtls": {
@@ -743,12 +772,14 @@ graph TD
       },
       "CdtrAcct": {
         "Id": {
-          "Othr": {
-            "Id": "f58d206a6ada4a34a372dfbd66b17c6f",
-            "SchmeNm": {
-              "Prtry": "MSISDN"
+          "Othr": [
+            {
+              "Id": "f58d206a6ada4a34a372dfbd66b17c6f",
+              "SchmeNm": {
+                "Prtry": "MSISDN"
+              }
             }
-          }
+          ]
         },
         "Nm": "Felicia Quill"
       },
@@ -781,6 +812,7 @@ graph TD
   }
 }
 ```
+
 </details>
 
 ## Pacs002 Message

@@ -1102,9 +1102,9 @@ definitions:
   ISO20022Pacs008:
    type: object
    required:
-    - FIToFICstmrCdt
+    - FIToFICstmrCdtTrf
    properties:
-    FIToFICstmrCdt:
+    FIToFICstmrCdtTrf:
       type: object
       required:
         - GrpHdr
