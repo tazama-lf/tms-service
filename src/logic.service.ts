@@ -285,8 +285,6 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   }
 
   if (!configuration.quoting) {
-    accountInserts.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
-    accountInserts.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
     const dataCache: DataCache = {
       cdtrId: creditorId,
       dbtrId: debtorId,
