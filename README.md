@@ -10,8 +10,8 @@ See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlas
   - [Repository](#repository)
   - [Pain001 Message](#pain001-message)
   - [Pain013 Message](#pain013-message)
-  - [Pacs002 Message](#pacs002-message)
   - [Pacs008 Message](#pacs008-message)
+  - [Pacs002 Message](#pacs002-message)
 
 ## Sequence Diagram ISO Messages
 
@@ -25,7 +25,6 @@ sequenceDiagram
     participant ED as "Event-Director"
 
     %% ISO20022 Message Pain001
-    rect rgb(105, 105, 105)
         Client ->>+ TMS: POST /v1/evaluate/iso20022/pain.001.001.11: Pain001.001.11 Message
         TMS ->> TMS: Validate Pain001
         TMS ->> log: Logging of receipt
@@ -33,30 +32,28 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
         end
-
-        rect rgb(173, 216, 230)
-            rect rgb(138, 43, 226)
-                par save in ArangoDB and Redis Cache
+                par save in ArangoDB
                     TMS ->> Ara: saveTransactionHistory(pain001)
                     TMS ->> Ara: addAccount(debtor)
                     TMS ->> Ara: addAccount(creditor)
                     TMS ->> Ara: addEntity(debtor)
-                    TMS ->> Ara: addEntity(creditor)
-                    TMS ->> Cache: setJson(DataCache)
+                    TMS ->> Ara: addEntity(creditor)                   
                 end
-            end
-            TMS ->> ED: NATS handleResponse: Pain001 Message
-        end
+                par save in ArangoDB
+                    TMS ->> Ara: saveTransactionRelationship(pain001)
+                    TMS ->> Ara: addAccountHolder(debtor)
+                    TMS ->> Ara: addAccountHolder(creditor)                
+                end
+            
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
         end
+        TMS ->> ED: NATS handleResponse: Pain001 Message
         TMS ->> log: Transaction sent to ED service
         TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
-    end
-
+    
     %% ISO20022 Message Pain013
-    rect rgb(105, 105, 105)
         Client ->>+ TMS: POST /v1/evaluate/iso20022/pain.013.001.09: Pain013.001.09 Message
         TMS ->> TMS: Validate Pain013
         TMS ->> log: Logging of receipt
@@ -64,34 +61,21 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
         end
-
-        rect rgb(173, 216, 230)
-            TMS ->> Cache: getJson(DataCache)
-            alt rebuild Cache
-                TMS ->> Ara: getTransactionPain001
-                alt Error
-                    TMS ->> TMS: Throw error
-                end
-                TMS ->> TMS: rebuildCache
-                TMS ->> Cache: setJson(DataCache)
-            end
             par save in ArangoDB
                 TMS ->> Ara: saveTransactionHistory(pain013)
                 TMS ->> Ara: addAccount(debtor)
                 TMS ->> Ara: addAccount(creditor)
             end
-            TMS ->> ED: NATS handleResponse: Pain013 Message
-        end
+            TMS ->> Ara: saveTransactionRelationship(pain013)
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
         end
+        TMS ->> ED: NATS handleResponse: Pain013 Message
         TMS ->> log: Transaction sent to ED service
         TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
-    end
 
     %% ISO20022 Message Pacs008
-    rect rgb(105, 105, 105)
         Client ->>+ TMS: POST /v1/evaluate/iso20022/pacs.008.001.10: Pacs008.001.10 Message
         TMS ->> TMS: Validate Pacs008
         TMS ->> log: Logging of receipt
@@ -99,38 +83,64 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
         end
-
-        rect rgb(173, 216, 230)
-            TMS ->> Cache: getJson(DataCache)
-            alt rebuild Cache
-                TMS ->> Ara: getTransactionPain001
-                alt Error
-                    TMS ->> TMS: Throw error
-                end
-                TMS ->> TMS: rebuildCache
-                TMS ->> Cache: setJson(DataCache)
-            end
             par save in ArangoDB
-                TMS ->> Ara: saveTransactionHistory(pacs008)
                 TMS ->> Ara: addAccount(debtor)
                 TMS ->> Ara: addAccount(creditor)
+                TMS ->> Cache: save Data Cache
+                %% TMS ->> Ara: saveTransactionHistory(pacs008)
             end
-            TMS ->> ED: NATS handleResponse: Pacs008 Message
-        end
+            alt Quoting Enabled
+                par save in ArangoDB
+                  TMS ->> Ara: addEntity(creditor)
+                  TMS ->> Ara: addEntity(debtor)
+                end
+
+                par save in ArangoDB
+                  TMS ->> Ara: addAccountHolder(creditor)
+                  TMS ->> Ara: addAccountHolder(debtor)
+                end
+            end
+            TMS ->> Ara: saveTransactionRelationship
+            TMS ->> Ara: saveTransactionHistory(pacs008)
+
+            
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
         end
+        TMS ->> ED: NATS handleResponse: Pacs008 Message
         TMS ->> log: Transaction sent to ED service
         TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
-    end
+
+    %% ISO20022 Message Pacs002
+        Client ->>+ TMS: POST /v1/evaluate/iso20022/pacs.002.001.12: Pacs002.001.12 Message
+        TMS ->> TMS: Validate Pacs002
+        TMS ->> log: Logging of receipt
+        alt Validation Error
+        TMS ->> log: Logging of error
+        TMS ->> Client: /v1/evaluate/iso20022/pacs.002.001.12 POST Result
+        end
+        TMS ->> Cache: getCache
+        alt cache miss
+          TMS ->> Ara: get Pacs008
+          TMS ->> TMS: rebuild cache
+        end
+        TMS ->> Ara: saveTransactionHistory
+        TMS ->> Ara: get Pacs008
+        TMS ->> Ara: saveTransactionRelationship
+        alt Error
+        TMS ->> log: Logging of error
+        TMS ->> TMS: Throw error
+        end
+        TMS ->> ED: NATS handleResponse: Pacs002 Message
+        TMS ->> log: Transaction sent to ED service
+        TMS ->> Client: /v1/evaluate/iso20022/pacs.002.001.12 POST Result
 ```
 
-![](./images/image-20230815-100606.png)
 
 Transaction monitoring is one of many risk management activities that an organization must perform to ensure healthy operations and also to remain compliant with relevant legislation or regulations.
 
-Currently, it accepts ISO20022 Pain001.001.11 message , pain.013 message , pacs.002.001.12 and pacs.008.001.10. For more information click [here](https://github.com/frmscoe/docs/blob/dev/Knowledge-Articles/iso20022-and-tazama.md)
+Currently, it accepts ISO20022 Pain001.001.11 message, pain.013 message, pacs.002.001.12 and pacs.008.001.10. For more information click [here](https://github.com/frmscoe/docs/blob/dev/Knowledge-Articles/iso20022-and-tazama.md)
 
 ## Activity Diagram
 
