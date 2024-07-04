@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import apm from './apm';
-import { cacheDatabaseClient, databaseManager, loggerService, server } from '.';
+import { cacheDatabaseManager, loggerService, server } from '.';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
@@ -75,17 +75,17 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain001Collection, `pain001_${EndToEndId}`),
-      cacheDatabaseClient.addAccount(debtorAcctId),
-      cacheDatabaseClient.addAccount(creditorAcctId),
-      cacheDatabaseClient.addEntity(creditorId, CreDtTm),
-      cacheDatabaseClient.addEntity(debtorId, CreDtTm),
+      cacheDatabaseManager.saveTransactionHistory(transaction, configuration.transactionHistoryPain001Collection, `pain001_${EndToEndId}`),
+      cacheDatabaseManager.addAccount(debtorAcctId),
+      cacheDatabaseManager.addAccount(creditorAcctId),
+      cacheDatabaseManager.addEntity(creditorId, CreDtTm),
+      cacheDatabaseManager.addEntity(debtorId, CreDtTm),
     ]);
 
     await Promise.all([
-      cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+      cacheDatabaseManager.saveTransactionRelationship(transactionRelationship),
+      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
+      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
     let error: Error;
@@ -178,12 +178,12 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   const spanInsert = apm.startSpan('db.insert.pain013');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain013Collection, `pain013_${EndToEndId}`),
-      cacheDatabaseClient.addAccount(debtorAcctId),
-      cacheDatabaseClient.addAccount(creditorAcctId),
+      cacheDatabaseManager.saveTransactionHistory(transaction, configuration.transactionHistoryPain013Collection, `pain013_${EndToEndId}`),
+      cacheDatabaseManager.addAccount(debtorAcctId),
+      cacheDatabaseManager.addAccount(creditorAcctId),
     ]);
 
-    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     let error: Error;
     if (err instanceof Error) {
@@ -263,7 +263,7 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     TxTp,
   };
 
-  const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
+  const accountInserts = [cacheDatabaseManager.addAccount(debtorAcctId), cacheDatabaseManager.addAccount(creditorAcctId)];
 
   const dataCache: DataCache = {
     cdtrId: creditorId,
@@ -278,15 +278,15 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   };
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
-    accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
+    accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
   } else {
     // this is fatal
     throw new Error('[pacs008] data cache could not be serialised');
   }
 
   if (!configuration.quoting) {
-    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, creDtTm));
-    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, creDtTm));
+    accountInserts.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
+    accountInserts.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
     const dataCache: DataCache = {
       cdtrId: creditorId,
       dbtrId: debtorId,
@@ -301,10 +301,10 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
 
     const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
-    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, creDtTm));
-    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, creDtTm));
+    accountInserts.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
+    accountInserts.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
     if (cacheBuffer) {
-      accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, 150));
+      accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, 150));
     } else {
       // this is fatal
       throw new Error('[pacs008] data cache could not be serialised');
@@ -312,18 +312,18 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     await Promise.all(accountInserts);
 
     await Promise.all([
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, creDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, creDtTm),
     ]);
   } else {
     await Promise.all(accountInserts);
   }
-  cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
+  cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
 
   const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
+      cacheDatabaseManager.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
     ]);
   } catch (err) {
     let error: Error;
@@ -384,7 +384,7 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
   try {
-    const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
+    const dataCacheJSON = (await cacheDatabaseManager.getBuffer(EndToEndId)).DataCache;
     dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
@@ -398,13 +398,13 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
 
   const spanInsert = apm.startSpan('db.insert.pacs002');
   try {
-    await cacheDatabaseClient.saveTransactionHistory(
+    await cacheDatabaseManager.saveTransactionHistory(
       transaction,
       configuration.transactionHistoryPacs002Collection,
       `pacs002_${EndToEndId}`,
     );
 
-    const result = (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]];
+    const result = (await cacheDatabaseManager.getTransactionPacs008(EndToEndId)) as [Pacs008[]];
 
     const debtorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
     const debtorAcctId = createAccountId(
@@ -423,7 +423,7 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
     transactionRelationship.to = `accounts/${debtorAcctId}`;
     transactionRelationship.from = `accounts/${creditorAcctId}`;
 
-    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
     let error: Error;
     if (err instanceof Error) {
@@ -465,7 +465,7 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
 export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id?: string): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild');
   const context = 'rebuildCache()';
-  const currentPacs008 = (await databaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
+  const currentPacs008 = (await cacheDatabaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
 
   const pacs008 = unwrap(currentPacs008);
 
@@ -493,7 +493,7 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
     const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
     if (buffer) {
-      await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+      await cacheDatabaseManager.set(endToEndId, buffer, configuration.cacheTTL);
     } else {
       loggerService.error('[pacs008] could not rebuild redis cache');
     }
