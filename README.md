@@ -140,7 +140,7 @@ sequenceDiagram
 
 Transaction monitoring is one of many risk management activities that an organization must perform to ensure healthy operations and also to remain compliant with relevant legislation or regulations.
 
-Currently, it accepts ISO20022 Pain001.001.11 message, pain.013 message, pacs.002.001.12 and pacs.008.001.10. For more information click [here](https://github.com/frmscoe/docs/blob/dev/Knowledge-Articles/iso20022-and-tazama.md)
+Currently, the TMS API is able to accept ISO20022 pain.001.001.11, pain.013.001.09, pacs.002.001.12 and pacs.008.001.10 messages. Depending on the configuration of the TMS API service via the `QUOTING` environment variable, the pain.001 and pain.013 messages may be excluded (`QUOTING=false`).
 
 ## Activity Diagram
 
