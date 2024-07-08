@@ -6,6 +6,7 @@ import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
 import { unwrap } from '@frmscoe/frms-coe-lib/lib/helpers/unwrap';
+import { createAccountId, createId } from './utils/create-id';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
@@ -21,11 +22,30 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   transaction.TxTp = TxTp;
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
-  const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
-  const creditorId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id;
+
+  const othrCreditorAcct = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+
+  const creditorAcctId = createAccountId(
+    othrCreditorAcct.Id,
+    othrCreditorAcct.SchmeNm.Prtry,
+    transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  );
+
+  const othrCreditor = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const creditorId = createId(othrCreditor.Id, othrCreditor.SchmeNm.Prtry);
+
+  const othrDebtor = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0];
+  const debtorId = createId(othrDebtor.Id, othrDebtor.SchmeNm.Prtry);
+
   const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
-  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0].Id;
-  const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0].Id;
+  const othrDebtorAcct = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0];
+
+  const debtorAcctId = createAccountId(
+    othrDebtorAcct.Id,
+    othrDebtorAcct.SchmeNm.Prtry,
+    transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  );
+
   const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
@@ -114,11 +134,25 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   const MsgId = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
 
-  const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
-  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr[0].Id;
+  const creditorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorAcctId = createAccountId(
+    creditorAcctOthr.Id,
+    creditorAcctOthr.SchmeNm.Prtry,
+    transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  );
 
-  const dbtrId = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr[0].Id;
-  const cdtrId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id;
+  const debtorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr[0];
+  const debtorAcctId = createAccountId(
+    debtorAcctOthr.Id,
+    debtorAcctOthr.SchmeNm.Prtry,
+    transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  );
+
+  const dbtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr[0];
+  const dbtrId = createId(dbtrOthr.Id, dbtrOthr.SchmeNm.Prtry);
+
+  const cdtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const cdtrId = createId(cdtrOthr.Id, cdtrOthr.SchmeNm.Prtry);
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorAcctId}`,
@@ -197,11 +231,25 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const EndToEndId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
-  const debtorId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0].Id;
-  const creditorId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id;
+  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
+  const debtorId = createId(debtorOthr.Id, debtorOthr.SchmeNm.Prtry);
 
-  const debtorAcctId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0].Id;
-  const creditorAcctId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
+  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const creditorId = createId(creditorOthr.Id, creditorOthr.SchmeNm.Prtry);
+
+  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+  const debtorAcctId = createAccountId(
+    debtorAcctOthr.Id,
+    debtorAcctOthr.SchmeNm.Prtry,
+    transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  );
+
+  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorAcctId = createAccountId(
+    creditorAcctOthr.Id,
+    creditorAcctOthr.SchmeNm.Prtry,
+    transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+  );
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
@@ -358,8 +406,19 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
 
     const result = (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]];
 
-    const debtorAcctId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0].Id;
-    const creditorAcctId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0].Id;
+    const debtorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+    const debtorAcctId = createAccountId(
+      debtorAcctOthr.Id,
+      debtorAcctOthr.SchmeNm.Prtry,
+      result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+    );
+
+    const creditorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+    const creditorAcctId = createAccountId(
+      creditorAcctOthr.Id,
+      creditorAcctOthr.SchmeNm.Prtry,
+      result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId,
+    );
 
     transactionRelationship.to = `accounts/${debtorAcctId}`;
     transactionRelationship.from = `accounts/${creditorAcctId}`;
