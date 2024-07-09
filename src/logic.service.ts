@@ -285,28 +285,9 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   }
 
   if (!configuration.quoting) {
-    const dataCache: DataCache = {
-      cdtrId: creditorId,
-      dbtrId: debtorId,
-      cdtrAcctId: creditorAcctId,
-      dbtrAcctId: debtorAcctId,
-      creDtTm,
-      amt: {
-        amt: parseFloat(Amt),
-        ccy: Ccy,
-      },
-    };
-
-    const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
-
     accountInserts.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
     accountInserts.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
-    if (cacheBuffer) {
-      accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, 150));
-    } else {
-      // this is fatal
-      throw new Error('[pacs008] data cache could not be serialised');
-    }
+
     await Promise.all(accountInserts);
 
     await Promise.all([
