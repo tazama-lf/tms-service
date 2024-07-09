@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 name: Release Workflow
 
 on:
@@ -13,6 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
+          ref: main
           fetch-depth: 0 # Fetch all tags
       
       # Fetch merged pull request and determine release labels
@@ -154,7 +157,7 @@ jobs:
             local section_label="$2"
             local section_icon="$3"
             # Get the commit messages with the specified label between the last release and the current release
-            local commit_messages=$(git log --pretty=format:"- %s (Milestone: %b, Linked Issues: %C(yellow)%H%Creset)" "$LAST_RELEASE_TAG..HEAD" --grep="$section_label" --no-merges --decorate --decorate-refs=refs/issues)
+            local commit_messages=$(git log --pretty=format:"- %s (Linked Issues: %C(yellow)%H%Creset)" "$LAST_RELEASE_TAG..HEAD" --grep="$section_label" --no-merges --decorate --decorate-refs=refs/issues)
             # If there are commit messages, append the section to the changelog file
             if [ -n "$commit_messages" ]; then
               echo "### $section_icon $section_title" >> "$CHANGELOG_FILE"
