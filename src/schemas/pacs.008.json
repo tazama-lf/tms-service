@@ -505,11 +505,29 @@
                 "Doc": {
                   "type": "object",
                   "properties": {
+                    "InitgPty": {
+                      "type": "object",
+                      "properties": {
+                        "Glctn": {
+                          "type": "object",
+                          "properties": {
+                            "Lat": {
+                              "type": "string"
+                            },
+                            "Long": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["Lat", "Long"]
+                        }
+                      },
+                      "required": ["Glctn"]
+                    },
                     "Xprtn": {
                       "type": "string"
                     }
                   },
-                  "required": ["Xprtn"]
+                  "required": ["InitgPty", "Xprtn"]
                 }
               },
               "required": ["Doc"]
