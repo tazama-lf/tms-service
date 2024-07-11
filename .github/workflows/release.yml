@@ -13,6 +13,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
+          ref: main
           fetch-depth: 0 # Fetch all tags
       
       # Fetch merged pull request and determine release labels
