@@ -7,9 +7,6 @@ on:
         description: 'Milestone ID'
         required: true
         default: '1'
-  issues:
-    types:
-      - closed
 
 jobs:
   close_milestone:
