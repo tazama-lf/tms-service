@@ -64,6 +64,9 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
     cdtrAcctId: creditorAcctId,
     dbtrAcctId: debtorAcctId,
   };
+
+  transaction.DataCache = dataCache;
+
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
     await Promise.all([
@@ -159,6 +162,7 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
     dbtrId,
   };
 
+  transaction.DataCache = dataCache;
   transaction._key = MsgId;
 
   const spanInsert = apm.startSpan('db.insert.pain013');
@@ -256,6 +260,8 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
       ccy: Ccy,
     },
   };
+  transaction.DataCache = dataCache;
+
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
     accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
@@ -354,6 +360,7 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
   }
 
   transaction._key = MsgId;
+  transaction.DataCache = dataCache;
 
   const spanInsert = apm.startSpan('db.insert.pacs002');
   try {
