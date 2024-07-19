@@ -1,57 +1,33 @@
 // SPDX-License-Identifier: Apache-2.0
 import './apm';
-import { LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import { LoggerService, type ManagerConfig } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
 import os from 'os';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
 import { configuration } from './config';
-import { Singleton } from './utils/services';
 
-const databaseManagerConfig = {
-  redisConfig: {
-    db: configuration.redis.db,
-    servers: configuration.redis.servers,
-    password: configuration.redis.password,
-    isCluster: configuration.redis.isCluster,
-  },
-  transactionHistory: {
-    certPath: configuration.transactionHistoryCertPath,
-    databaseName: configuration.transactionHistoryName,
-    user: configuration.transactionHistoryUser,
-    password: configuration.transactionHistoryPassword,
-    url: configuration.transactionHistoryURL,
-  },
-  pseudonyms: {
-    certPath: configuration.pseudonymsCertPath,
-    databaseName: configuration.graphDb,
-    user: configuration.pseudonymsUser,
-    password: configuration.pseudonymsPassword,
-    url: configuration.pseudonymsURL,
-  },
-};
+const databaseManagerConfig = configuration.db;
 
 export const loggerService: LoggerService = new LoggerService(configuration.sidecarHost);
 export let server: IStartupService;
 
-let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
-let cacheDatabaseClient: CacheDatabaseService;
+let cacheDatabaseManager: CacheDatabaseService<ManagerConfig>;
 
 export const dbInit = async (): Promise<void> => {
-  databaseManager = await Singleton.getDatabaseManager(databaseManagerConfig);
-  cacheDatabaseClient = await CacheDatabaseService.create(databaseManager, configuration.cacheTTL);
-  loggerService.log(JSON.stringify(databaseManager.isReadyCheck()));
+  cacheDatabaseManager = await CacheDatabaseService.create(databaseManagerConfig, configuration.cacheTTL);
+  loggerService.log(JSON.stringify(cacheDatabaseManager.isReadyCheck()));
 };
 
 const connect = async (): Promise<void> => {
   let isConnected = false;
   for (let retryCount = 0; retryCount < 10; retryCount++) {
-    loggerService.log(`Connecting to nats server...`);
+    loggerService.log('Connecting to nats server...');
     if (!(await server.initProducer())) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
-      loggerService.log(`Connected to nats`);
+      loggerService.log('Connected to nats');
       isConnected = true;
       break;
     }
@@ -67,6 +43,7 @@ const connect = async (): Promise<void> => {
       loggerService.error(err);
       throw Error(`${err.message}`);
     }
+
     loggerService.log(`Fastify listening on ${address}`);
   });
 };
@@ -108,4 +85,4 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
   })();
 }
 
-export { cacheDatabaseClient, databaseManager };
+export { cacheDatabaseManager };

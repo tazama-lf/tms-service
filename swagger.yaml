@@ -38,9 +38,9 @@ paths:
             $ref: '#/definitions/Health'
         500:
           $ref: '#/responses/500'
-  /execute:
+  /v1/evaluate/iso20022/pain.001.001.11:
     post:
-      summary: 'Monitor Quote Transaction'
+      summary: 'pain.001.001.11 Transaction'
       description: 'ISO20022 pain.001.001.11 formatted message expected. Historically Mojaloop Quote message.'
       consumes:
         - 'application/json'
@@ -64,9 +64,9 @@ paths:
           $ref: '#/responses/401'
         500:
           $ref: '#/responses/500'
-  /quoteReply:
+  /v1/evaluate/iso20022/pain.013.001.09:
     post:
-      summary: 'Reply Quote Transaction'
+      summary: 'pain.013.001.09 Transaction'
       description: 'ISO20022 pain.013.001.09 formatted message expected. Historically Mojaloop Quote Response message.'
       consumes:
         - 'application/json'
@@ -90,9 +90,9 @@ paths:
           $ref: '#/responses/401'
         500:
           $ref: '#/responses/500'
-  /transfer:
+  /v1/evaluate/iso20022/pacs.008.001.10:
     post:
-      summary: 'Transfer'
+      summary: 'pacs.008.001.10'
       description: 'ISO20022 pacs.008.001.10 formatted message expected. Historically Mojaloop Transfer message.'
       consumes:
         - 'application/json'
@@ -116,9 +116,9 @@ paths:
           $ref: '#/responses/401'
         500:
           $ref: '#/responses/500'
-  /transfer-response:
+  /v1/evaluate/iso20022/pacs.002.001.12:
     post:
-      summary: 'Transfer response'
+      summary: 'pacs.002.001.12'
       description: 'ISO20022 pacs.002.001.12 formatted message expected.'
       consumes:
         - 'application/json'
@@ -565,14 +565,8 @@ definitions:
   ISO20022Pain001:
     type: object
     required:
-      - TxTp
       - CstmrCdtTrfInitn
     properties:
-      TxTp:
-        type: string
-        enum:
-          - pain.001.001.11
-        example: 'pain.001.001.11'
       CstmrCdtTrfInitn:
         type: object
         properties:
@@ -989,14 +983,8 @@ definitions:
   ISO20022Pacs002:
     type: object
     required:
-      - TxTp
       - FIToFIPmtSts
     properties:
-      TxTp:
-        type: string
-        enum:
-          - pacs.002.001.12
-        example: 'pacs.002.001.12'
       FIToFIPmtSts:
         type: object
         required:
@@ -1114,15 +1102,9 @@ definitions:
   ISO20022Pacs008:
    type: object
    required:
-    - TxTp
-    - FIToFICstmrCdt
+    - FIToFICstmrCdtTrf
    properties:
-    TxTp:
-      type: string
-      enum:
-        - pacs.008.001.10
-      example: "pacs.008.001.10"
-    FIToFICstmrCdt:
+    FIToFICstmrCdtTrf:
       type: object
       required:
         - GrpHdr
@@ -1130,10 +1112,10 @@ definitions:
         GrpHdr:
           type: object
           required:
-            - MsgId 
+            - MsgId
             - CreDtTm
             - NbOfTxs
-            - SttlmInf        
+            - SttlmInf
           properties:
             MsgId:
               type: string
@@ -1231,14 +1213,14 @@ definitions:
                         Ccy:
                           $ref: "#/definitions/Currencies"
                           type: string
-                          minLength: 3 
+                          minLength: 3
                           maxLength: 3
                           example: "USD"
                 ChrgBr:
                       type: string
                       example: "DEBT"
                       minLength: 4
-                      maxLength: 4  
+                      maxLength: 4
                 ChrgsInf:
                   type: object
                   required:
@@ -1259,7 +1241,7 @@ definitions:
                           example: 50431891779910900
                         Ccy:
                           $ref: "#/definitions/Currencies"
-                          minLength: 3 
+                          minLength: 3
                           maxLength: 3
                           example: "USD"
                     Agt:
@@ -1351,7 +1333,7 @@ definitions:
                         MobNb:
                           type: string
                           pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
-                          example: "+27-783078685"         
+                          example: "+27-783078685"
                 Dbtr:
                   type: object
                   required:
@@ -1456,7 +1438,7 @@ definitions:
                 DbtrAgt:
                   type: object
                   required:
-                    - FinInstnId 
+                    - FinInstnId
                   properties:
                     FinInstnId:
                       type: object
@@ -1490,7 +1472,7 @@ definitions:
                             MmbId:
                               type: string
                               maxLength: 35
-                              example: "dfsp002"        
+                              example: "dfsp002"
                 Cdtr:
                   type: object
                   required:
@@ -1556,7 +1538,7 @@ definitions:
                             MobNb:
                               type: string
                               pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
-                              example: "+27-783078685"      
+                              example: "+27-783078685"
                     CdtrAcct:
                       type: object
                       required:
@@ -1639,7 +1621,7 @@ definitions:
                     Xprtn:
                       type: string
                       example: "2021-10-07T09:30:31.000Z"
-  
+
   Currencies:
       enum:
         - AFN
@@ -1825,14 +1807,8 @@ definitions:
   ISO20022Pain013:
       type: object
       required:
-        - TxTp
         - CdtrPmtActvtnReq
       properties:
-        TxTp:
-          type: string
-          enum:
-            - pain.013.001.09
-          example: 'pain.013.001.09'
         CdtrPmtActvtnReq:
           type: object
           properties:

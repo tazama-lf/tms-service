@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
-import { type DatabaseManagerType } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { CreateDatabaseManager, type DatabaseManagerInstance, type ManagerConfig } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
+import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
 
-export class CacheDatabaseService {
-  private readonly dbClient: DatabaseManagerType;
+export class CacheDatabaseService<T extends ManagerConfig> {
+  private readonly dbManager: DatabaseManagerInstance<T>;
 
   cacheExpireTime: number;
 
-  private constructor(dbClient: unknown, expire: number) {
-    this.dbClient = dbClient as DatabaseManagerType;
+  private constructor(dbInstance: DatabaseManagerInstance<T>, expire: number) {
+    this.dbManager = dbInstance;
     this.cacheExpireTime = expire;
   }
 
   /**
-   * Creates a wrapper database for adding optional caching to dbManager librart
+   * Creates a wrapper database for adding optional caching to dbManager library.
+   * Missing methods will have to be added by manually
    *
    * @static
    * @param {unknown} db frms-coe-lib dbManager instance
@@ -23,8 +24,9 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<CacheDatabaseService>}
    * @memberof CacheDatabaseService
    */
-  public static async create(db: unknown, expire: number): Promise<CacheDatabaseService> {
-    return new CacheDatabaseService(db, expire);
+  public static async create<T extends ManagerConfig>(databaseManagerConfig: T, expire: number): Promise<CacheDatabaseService<T>> {
+    const dbManager = await CreateDatabaseManager(databaseManagerConfig);
+    return new CacheDatabaseService<T>(dbManager, expire);
   }
 
   /**
@@ -33,7 +35,7 @@ export class CacheDatabaseService {
    * @memberof CacheDatabaseService
    */
   quit = (): void => {
-    this.dbClient.quit?.();
+    this.dbManager.quit?.();
   };
 
   /**
@@ -43,8 +45,8 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<unknown>}
    * @memberof CacheDatabaseService
    */
-  async getTransactionHistoryPacs008(EndToEndId: string): Promise<unknown> {
-    const pacs008 = await this.dbClient.getTransactionPacs008?.(EndToEndId);
+  async getTransactionPacs008(EndToEndId: string): Promise<unknown> {
+    const pacs008 = await this.dbManager.getTransactionPacs008(EndToEndId);
     return pacs008;
   }
 
@@ -56,7 +58,7 @@ export class CacheDatabaseService {
    * @memberof CacheDatabaseService
    */
   async addAccount(hash: string): Promise<void> {
-    await this.dbClient.saveAccount?.(hash);
+    await this.dbManager.saveAccount(hash);
   }
 
   /**
@@ -68,7 +70,7 @@ export class CacheDatabaseService {
    * @memberof CacheDatabaseService
    */
   async addEntity(entityId: string, CreDtTm: string): Promise<void> {
-    await this.dbClient.saveEntity?.(entityId, CreDtTm);
+    await this.dbManager.saveEntity(entityId, CreDtTm);
   }
 
   /**
@@ -81,7 +83,7 @@ export class CacheDatabaseService {
    * @memberof CacheDatabaseService
    */
   async addAccountHolder(entityId: string, accountId: string, CreDtTm: string): Promise<void> {
-    await this.dbClient.saveAccountHolder?.(entityId, accountId, CreDtTm);
+    await this.dbManager.saveAccountHolder(entityId, accountId, CreDtTm);
   }
 
   /**
@@ -92,7 +94,7 @@ export class CacheDatabaseService {
    * @memberof CacheDatabaseService
    */
   async saveTransactionRelationship(tR: TransactionRelationship): Promise<void> {
-    await this.dbClient.saveTransactionRelationship?.(tR);
+    await this.dbManager.saveTransactionRelationship(tR);
   }
 
   /**
@@ -111,8 +113,44 @@ export class CacheDatabaseService {
   ): Promise<void> {
     const buff = createMessageBuffer({ ...transaction });
 
-    if (redisKey && buff) await this.dbClient.set?.(redisKey, buff, this.cacheExpireTime);
+    if (redisKey && buff) await this.dbManager.set(redisKey, buff, this.cacheExpireTime);
 
-    await this.dbClient.saveTransactionHistory?.(transaction, transactionHistoryCollection);
+    await this.dbManager.saveTransactionHistory(transaction, transactionHistoryCollection);
+  }
+
+  /**
+   * Wrapper method for dbManager.set
+   *
+   * @param {string} key
+   * @param {string | number | Buffer} value
+   * @param {number} expire
+   * @return {*}  {Promise<void>}
+   * @memberof CacheDatabaseService
+   */
+  async set(key: string, value: string | number | Buffer, expire: number): Promise<void> {
+    await this.dbManager.set(key, value, expire);
+  }
+
+  /**
+   * Wrapper method for dbManager.getBuffer
+   *
+   * @param {string} key
+   * @return {*}  {Promise<Record<string, unknown>>}
+   * @memberof CacheDatabaseService
+   */
+  async getBuffer(key: string): Promise<Record<string, unknown>> {
+    const buf = await this.dbManager.getBuffer(key);
+    return buf;
+  }
+
+  /**
+   * Wrapper method for dbManager.isReadyCheck
+   *
+   * @return {*}  {Promise<Record<string, unknown>>}
+   * @memberof CacheDatabaseService
+   */
+  async isReadyCheck(): Promise<Record<string, unknown>> {
+    const ready = await this.dbManager.isReadyCheck();
+    return ready;
   }
 }

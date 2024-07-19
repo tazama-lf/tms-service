@@ -1,26 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import apm from 'elastic-apm-node';
 import { Pacs002, Pacs008, Pain001, Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { cacheDatabaseClient, databaseManager, dbInit, runServer, server } from '../../src/index';
+import { cacheDatabaseManager, dbInit, runServer, server } from '../../src/index';
 import * as LogicService from '../../src/logic.service';
 import { configuration } from '../../src/config';
 import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@frmscoe/frms-coe-lib/lib/tests/mocks/mock-transactions';
 import { Pacs002Sample, Pacs008Sample, Pain001Sample, Pain013Sample } from '@frmscoe/frms-coe-lib/lib/tests/data';
-
-// TODO: Please fix tests to not rely on local .env
-// Currently expects QUOTING=false for tests to meet coverage criteria.
-
-jest.mock('elastic-apm-node');
-const mockApm = apm as jest.Mocked<typeof apm>;
-
-interface MockedSpan extends Omit<apm.Span, 'end'> {
-  end: jest.Mock;
-}
-
-(mockApm.startSpan as jest.MockedFunction<typeof mockApm.startSpan>).mockReturnValue({
-  end: jest.fn(),
-} as MockedSpan);
 
 beforeAll(async () => {
   await dbInit();
@@ -28,14 +13,13 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  cacheDatabaseClient.quit();
-  databaseManager.quit();
+  cacheDatabaseManager.quit();
 });
 
 describe('App Controller & Logic Service', () => {
   beforeEach(() => {
-    CacheDatabaseClientMocks(cacheDatabaseClient);
-    DatabaseManagerMocks(databaseManager);
+    CacheDatabaseClientMocks(cacheDatabaseManager);
+    DatabaseManagerMocks(cacheDatabaseManager);
 
     jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
   });
@@ -45,21 +29,21 @@ describe('App Controller & Logic Service', () => {
   });
 
   describe('handleExecute', () => {
-    it('should handle Quote', async () => {
+    it('should handle pain.001', async () => {
       const request = Pain001Sample as Pain001;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePain001');
 
-      await LogicService.handlePain001(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      await LogicService.handlePain001(request, 'pain.001.001.11');
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
 
-    it('should handle Quote, database error', async () => {
+    it('should handle pain.001, database error', async () => {
       const request = Pain001Sample as Pain001;
 
       jest
-        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
         .mockImplementation((transaction: any, transactionhistorycollection: string) => {
           return new Promise((resolve, reject) => {
             throw new Error('Deliberate Error');
@@ -68,7 +52,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePain001(request);
+        await LogicService.handlePain001(request, 'pain.001.001.11');
       } catch (err: any) {
         error = err?.message;
       }
@@ -76,22 +60,22 @@ describe('App Controller & Logic Service', () => {
     });
   });
 
-  describe('handleQuoteReply', () => {
-    it('should handle Quote Reply', async () => {
+  describe('handlePain.013', () => {
+    it('should handle pain.013', async () => {
       const request = Pain013Sample as Pain013;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePain013');
 
-      await LogicService.handlePain013(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      await LogicService.handlePain013(request, 'pain.013.001.09');
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
 
-    it('should handle Quote Reply, database error', async () => {
+    it('should handle pain.013, database error', async () => {
       const request = Pain013Sample as Pain013;
 
       jest
-        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
         .mockImplementation((transaction: any, transactionhistorycollection: string) => {
           return new Promise((resolve, reject) => {
             throw new Error('Deliberate Error');
@@ -100,7 +84,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePain013(request);
+        await LogicService.handlePain013(request, 'pain.013.001.09');
       } catch (err: any) {
         error = err?.message;
       }
@@ -108,20 +92,20 @@ describe('App Controller & Logic Service', () => {
     });
   });
 
-  describe('handleTransfer', () => {
-    it('should handle Transfer', async () => {
+  describe('handlePacs.008', () => {
+    it('should pacs.008', async () => {
       const request = Pacs008Sample as Pacs008;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
 
-      await LogicService.handlePacs008(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      await LogicService.handlePacs008(request, 'pacs.008.001.10');
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
 
-    it('should handle Transfer, database error', async () => {
+    it('should handle pacs.008, database error', async () => {
       jest
-        .spyOn(cacheDatabaseClient, 'saveTransactionHistory')
+        .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
         .mockImplementation((transaction: Pain001 | Pain013 | Pacs008 | Pacs002, transactionhistorycollection: string) => {
           return new Promise((resolve, reject) => {
             throw new Error('Deliberate Error');
@@ -131,7 +115,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePacs008(request);
+        await LogicService.handlePacs008(request, 'pacs.008.001.10');
       } catch (err: any) {
         error = err?.message;
       }
@@ -139,26 +123,26 @@ describe('App Controller & Logic Service', () => {
     });
   });
 
-  describe('handleTransfer, quoting enabled', () => {
-    it('should handle Transfer', async () => {
+  describe('handlePacs.008, quoting enabled', () => {
+    it('should handle pacs.008', async () => {
       configuration.quoting = false;
       const request = Pacs008Sample as Pacs008;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
 
-      await LogicService.handlePacs008(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      await LogicService.handlePacs008(request, 'pacs.008.001.10');
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
       configuration.quoting = false;
     });
   });
 
-  describe('handleTransferResponse', () => {
-    it('should handle Transfer Response', async () => {
-      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
+  describe('handlePacs.002', () => {
+    it('should handle pacs.002', async () => {
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementation((EndToEndId: string) => {
         return Promise.resolve(
           JSON.parse(
-            '[[{"TxTp":"pacs.008.001.10","FIToFICstmrCdt":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}]]',
+            '[[{"TxTp":"pacs.008.001.10","FIToFICstmrCdtTrf":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":[{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}]]',
           ),
         );
       });
@@ -166,13 +150,13 @@ describe('App Controller & Logic Service', () => {
       const request = Pacs002Sample as Pacs002;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
-      await LogicService.handlePacs002(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
     });
 
-    it('should handle Transfer Response, database error', async () => {
-      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((EndToEndId: string) => {
+    it('should handle pacs.002, database error', async () => {
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementation((EndToEndId: string) => {
         return new Promise((resolve, reject) => {
           throw new Error('Deliberate Error');
         });
@@ -181,7 +165,7 @@ describe('App Controller & Logic Service', () => {
 
       let error = '';
       try {
-        await LogicService.handlePacs002(request);
+        await LogicService.handlePacs002(request, 'pacs.002.001.12');
       } catch (err: any) {
         error = err?.message;
       }
@@ -193,23 +177,19 @@ describe('App Controller & Logic Service', () => {
     it('should fail gracefully - rebuildCache', async () => {
       const request = Pacs002Sample as Pacs002;
 
-      jest.spyOn(databaseManager, 'getBuffer').mockRejectedValue((key: any) => {
+      jest.spyOn(cacheDatabaseManager, 'getBuffer').mockRejectedValue((key: any) => {
         return Promise.resolve('some error');
       });
 
-      jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve('');
       });
 
-      jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
-        return Promise.resolve('');
-      });
-
-      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((key: any) => {
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve([
           [
             JSON.parse(
-              '{"TxTp":"pacs.008.001.10","FIToFICstmrCdt":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}',
+              '{"TxTp":"pacs.008.001.10","FIToFICstmrCdtTrf":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":[{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}',
             ),
           ],
         ]);
@@ -217,47 +197,45 @@ describe('App Controller & Logic Service', () => {
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
 
-      await LogicService.handlePacs002(request);
-      expect(handleSpy).toBeCalledTimes(1);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
+      expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
 
-      jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve([[Pacs008Sample]]);
       });
-      await LogicService.handlePacs002(request);
-      expect(handleSpy).toBeCalledTimes(2);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
+      expect(handleSpy).toHaveBeenCalledTimes(2);
       expect(handleSpy).toHaveReturned();
     });
-    it('should fail gracefully - rebuildCachePain001', async () => {
-      const request = Pain013Sample as Pain013;
 
-      jest.spyOn(databaseManager, 'getBuffer').mockRejectedValue((key: any) => {
+    it('should fail gracefully - rebuildCache', async () => {
+      const request = Pacs002Sample as Pacs002;
+
+      jest.spyOn(cacheDatabaseManager, 'getBuffer').mockRejectedValue((key: any) => {
         return Promise.resolve('some error');
       });
 
-      jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
-        return Promise.resolve('');
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementationOnce((key: any) => {
+        return Promise.resolve([[]]);
       });
 
-      jest.spyOn(databaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
-        return Promise.resolve('');
-      });
-
-      jest.spyOn(cacheDatabaseClient, 'getTransactionHistoryPacs008').mockImplementation((key: any) => {
+      jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockImplementation((key: any) => {
         return Promise.resolve([
           [
             JSON.parse(
-              '{"TxTp":"pacs.008.001.10","FIToFICstmrCdt":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}',
+              '{"TxTp":"pacs.008.001.10","FIToFICstmrCdtTrf":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+01-710694778"}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1968-02-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+01-710694778"}},"DbtrAcct":{"Id":{"Othr":[{"Id":"+01-710694778","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"April Grant"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"Felicia Easton Quill","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1935-05-08","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}]}},"CtctDtls":{"MobNb":"+07-197368463"}},"CdtrAcct":{"Id":{"Othr":[{"Id":"+07-197368463","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"Felicia Quill"},"Purp":{"Cd":"MP2P"}},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 30713.75 from April to Felicia"},"SplmtryData":{"Envlp":{"Doc":{"Xprtn":"2023-02-03T07:17:52.216Z"}}}}}',
             ),
           ],
         ]);
       });
 
-      jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
-        return Promise.resolve([[Pain001Sample]]);
-      });
+      const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
 
-      await LogicService.handlePain013(request);
+      await LogicService.handlePacs002(request, 'pacs.002.001.12');
+
+      expect(handleSpy).toHaveBeenCalledTimes(1);
+      expect(handleSpy).toHaveReturned();
     });
   });
 });

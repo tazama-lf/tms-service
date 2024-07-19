@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import apm from './apm';
-import { cacheDatabaseClient, databaseManager, loggerService, server } from '.';
+import { cacheDatabaseManager, loggerService, server } from '.';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
@@ -12,26 +12,37 @@ const calculateDuration = (startTime: bigint): number => {
   return Number(endTime - startTime);
 };
 
-export const handlePain001 = async (transaction: Pain001): Promise<void> => {
+export const handlePain001 = async (transaction: Pain001, transactionType: string): Promise<void> => {
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, 'handlePain001()', id);
+  loggerService.log('Start - Handle transaction data', 'handlePain001()', id);
   const span = apm.startSpan('transaction.pain001');
-
   const startTime = process.hrtime.bigint();
-
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
-  const creditorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-  const creditorId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+
+  const othrCreditorAcct = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const creditorAcctId = `${othrCreditorAcct.Id}${othrCreditorAcct.SchmeNm.Prtry}${creditorMmbId}`;
+
+  const othrCreditor = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const creditorId = `${othrCreditor.Id}${othrCreditor.SchmeNm.Prtry}`;
+
+  const othrDebtor = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0];
+  const debtorId = `${othrDebtor.Id}${othrDebtor.SchmeNm.Prtry}`;
+
   const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
-  const debtorAcctId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr.Id;
-  const debtorId = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
+
+  const othrDebtorAcct = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0];
+  const debtorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const debtorAcctId = `${othrDebtorAcct.Id}${othrDebtorAcct.SchmeNm.Prtry}${debtorMmbId}`;
+
   const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
   const MsgId = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
   const PmtInfId = transaction.CstmrCdtTrfInitn.PmtInf.PmtInfId;
-  const TxTp = transaction.TxTp;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
@@ -54,30 +65,40 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
     dbtrAcctId: debtorAcctId,
   };
 
+  transaction.DataCache = dataCache;
+
   const spanInsert = apm.startSpan('db.insert.pain001');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain001Collection, `pain001_${EndToEndId}`),
-      cacheDatabaseClient.addAccount(debtorAcctId),
-      cacheDatabaseClient.addAccount(creditorAcctId),
-      cacheDatabaseClient.addEntity(creditorId, CreDtTm),
-      cacheDatabaseClient.addEntity(debtorId, CreDtTm),
+      cacheDatabaseManager.saveTransactionHistory(transaction, configuration.transactionHistoryPain001Collection, `pain001_${EndToEndId}`),
+      cacheDatabaseManager.addAccount(debtorAcctId),
+      cacheDatabaseManager.addAccount(creditorAcctId),
+      cacheDatabaseManager.addEntity(creditorId, CreDtTm),
+      cacheDatabaseManager.addEntity(debtorId, CreDtTm),
     ]);
 
     await Promise.all([
-      cacheDatabaseClient.saveTransactionRelationship(transactionRelationship),
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+      cacheDatabaseManager.saveTransactionRelationship(transactionRelationship),
+      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
+      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
     ]);
   } catch (err) {
-    loggerService.error(JSON.stringify(err));
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.error(strErr);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
     span?.end();
-    throw err;
+    throw error;
   }
   spanInsert?.end();
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -86,32 +107,41 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, 'handlePain001()', id);
+  loggerService.log('Transaction send to event-director service', 'handlePain001()', id);
 
   span?.end();
-  loggerService.log(`END - Handle transaction data`, 'handlePain001()', id);
+  loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
-export const handlePain013 = async (transaction: Pain013): Promise<void> => {
+export const handlePain013 = async (transaction: Pain013, transactionType: string): Promise<void> => {
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, logContext, id);
+  loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pain013');
   const startTime = process.hrtime.bigint();
 
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const Amt = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
   const Ccy = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
   const CreDtTm = transaction.CdtrPmtActvtnReq.GrpHdr.CreDtTm;
   const EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
   const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
-  const TxTp = transaction.TxTp;
 
-  const creditorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
-  const debtorAcctId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr.Id;
+  const creditorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
 
-  const dbtrId = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr.Id;
-  const cdtrId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const debtorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr[0];
+  const debtorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
+
+  const dbtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr[0];
+  const dbtrId = `${dbtrOthr.Id}${dbtrOthr.SchmeNm.Prtry}`;
+
+  const cdtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const cdtrId = `${cdtrOthr.Id}${cdtrOthr.SchmeNm.Prtry}`;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorAcctId}`,
@@ -132,27 +162,36 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
     dbtrId,
   };
 
+  transaction.DataCache = dataCache;
   transaction._key = MsgId;
 
   const spanInsert = apm.startSpan('db.insert.pain013');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPain013Collection, `pain013_${EndToEndId}`),
-      cacheDatabaseClient.addAccount(debtorAcctId),
-      cacheDatabaseClient.addAccount(creditorAcctId),
+      cacheDatabaseManager.saveTransactionHistory(transaction, configuration.transactionHistoryPain013Collection, `pain013_${EndToEndId}`),
+      cacheDatabaseManager.addAccount(debtorAcctId),
+      cacheDatabaseManager.addAccount(creditorAcctId),
     ]);
 
-    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
-    loggerService.error(JSON.stringify(err), logContext, id);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      error = new Error(strErr);
+      loggerService.error(strErr, logContext, id);
+    }
     spanInsert?.end();
     span?.end();
-    throw err;
+    throw error;
   }
 
   spanInsert?.end();
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -161,31 +200,40 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, logContext, id);
+  loggerService.log('Transaction send to event-director service', logContext, id);
 
   span?.end();
-  loggerService.log(`END - Handle transaction data`, logContext, id);
+  loggerService.log('END - Handle transaction data', logContext, id);
 };
 
-export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
+export const handlePacs008 = async (transaction: Pacs008, transactionType: string): Promise<void> => {
   const logContext = 'handlePacs008()';
-  const id = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, logContext, id);
+  const id = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
+  loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transaction.pacs008');
   const startTime = process.hrtime.bigint();
 
-  const Amt = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Amt;
-  const Ccy = transaction.FIToFICstmrCdt.CdtTrfTxInf.InstdAmt.Amt.Ccy;
-  const creDtTm = transaction.FIToFICstmrCdt.GrpHdr.CreDtTm;
-  const EndToEndId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.EndToEndId;
-  const MsgId = transaction.FIToFICstmrCdt.GrpHdr.MsgId;
-  const PmtInfId = transaction.FIToFICstmrCdt.CdtTrfTxInf.PmtId.InstrId;
-  const TxTp = transaction.TxTp;
-  const debtorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id;
-  const creditorId = transaction.FIToFICstmrCdt.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id;
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
+  const Amt = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Amt;
+  const Ccy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Ccy;
+  const creDtTm = transaction.FIToFICstmrCdtTrf.GrpHdr.CreDtTm;
+  const EndToEndId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.EndToEndId;
+  const MsgId = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
+  const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
+  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
+  const debtorId = `${debtorOthr.Id}${debtorOthr.SchmeNm.Prtry}`;
 
-  const debtorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
-  const creditorAcctId = transaction.FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const creditorId = `${creditorOthr.Id}${creditorOthr.SchmeNm.Prtry}`;
+
+  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+  const debtorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
+
+  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
@@ -199,7 +247,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     TxTp,
   };
 
-  const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
+  const accountInserts = [cacheDatabaseManager.addAccount(debtorAcctId), cacheDatabaseManager.addAccount(creditorAcctId)];
 
   const dataCache: DataCache = {
     cdtrId: creditorId,
@@ -212,65 +260,54 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       ccy: Ccy,
     },
   };
+  transaction.DataCache = dataCache;
+
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
-    accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
+    accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
   } else {
     // this is fatal
     throw new Error('[pacs008] data cache could not be serialised');
   }
 
   if (!configuration.quoting) {
-    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, creDtTm));
-    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, creDtTm));
-    const dataCache: DataCache = {
-      cdtrId: creditorId,
-      dbtrId: debtorId,
-      cdtrAcctId: creditorAcctId,
-      dbtrAcctId: debtorAcctId,
-      creDtTm,
-      amt: {
-        amt: parseFloat(Amt),
-        ccy: Ccy,
-      },
-    };
+    accountInserts.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
+    accountInserts.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
 
-    const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
-
-    accountInserts.push(cacheDatabaseClient.addEntity(creditorId, creDtTm));
-    accountInserts.push(cacheDatabaseClient.addEntity(debtorId, creDtTm));
-    if (cacheBuffer) {
-      accountInserts.push(databaseManager.set(EndToEndId, cacheBuffer, 150));
-    } else {
-      // this is fatal
-      throw new Error('[pacs008] data cache could not be serialised');
-    }
     await Promise.all(accountInserts);
 
     await Promise.all([
-      cacheDatabaseClient.addAccountHolder(creditorId, creditorAcctId, creDtTm),
-      cacheDatabaseClient.addAccountHolder(debtorId, debtorAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, creDtTm),
     ]);
   } else {
     await Promise.all(accountInserts);
   }
-  cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
+  cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
 
   const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
     await Promise.all([
-      cacheDatabaseClient.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
+      cacheDatabaseManager.saveTransactionHistory(transaction, configuration.transactionHistoryPacs008Collection, `pacs008_${EndToEndId}`),
     ]);
   } catch (err) {
-    loggerService.error(JSON.stringify(err), logContext, id);
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.error(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.error(strErr, logContext, id);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
     span?.end();
-    throw err;
+    throw error;
   } finally {
     spanInsert?.end();
   }
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -279,23 +316,24 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, logContext, id);
+  loggerService.log('Transaction send to event-director service', logContext, id);
   span?.end();
 };
 
-export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
+export const handlePacs002 = async (transaction: Pacs002, transactionType: string): Promise<void> => {
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
-  loggerService.log(`Start - Handle transaction data`, logContext, id);
+  loggerService.log('Start - Handle transaction data', logContext, id);
   const span = apm.startSpan('transactions.pacs002');
   const startTime = process.hrtime.bigint();
 
+  const TxTp = transactionType;
+  transaction.TxTp = TxTp;
   const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
   const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId;
   const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlInstrId;
   const TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
-  const TxTp = transaction.TxTp;
 
   const transactionRelationship: TransactionRelationship = {
     from: '',
@@ -311,45 +349,62 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
   try {
-    const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
+    const dataCacheJSON = (await cacheDatabaseManager.getBuffer(EndToEndId)).DataCache;
     dataCache = dataCacheJSON as DataCache;
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
-    loggerService.log(`Proceeding with Arango Call`, logContext, id);
+    loggerService.log('Proceeding with Arango Call', logContext, id);
     dataCache = await rebuildCache(EndToEndId, false, id);
   } finally {
     spanDataCache?.end();
   }
 
   transaction._key = MsgId;
+  transaction.DataCache = dataCache;
 
   const spanInsert = apm.startSpan('db.insert.pacs002');
   try {
-    await cacheDatabaseClient.saveTransactionHistory(
+    await cacheDatabaseManager.saveTransactionHistory(
       transaction,
       configuration.transactionHistoryPacs002Collection,
       `pacs002_${EndToEndId}`,
     );
 
-    const result = (await cacheDatabaseClient.getTransactionHistoryPacs008(EndToEndId)) as [Pacs008[]];
+    const result = (await cacheDatabaseManager.getTransactionPacs008(EndToEndId)) as [Pacs008[]];
 
-    const debtorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.DbtrAcct.Id.Othr.Id;
-    const creditorAcctId = result[0][0].FIToFICstmrCdt.CdtTrfTxInf.CdtrAcct.Id.Othr.Id;
+    const debtorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+    const debtorMmbId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+
+    const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
+
+    const creditorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+
+    const creditorMmbId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+
+    const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
 
     transactionRelationship.to = `accounts/${debtorAcctId}`;
     transactionRelationship.from = `accounts/${creditorAcctId}`;
 
-    await cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
+    await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
+    let error: Error;
+    if (err instanceof Error) {
+      loggerService.log(err.message, logContext, id);
+      error = err;
+    } else {
+      const strErr = JSON.stringify(err);
+      loggerService.log(strErr, logContext, id);
+      error = new Error(strErr);
+    }
     spanInsert?.end();
-    loggerService.log(`${JSON.stringify(err)}`, logContext, id);
     span?.end();
-    throw err;
+    throw error;
   } finally {
     spanInsert?.end();
   }
 
-  // Notify CRSP
+  // Notify event-director
   server.handleResponse({
     transaction,
     DataCache: dataCache,
@@ -358,10 +413,10 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
       traceParent: apm.getCurrentTraceparent(),
     },
   });
-  loggerService.log(`Transaction send to CRSP service`, logContext, id);
+  loggerService.log('Transaction send to event-director service', logContext, id);
 
   span?.end();
-  loggerService.log(`END - Handle transaction data`, logContext, id);
+  loggerService.log('END - Handle transaction data', logContext, id);
 };
 
 /**
@@ -373,7 +428,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
 export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id?: string): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild');
   const context = 'rebuildCache()';
-  const currentPacs008 = (await databaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
+  const currentPacs008 = (await cacheDatabaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
 
   const pacs008 = unwrap(currentPacs008);
 
@@ -383,14 +438,14 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
     return undefined;
   }
 
-  const cdtTrfTxInf = pacs008.FIToFICstmrCdt.CdtTrfTxInf;
+  const cdtTrfTxInf = pacs008.FIToFICstmrCdtTrf.CdtTrfTxInf;
 
   const dataCache: DataCache = {
-    cdtrId: cdtTrfTxInf.Cdtr.Id.PrvtId.Othr.Id,
-    dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr.Id,
-    cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr.Id,
-    dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr.Id,
-    creDtTm: pacs008.FIToFICstmrCdt.GrpHdr.CreDtTm,
+    cdtrId: cdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id,
+    dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0].Id,
+    cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr[0].Id,
+    dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr[0].Id,
+    creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
     amt: {
       amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
       ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
@@ -401,7 +456,7 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
     const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
     if (buffer) {
-      await databaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+      await cacheDatabaseManager.set(endToEndId, buffer, configuration.cacheTTL);
     } else {
       loggerService.error('[pacs008] could not rebuild redis cache');
     }
