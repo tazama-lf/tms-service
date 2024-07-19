@@ -1,5 +1,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
+## v3.0.0
+
+## Milestone: Release v2.0.0
+Date: 2024-07-18T07:00:00Z
+Description: Create Release v2.0.0 release using Github Actions release workflow.
+
+### ⚙️ Chores
+
+- chore: Update VERSION to v2.0.0 (Linked Issues: 1038bc8ff3c0dc3e83e518e983b25626acd040b2)
+- chore: Update CHANGELOG.md for v2.0.0 (Linked Issues: 5457b8b0722d7c40d60c49168a0650becf12f50d)
+
+### 🏗️ Build
+
+- build: removed carrot (Linked Issues: 63c247038a643ae7e8509313bdc7e2c825cf7d1c)
+- build: update package-versions (Linked Issues: 2c439bc942fdadcd0d048002e3b4ba6a884a7dc4)
+
 ## v2.0.0
 
 ## Milestone: Release v2.0.0
