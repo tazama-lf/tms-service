@@ -142,6 +142,8 @@ Transaction monitoring is one of many risk management activities that an organiz
 
 Currently, the TMS API is able to accept ISO20022 pain.001.001.11, pain.013.001.09, pacs.002.001.12 and pacs.008.001.10 messages. Depending on the configuration of the TMS API service via the `QUOTING` environment variable, the pain.001 and pain.013 messages may be excluded (`QUOTING=false`).
 
+API authentication is turned off by default (ENV: `AUTHENTICATED=false`) but but when turned on a public key (ENV `CERT_PATH_PUBLIC=/path/to/public/key`) is required to be able to validate tokens received via the Auth-Service login.
+
 ## Activity Diagram
 
 The activity diagram below applies to Pain001, Pain013, Pacs008 and Pacs002 messages.

@@ -15,6 +15,7 @@ export interface IConfig {
   env: string;
   port: number;
   quoting: boolean;
+  authentication: boolean;
   apm: {
     secretToken: string;
     serviceName: string;
@@ -40,6 +41,7 @@ export const configuration: IConfig = {
   maxCPU: parseInt(process.env.MAX_CPU!, 10) || 1,
   port: parseInt(process.env.PORT!, 10) || 3000,
   quoting: process.env.QUOTING === 'true',
+  authentication: process.env.AUTHENTICATED === 'true',
   apm: {
     serviceName: process.env.APM_SERVICE_NAME!,
     url: process.env.APM_URL!,
