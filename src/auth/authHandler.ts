@@ -6,7 +6,7 @@ export const tokenHandler = (claim: string) => {
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const logContext = 'tokenHandler()';
     const authHeader = request.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ') || !claim) {
+    if (!authHeader?.startsWith('Bearer ') || !claim) {
       reply.code(401).send({ error: 'Unauthorized' });
       return;
     }
