@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-import { type RouteHandlerMethod } from 'fastify';
+import { type FastifyReply, type FastifyRequest, type RouteHandlerMethod } from 'fastify';
 import { type FastifySchema } from 'fastify/types/schema';
+import { loggerService } from '..';
+import { tokenHandler } from '../auth/authHandler';
+import { configuration } from '../config';
 
-const reposnseSchema = (schemaTransactionName: string): Record<string, unknown> => {
+type preHandler = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+
+const responseSchema = (schemaTransactionName: string): Record<string, unknown> => {
   return {
     '2xx': {
       type: 'object',
@@ -19,10 +24,18 @@ const reposnseSchema = (schemaTransactionName: string): Record<string, unknown> 
   };
 };
 
-const SetOptions = (handler: RouteHandlerMethod, schemaTransactionName: string): { handler: RouteHandlerMethod; schema: FastifySchema } => {
+const SetOptions = (
+  handler: RouteHandlerMethod,
+  schemaTransactionName: string,
+  claim: string,
+): { preHandler?: preHandler; handler: RouteHandlerMethod; schema: FastifySchema } => {
+  loggerService.debug(`Authentication is ${configuration.authentication ? 'ENABLED' : 'DISABLED'} for ${handler.name}`);
+  const preHandler = configuration.authentication ? tokenHandler(claim) : undefined;
+
   return {
+    preHandler,
     handler,
-    schema: { body: { $ref: `${schemaTransactionName}#` }, response: reposnseSchema(schemaTransactionName) },
+    schema: { body: { $ref: `${schemaTransactionName}#` }, response: responseSchema(schemaTransactionName) },
   };
 };
 
