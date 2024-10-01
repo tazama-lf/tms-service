@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Pacs002, Pacs008, Pain001, Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { cacheDatabaseManager, dbInit, runServer, server } from '../../src/index';
 import * as LogicService from '../../src/logic.service';
 import { configuration } from '../../src/config';
-import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@frmscoe/frms-coe-lib/lib/tests/mocks/mock-transactions';
-import { Pacs002Sample, Pacs008Sample, Pain001Sample, Pain013Sample } from '@frmscoe/frms-coe-lib/lib/tests/data';
+import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@tazama-lf/frms-coe-lib/lib/tests/mocks/mock-transactions';
+import { Pacs002Sample, Pacs008Sample, Pain001Sample, Pain013Sample } from '@tazama-lf/frms-coe-lib/lib/tests/data';
 
 beforeAll(async () => {
   await dbInit();

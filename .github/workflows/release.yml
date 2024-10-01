@@ -45,8 +45,8 @@ jobs:
         with:
           node-version: 20.x
           registry-url: https://npm.pkg.github.com/
-          scope: '@frmscoe'
-          
+          scope: '@tazama-lf'
+
       # Install dependencies
       - name: Install dependencies
         run: npm ci
@@ -58,20 +58,20 @@ jobs:
         run: npm test
         env:
           STARTUP_TYPE: 'nats'
-        
-      # Determine the release type (major, minor, patch) based on commit messages  
+
+      # Determine the release type (major, minor, patch) based on commit messages
       - name: Determine Release Type
         id: determine_release
         run: |
           PREV_VERSION=$(git describe --abbrev=0 --tags)
           echo "Previous Version: $PREV_VERSION"
-          
+
           COMMIT_MESSAGES=$(git log $PREV_VERSION^..HEAD --format=%B)
           echo "Commit Messages: $COMMIT_MESSAGES"
-          
+
           # Determine release type based on commit messages and labels
           RELEASE_TYPE="patch"  # Default to patch
-          
+
           if echo "$COMMIT_MESSAGES" | grep -q -e "BREAKING CHANGE:"; then
             RELEASE_TYPE="major"
           elif echo "$COMMIT_MESSAGES" | grep -q -e "feat!:"; then
@@ -83,25 +83,25 @@ jobs:
           elif echo "$COMMIT_MESSAGES" | grep -q -e "fix:" -e "enhancement:" -e "docs:" -e "refactor:" -e "chore:" -e "build:" -e "ci:" -e "perf:" -e "style:" -e "test:" -e "chore(deps):" -e "chore(deps-dev):"; then
             RELEASE_TYPE="patch"
           fi
-          
+
           echo "Release Type: $RELEASE_TYPE"
           echo "::set-output name=release_type::$RELEASE_TYPE"
-        
+
       # Bump the version based on the determined release type
       - name: Bump Version
         id: bump_version
         run: |
           PREV_VERSION=$(git describe --abbrev=0 --tags)
           echo "Previous Version: $PREV_VERSION"
-          
+
           RELEASE_TYPE=${{ steps.determine_release.outputs.release_type }}
           echo "Release Type: $RELEASE_TYPE"
-          
+
           # Strip the 'v' from the version if it exists
           PREV_VERSION=${PREV_VERSION#v}
-          
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$PREV_VERSION"
-          
+
           if [[ $RELEASE_TYPE == "major" ]]; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
@@ -112,7 +112,7 @@ jobs:
           else
             PATCH=$((PATCH + 1))
           fi
-          
+
           NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
           echo "New Version: $NEW_VERSION"
           echo "::set-output name=new_version::$NEW_VERSION"
@@ -198,7 +198,7 @@ jobs:
           append_section "Feature Breaking Changes" "$LABEL_FEAT_BREAKING" "💥"
           append_section "Dependencies" "$LABEL_DEPS" "📦"
           append_section "Dev Dependencies" "$LABEL_DEPS_DEV" "🔧"
-          
+
           # Function to append non-labeled commits to the changelog file
           append_non_labeled_commits() {
             # Get the commit messages that do not match any conventional commit labels between the last release and the current release
@@ -223,18 +223,18 @@ jobs:
         id: read_changelog
         run: |
           echo "::set-output name=changelog_contents::$(cat /home/runner/work/changelog.txt)"
-      
+
       # Display changelog
       - name: Display Changelog
         run: cat /home/runner/work/changelog.txt
-      
+
       # Attach changelog as an artifact
       - name: Attach Changelog to Release
         uses: actions/upload-artifact@v2
         with:
           name: Changelog
           path: /home/runner/work/changelog.txt
-      
+
       # Create release while including the changelog
       - name: Create Release
         id: create_release
@@ -263,7 +263,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           STARTUP_TYPE: 'nats'
-        
+
       # Update the VERSION file
       - name: Update VERSION file
         run: |

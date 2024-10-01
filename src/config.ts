@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // config settings, env variables
-import { type ManagerConfig } from '@frmscoe/frms-coe-lib';
+import { type ManagerConfig } from '@tazama-lf/frms-coe-lib';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-
 // Load .env file into process.env if it exists. This is convenient for running locally.
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),
