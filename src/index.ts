@@ -10,7 +10,7 @@ import { configuration } from './config';
 
 const databaseManagerConfig = configuration.db;
 
-export const loggerService: LoggerService = new LoggerService(configuration.sidecarHost);
+export const loggerService: LoggerService = new LoggerService(configuration.logger.sidecarHost);
 export let server: IStartupService;
 
 let cacheDatabaseManager: CacheDatabaseService<ManagerConfig>;
