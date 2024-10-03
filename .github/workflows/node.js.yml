@@ -6,7 +6,7 @@
 name: Node.js CI
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  NPM_SCOPE: "@tazama-lf"
+  NPM_SCOPE: "@frmscoe"
   NPM_REGISTRY: "https://npm.pkg.github.com/"
   NODE_ENV: 'test'
   STARTUP_TYPE: 'nats'
@@ -32,7 +32,7 @@ jobs:
           cache: 'npm'
           registry-url: ${{ env.NPM_REGISTRY }}
           scope: ${{ env.NPM_SCOPE }}
-      - name: Install dependencies
+      - name: Install dependencies 
         run: npm ci
       - name: Run build
         run: npm run build
