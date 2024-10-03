@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Apm } from '@frmscoe/frms-coe-lib/lib/services/apm';
+import { Apm } from '@tazama-lf/frms-coe-lib/lib/services/apm';
 import { configuration } from './config';
 
 const apm = new Apm({

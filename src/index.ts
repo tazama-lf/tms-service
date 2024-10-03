@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import './apm';
-import { LoggerService, type ManagerConfig } from '@frmscoe/frms-coe-lib';
-import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
+import { LoggerService, type ManagerConfig } from '@tazama-lf/frms-coe-lib';
+import { StartupFactory, type IStartupService } from '@tazama-lf/frms-coe-startup-lib';
 import cluster from 'cluster';
 import os from 'os';
 import { CacheDatabaseService } from './clients/cache-database';

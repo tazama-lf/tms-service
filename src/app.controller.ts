@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
 import { type FastifyRequest, type FastifyReply } from 'fastify';

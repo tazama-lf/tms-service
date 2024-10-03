@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import apm from './apm';
 import { cacheDatabaseManager, loggerService, server } from '.';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { configuration } from './config';
 import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
-import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
-import { unwrap } from '@frmscoe/frms-coe-lib/lib/helpers/unwrap';
+import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
+import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
