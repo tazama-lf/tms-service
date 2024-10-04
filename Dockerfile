@@ -102,8 +102,5 @@ ENV LOGSTASH_PORT=8080
 ENV LOGSTASH_LEVEL='info'
 ENV SIDECAR_HOST=0.0.0.0:5000
 
-HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
-EXPOSE 4222
-
 # Execute watchdog command
 CMD ["build/index.js"]
