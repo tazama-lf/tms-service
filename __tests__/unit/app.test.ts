@@ -7,6 +7,46 @@ import { configuration } from '../../src/config';
 import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@tazama-lf/frms-coe-lib/lib/tests/mocks/mock-transactions';
 import { Pacs002Sample, Pacs008Sample, Pain001Sample, Pain013Sample } from '@tazama-lf/frms-coe-lib/lib/tests/data';
 
+jest.mock('@tazama-lf/frms-coe-lib/lib/helpers/env', () => ({
+  validateAPMConfig: jest.fn().mockReturnValue({
+    apmServiceName: '',
+  }),
+  validateLogConfig: jest.fn().mockReturnValue({}),
+  validateProcessorConfig: jest.fn().mockReturnValue({
+    functionName: 'test-ed',
+    nodeEnv: 'test',
+  }),
+  validateEnvVar: jest.fn().mockReturnValue(''),
+  validateRedisConfig: jest.fn().mockReturnValue({
+    db: 0,
+    servers: [
+      {
+        host: 'redis://localhost',
+        port: 6379,
+      },
+    ],
+    password: '',
+    isCluster: false,
+  }),
+  validateDatabaseConfig: jest.fn().mockReturnValue({}),
+}));
+
+jest.mock('@tazama-lf/frms-coe-lib/lib/helpers/env/database.config', () => ({
+  Database: {
+    CONFIGURATION: 'MOCK_DB',
+  },
+}));
+
+jest.mock('@tazama-lf/frms-coe-startup-lib/lib/interfaces/iStartupConfig', () => ({
+  startupConfig: {
+    startupType: 'nats',
+    consumerStreamName: 'consumer',
+    serverUrl: 'server',
+    producerStreamName: 'producer',
+    functionName: 'producer',
+  },
+}));
+
 beforeAll(async () => {
   await dbInit();
   await runServer();
