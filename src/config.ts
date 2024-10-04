@@ -35,7 +35,7 @@ export interface IConfig {
   cacheTTL: number;
 }
 
-const serviceAuth: boolean = validateEnvVar('AUTHENTICATED', 'boolean', true) || true;
+const serviceAuth: boolean = validateEnvVar('AUTHENTICATED', 'boolean', true) || false;
 const redisConfig = validateRedisConfig(serviceAuth);
 const transactionHistory = validateDatabaseConfig(serviceAuth, Database.TRANSACTION_HISTORY);
 const pseudonyms = validateDatabaseConfig(serviceAuth, Database.PSEUDONYMS);
@@ -47,7 +47,7 @@ export const configuration: IConfig = {
   functionName: generalConfig.functionName,
   maxCPU: generalConfig.maxCPU || 1,
   port: validateEnvVar('PORT', 'number', true) || 3000,
-  quoting: validateEnvVar('QUOTING', 'boolean', true) || true,
+  quoting: validateEnvVar('QUOTING', 'boolean', true) || false,
   authentication: serviceAuth,
   apm,
   db: {
