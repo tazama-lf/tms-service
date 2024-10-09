@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { CreateDatabaseManager, type DatabaseManagerInstance, type ManagerConfig } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
+import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { CreateDatabaseManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
 
 export class CacheDatabaseService<T extends ManagerConfig> {

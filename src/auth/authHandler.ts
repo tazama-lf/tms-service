@@ -1,4 +1,4 @@
-import { validateTokenAndClaims } from '@frmscoe/auth-lib';
+import { validateTokenAndClaims } from '@tazama-lf/auth-lib';
 import { type FastifyReply, type FastifyRequest } from 'fastify';
 import { loggerService } from '..';
 
