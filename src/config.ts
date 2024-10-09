@@ -35,17 +35,19 @@ export interface IConfig {
   cacheTTL: number;
 }
 
+const generalConfig = validateProcessorConfig();
+const authEnabled = generalConfig.nodeEnv === 'production';
 const serviceAuth: boolean = validateEnvVar('AUTHENTICATED', 'boolean', true) || false;
-const redisConfig = validateRedisConfig(serviceAuth);
-const transactionHistory = validateDatabaseConfig(serviceAuth, Database.TRANSACTION_HISTORY);
-const pseudonyms = validateDatabaseConfig(serviceAuth, Database.PSEUDONYMS);
+const redisConfig = validateRedisConfig(authEnabled);
+const transactionHistory = validateDatabaseConfig(authEnabled, Database.TRANSACTION_HISTORY);
+const pseudonyms = validateDatabaseConfig(authEnabled, Database.PSEUDONYMS);
 const apm = validateAPMConfig();
 const logger = validateLogConfig();
-const generalConfig = validateProcessorConfig();
 
 export const configuration: IConfig = {
   functionName: generalConfig.functionName,
   maxCPU: generalConfig.maxCPU || 1,
+  env: generalConfig.nodeEnv,
   port: validateEnvVar('PORT', 'number', true) || 3000,
   quoting: validateEnvVar('QUOTING', 'boolean', true) || false,
   authentication: serviceAuth,
@@ -60,6 +62,5 @@ export const configuration: IConfig = {
   transactionHistoryPain013Collection: validateEnvVar('TRANSACTION_HISTORY_PAIN013_COLLECTION', 'string'),
   transactionHistoryPacs008Collection: validateEnvVar('TRANSACTION_HISTORY_PACS008_COLLECTION', 'string'),
   transactionHistoryPacs002Collection: validateEnvVar('TRANSACTION_HISTORY_PACS002_COLLECTION', 'string'),
-  env: generalConfig.nodeEnv,
   logger,
 };
