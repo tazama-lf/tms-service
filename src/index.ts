@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import './apm';
 import { LoggerService, type ManagerConfig } from '@tazama-lf/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@tazama-lf/frms-coe-startup-lib';
 import cluster from 'cluster';
 import os from 'os';
+import './apm';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
 import { configuration } from './config';
@@ -16,7 +16,8 @@ export let server: IStartupService;
 let cacheDatabaseManager: CacheDatabaseService<ManagerConfig>;
 
 export const dbInit = async (): Promise<void> => {
-  cacheDatabaseManager = await CacheDatabaseService.create(databaseManagerConfig, configuration.cacheTTL);
+  const redisTTL = configuration.db.localCacheConfig?.localCacheTTL;
+  cacheDatabaseManager = await CacheDatabaseService.create(databaseManagerConfig, redisTTL ? Number(redisTTL) : 0);
   loggerService.log(JSON.stringify(cacheDatabaseManager.isReadyCheck()));
 };
 

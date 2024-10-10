@@ -8,6 +8,7 @@ import {
   validateRedisConfig,
   validateAPMConfig,
   validateProcessorConfig,
+  validateLocalCacheConfig,
 } from '@tazama-lf/frms-coe-lib/lib/helpers/env';
 import { Database } from '@tazama-lf/frms-coe-lib/lib/helpers/env/database.config';
 import { type ApmConfig, type LogConfig } from '@tazama-lf/frms-coe-lib/lib/helpers/env/monitoring.config';
@@ -32,7 +33,6 @@ export interface IConfig {
   transactionHistoryPacs008Collection: string;
   transactionHistoryPacs002Collection: string;
   logger: LogConfig;
-  cacheTTL: number;
 }
 
 const generalConfig = validateProcessorConfig();
@@ -43,6 +43,7 @@ const transactionHistory = validateDatabaseConfig(authEnabled, Database.TRANSACT
 const pseudonyms = validateDatabaseConfig(authEnabled, Database.PSEUDONYMS);
 const apm = validateAPMConfig();
 const logger = validateLogConfig();
+const localCacheConfig = validateLocalCacheConfig();
 
 export const configuration: IConfig = {
   functionName: generalConfig.functionName,
@@ -56,8 +57,8 @@ export const configuration: IConfig = {
     redisConfig,
     transactionHistory,
     pseudonyms,
+    localCacheConfig,
   },
-  cacheTTL: validateEnvVar('CACHETTL', 'number') || 300,
   transactionHistoryPain001Collection: validateEnvVar('TRANSACTION_HISTORY_PAIN001_COLLECTION', 'string'),
   transactionHistoryPain013Collection: validateEnvVar('TRANSACTION_HISTORY_PAIN013_COLLECTION', 'string'),
   transactionHistoryPacs008Collection: validateEnvVar('TRANSACTION_HISTORY_PACS008_COLLECTION', 'string'),
