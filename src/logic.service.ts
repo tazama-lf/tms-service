@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import apm from './apm';
-import { cacheDatabaseManager, loggerService, server } from '.';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013, type DataCache } from '@tazama-lf/frms-coe-lib/lib/interfaces';
-import { configuration } from './config';
-import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
 import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
+import { type DataCache, type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { cacheDatabaseManager, loggerService, server } from '.';
+import apm from './apm';
+import { configuration } from './config';
+import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
@@ -264,7 +264,8 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
 
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
-    accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, configuration.cacheTTL));
+    const redisTTL = configuration.db.redisConfig?.distributedCacheTTL;
+    accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, redisTTL ? Number(redisTTL) : 0));
   } else {
     // this is fatal
     throw new Error('[pacs008] data cache could not be serialised');
@@ -456,7 +457,8 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
     const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
 
     if (buffer) {
-      await cacheDatabaseManager.set(endToEndId, buffer, configuration.cacheTTL);
+      const redisTTL = configuration.db.redisConfig?.distributedCacheTTL;
+      await cacheDatabaseManager.set(endToEndId, buffer, redisTTL ? Number(redisTTL) : 0);
     } else {
       loggerService.error('[pacs008] could not rebuild redis cache');
     }
