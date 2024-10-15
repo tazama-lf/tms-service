@@ -6,18 +6,20 @@ import os from 'os';
 import './apm';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
-import { configuration } from './config';
+import { validateProcessorConfig } from '@tazama-lf/frms-coe-lib/lib/config/processor.config';
+import { additionalEnvironmentVariables, type Configuration } from './config';
 
-const databaseManagerConfig = configuration.db;
+let configuration = validateProcessorConfig(additionalEnvironmentVariables) as Configuration;
 
-export const loggerService: LoggerService = new LoggerService(configuration.logger.sidecarHost);
+export const loggerService: LoggerService = new LoggerService(configuration);
 export let server: IStartupService;
 
 let cacheDatabaseManager: CacheDatabaseService<ManagerConfig>;
 
 export const dbInit = async (): Promise<void> => {
-  const redisTTL = configuration.db.localCacheConfig?.localCacheTTL;
-  cacheDatabaseManager = await CacheDatabaseService.create(databaseManagerConfig, redisTTL ? Number(redisTTL) : 0);
+  const { config, db } = await CacheDatabaseService.create();
+  cacheDatabaseManager = db;
+  configuration = { ...configuration, ...config };
   loggerService.log(JSON.stringify(cacheDatabaseManager.isReadyCheck()));
 };
 
@@ -39,7 +41,7 @@ const connect = async (): Promise<void> => {
   }
 
   const fastify = await initializeFastifyClient();
-  fastify.listen({ port: configuration.port, host: '0.0.0.0' }, (err, address) => {
+  fastify.listen({ port: configuration.PORT, host: '0.0.0.0' }, (err, address) => {
     if (err) {
       loggerService.error(err);
       throw Error(`${err.message}`);
@@ -51,7 +53,7 @@ const connect = async (): Promise<void> => {
 
 export const runServer = async (): Promise<void> => {
   server = new StartupFactory();
-  if (configuration.env !== 'test') await connect();
+  if (configuration.nodeEnv !== 'test') await connect();
 };
 
 process.on('uncaughtException', (err) => {
@@ -86,4 +88,4 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
   })();
 }
 
-export { cacheDatabaseManager };
+export { cacheDatabaseManager, configuration };

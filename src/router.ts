@@ -2,7 +2,7 @@
 
 import { type FastifyInstance } from 'fastify';
 import { Pacs002Handler, Pacs008Handler, Pain001Handler, Pain013Handler, handleHealthCheck } from './app.controller';
-import { configuration } from './config';
+import { configuration } from './';
 import SetOptions from './utils/schema-utils';
 
 const routePrivilege = {
@@ -15,7 +15,7 @@ const routePrivilege = {
 async function Routes(fastify: FastifyInstance, options: unknown): Promise<void> {
   fastify.get('/', handleHealthCheck);
   fastify.get('/health', handleHealthCheck);
-  if (configuration.quoting) {
+  if (configuration.QUOTING) {
     fastify.post('/v1/evaluate/iso20022/pain.001.001.11', SetOptions(Pain001Handler, 'messageSchemaPain001', routePrivilege.pain001));
     fastify.post('/v1/evaluate/iso20022/pain.013.001.09', SetOptions(Pain013Handler, 'messageSchemaPain013', routePrivilege.pain013));
   }

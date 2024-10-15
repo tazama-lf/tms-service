@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
 import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
-import { CreateDatabaseManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
+import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
+import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
+import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
 
 export class CacheDatabaseService<T extends ManagerConfig> {
   private readonly dbManager: DatabaseManagerInstance<T>;
@@ -24,9 +26,10 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<CacheDatabaseService>}
    * @memberof CacheDatabaseService
    */
-  public static async create<T extends ManagerConfig>(databaseManagerConfig: T, expire: number): Promise<CacheDatabaseService<T>> {
-    const dbManager = await CreateDatabaseManager(databaseManagerConfig);
-    return new CacheDatabaseService<T>(dbManager, expire);
+  public static async create<T extends ManagerConfig>(): Promise<{ db: CacheDatabaseService<T>; config: ManagerConfig }> {
+    const { db, config } = await CreateStorageManager([Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED]);
+    const databaseManager = db as DatabaseManagerInstance<T>;
+    return { db: new CacheDatabaseService<T>(databaseManager, config.redisConfig?.distributedCacheTTL ?? 0), config };
   }
 
   /**
