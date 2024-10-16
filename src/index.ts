@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import { LoggerService, type ManagerConfig } from '@tazama-lf/frms-coe-lib';
+import { validateProcessorConfig } from '@tazama-lf/frms-coe-lib/lib/config';
 import { StartupFactory, type IStartupService } from '@tazama-lf/frms-coe-startup-lib';
 import cluster from 'cluster';
 import os from 'os';
 import './apm';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
-import { validateProcessorConfig } from '@tazama-lf/frms-coe-lib/lib/config/processor.config';
 import { additionalEnvironmentVariables, type Configuration } from './config';
 
 let configuration = validateProcessorConfig(additionalEnvironmentVariables) as Configuration;
