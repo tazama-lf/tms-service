@@ -3,7 +3,7 @@ import { type FastifyReply, type FastifyRequest, type RouteHandlerMethod } from 
 import { type FastifySchema } from 'fastify/types/schema';
 import { loggerService } from '..';
 import { tokenHandler } from '../auth/authHandler';
-import { configuration } from '../config';
+import { configuration } from '../';
 
 type preHandler = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
 
@@ -29,8 +29,8 @@ const SetOptions = (
   schemaTransactionName: string,
   claim: string,
 ): { preHandler?: preHandler; handler: RouteHandlerMethod; schema: FastifySchema } => {
-  loggerService.debug(`Authentication is ${configuration.authentication ? 'ENABLED' : 'DISABLED'} for ${handler.name}`);
-  const preHandler = configuration.authentication ? tokenHandler(claim) : undefined;
+  loggerService.debug(`Authentication is ${configuration.AUTHENTICATED ? 'ENABLED' : 'DISABLED'} for ${handler.name}`);
+  const preHandler = configuration.AUTHENTICATED ? tokenHandler(claim) : undefined;
 
   return {
     preHandler,

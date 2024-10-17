@@ -3,39 +3,35 @@
 import { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { cacheDatabaseManager, dbInit, runServer, server } from '../../src/index';
 import * as LogicService from '../../src/logic.service';
-import { configuration } from '../../src/config';
+import { configuration } from '../../src/';
 import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@tazama-lf/frms-coe-lib/lib/tests/mocks/mock-transactions';
 import { Pacs002Sample, Pacs008Sample, Pain001Sample, Pain013Sample } from '@tazama-lf/frms-coe-lib/lib/tests/data';
 
-jest.mock('@tazama-lf/frms-coe-lib/lib/helpers/env', () => ({
-  validateAPMConfig: jest.fn().mockReturnValue({
-    apmServiceName: '',
-  }),
-  validateLogConfig: jest.fn().mockReturnValue({}),
+jest.mock('@tazama-lf/frms-coe-lib/lib/config/processor.config', () => ({
   validateProcessorConfig: jest.fn().mockReturnValue({
     functionName: 'test-ed',
     nodeEnv: 'test',
   }),
-  validateEnvVar: jest.fn().mockReturnValue(''),
-  validateLocalCacheConfig: jest.fn().mockReturnValue(''),
-  validateRedisConfig: jest.fn().mockReturnValue({
-    db: 0,
-    servers: [
-      {
-        host: 'redis://localhost',
-        port: 6379,
-      },
-    ],
-    password: '',
-    isCluster: false,
-  }),
-  validateDatabaseConfig: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock('@tazama-lf/frms-coe-lib/lib/helpers/env/database.config', () => ({
-  Database: {
-    CONFIGURATION: 'MOCK_DB',
-  },
+jest.mock('@tazama-lf/frms-coe-lib/lib/services/apm', () => ({
+  Apm: jest.fn().mockReturnValue({
+    startSpan: jest.fn(),
+    getCurrentTraceparent: jest.fn().mockReturnValue(''),
+  }),
+}));
+
+jest.mock('@tazama-lf/frms-coe-lib/lib/services/dbManager', () => ({
+  CreateStorageManager: jest.fn().mockReturnValue({
+    db: {
+      set: jest.fn(),
+      quit: jest.fn(),
+      isReadyCheck: jest.fn().mockReturnValue({ nodeEnv: 'test' }),
+    },
+    config: {
+      redisConfig: { distributedCacheTTL: 300 },
+    },
+  }),
 }));
 
 jest.mock('@tazama-lf/frms-coe-startup-lib/lib/interfaces/iStartupConfig', () => ({
@@ -99,6 +95,26 @@ describe('App Controller & Logic Service', () => {
       }
       expect(error).toEqual('Deliberate Error');
     });
+  });
+
+  it('should handle pain.001, database error that not of type Error', async () => {
+    const request = Pain001Sample as Pain001;
+
+    jest
+      .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
+      .mockImplementation((transaction: any, transactionhistorycollection: string) => {
+        return new Promise((resolve, reject) => {
+          throw { error: 'Deliberate Error' };
+        });
+      });
+
+    let error = '';
+    try {
+      await LogicService.handlePain001(request, 'pain.001.001.11');
+    } catch (err: any) {
+      error = err?.message;
+    }
+    expect(error).toEqual(JSON.stringify({ error: 'Deliberate Error' }));
   });
 
   describe('handlePain.013', () => {
@@ -166,7 +182,7 @@ describe('App Controller & Logic Service', () => {
 
   describe('handlePacs.008, quoting enabled', () => {
     it('should handle pacs.008', async () => {
-      configuration.quoting = false;
+      configuration.QUOTING = false;
       const request = Pacs008Sample as Pacs008;
 
       const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
@@ -174,7 +190,7 @@ describe('App Controller & Logic Service', () => {
       await LogicService.handlePacs008(request, 'pacs.008.001.10');
       expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
-      configuration.quoting = false;
+      configuration.QUOTING = false;
     });
   });
 

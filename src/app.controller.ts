@@ -76,6 +76,7 @@ export const Pacs008Handler = async (req: FastifyRequest, reply: FastifyReply): 
     reply.status(200);
     reply.send(body);
   } catch (err) {
+    loggerService.error(JSON.stringify(err));
     const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
     loggerService.error(failMessage, 'ApplicationService');
     reply.status(500);
