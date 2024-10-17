@@ -17,7 +17,7 @@ export let server: IStartupService;
 let cacheDatabaseManager: CacheDatabaseService<ManagerConfig>;
 
 export const dbInit = async (): Promise<void> => {
-  const { config, db } = await CacheDatabaseService.create();
+  const { config, db } = await CacheDatabaseService.create(configuration);
   cacheDatabaseManager = db;
   configuration = { ...configuration, ...config };
   loggerService.log(JSON.stringify(cacheDatabaseManager.isReadyCheck()));

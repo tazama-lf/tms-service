@@ -5,6 +5,7 @@ import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig 
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
+import { type Configuration } from '../config';
 
 export class CacheDatabaseService<T extends ManagerConfig> {
   private readonly dbManager: DatabaseManagerInstance<T>;
@@ -26,8 +27,11 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<CacheDatabaseService>}
    * @memberof CacheDatabaseService
    */
-  public static async create<T extends ManagerConfig>(): Promise<{ db: CacheDatabaseService<T>; config: ManagerConfig }> {
-    const { db, config } = await CreateStorageManager([Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED]);
+  public static async create<T extends ManagerConfig>(
+    configuration: Configuration,
+  ): Promise<{ db: CacheDatabaseService<T>; config: ManagerConfig }> {
+    const auth = configuration.nodeEnv === 'production';
+    const { db, config } = await CreateStorageManager([Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED], auth);
     const databaseManager = db as DatabaseManagerInstance<T>;
     return { db: new CacheDatabaseService<T>(databaseManager, config.redisConfig?.distributedCacheTTL ?? 0), config };
   }
