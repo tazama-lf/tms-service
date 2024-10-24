@@ -259,7 +259,7 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     TxTp,
   };
 
-  const accountInserts = [cacheDatabaseManager.addAccount(debtorAcctId), cacheDatabaseManager.addAccount(creditorAcctId)];
+  const pendingPromises = [cacheDatabaseManager.addAccount(debtorAcctId), cacheDatabaseManager.addAccount(creditorAcctId)];
 
   const dataCache: DataCache = {
     cdtrId: creditorId,
@@ -289,17 +289,17 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   }
 
   if (!configuration.QUOTING) {
-    accountInserts.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
-    accountInserts.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
+    pendingPromises.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
+    pendingPromises.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
 
-    await Promise.all(accountInserts);
+    await Promise.all(pendingPromises);
 
     await Promise.all([
       cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, creDtTm),
       cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, creDtTm),
     ]);
   } else {
-    await Promise.all(accountInserts);
+    await Promise.all(pendingPromises);
   }
   cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
 
