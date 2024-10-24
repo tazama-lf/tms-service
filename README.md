@@ -180,9 +180,9 @@ flowchart TD
 ```mermaid
 graph TD
     A([Start]) --> B{Check Cache}
-    B -->|Cache Hit?| C[Retrieve Pain.001 from Cache]
-    B -->|No| D[Get Pain.001 from Database]
-    D --> E[Cache Pain.001]
+    B -->|Cache Hit?| C[Retrieve Pacs.008 from Cache]
+    B -->|No| D[Get Pacs.008 from Database]
+    D --> E[Cache Pacs.008]
     C --> F[Insert TransactionHistory]
     E --> F
     F --> G[Insert Creditor and Debtor Accounts]
@@ -312,7 +312,8 @@ graph TD
               "Amt": 31020.89,
               "Ccy": "USD"
             },
-            "CcyOfTrf": "USD"
+            "CcyOfTrf": "USD",
+            "XchgRate": 1.00,
           }
         },
         "ChrgBr": "DEBT",
@@ -672,6 +673,7 @@ graph TD
           "Ccy": "XTS"
         }
       },
+      "XchgRate": 1.00,
       "ChrgBr": "DEBT",
       "ChrgsInf": {
         "Amt": {
