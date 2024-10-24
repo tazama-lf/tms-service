@@ -318,6 +318,9 @@
                         },
                         "CcyOfTrf": {
                           "type": "string"
+                        },
+                        "XchgRate": {
+                          "type": "string"
                         }
                       },
                       "required": ["Amt", "CcyOfTrf"]
