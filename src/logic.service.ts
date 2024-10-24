@@ -223,7 +223,11 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
 
   const TxTp = transactionType;
   transaction.TxTp = TxTp;
-  const Amt = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Amt;
+  const InstdAmt = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Amt;
+  const InstdAmtCcy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Ccy;
+  const IntrBkSttlmAmt = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt;
+  const IntrBkSttlmAmtCcy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy;
+  const XchgRate = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.XchgRate;
   const Ccy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Ccy;
   const creDtTm = transaction.FIToFICstmrCdtTrf.GrpHdr.CreDtTm;
   const EndToEndId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.EndToEndId;
@@ -246,7 +250,7 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
     to: `accounts/${creditorAcctId}`,
-    Amt,
+    Amt: InstdAmt,
     Ccy,
     CreDtTm: creDtTm,
     EndToEndId,
@@ -263,17 +267,22 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     cdtrAcctId: creditorAcctId,
     dbtrAcctId: debtorAcctId,
     creDtTm,
-    amt: {
-      amt: parseFloat(Amt),
-      ccy: Ccy,
+    instdAmt: {
+      amt: parseFloat(InstdAmt),
+      ccy: InstdAmtCcy,
     },
+    intrBkSttlmAmt: {
+      amt: parseFloat(IntrBkSttlmAmt),
+      ccy: IntrBkSttlmAmtCcy,
+    },
+    xchgRate: XchgRate,
   };
   transaction.DataCache = dataCache;
 
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
     const redisTTL = configuration.redisConfig.distributedCacheTTL;
-    accountInserts.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, redisTTL ? Number(redisTTL) : 0));
+    pendingPromises.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, redisTTL ? Number(redisTTL) : 0));
   } else {
     // this is fatal
     throw new Error('[pacs008] data cache could not be serialised');
@@ -459,10 +468,15 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
     cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr[0].Id,
     dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr[0].Id,
     creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
-    amt: {
+    instdAmt: {
       amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
       ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
     },
+    intrBkSttlmAmt: {
+      amt: parseFloat(cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt),
+      ccy: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy,
+    },
+    xchgRate: cdtTrfTxInf.XchgRate,
   };
 
   if (writeToRedis) {

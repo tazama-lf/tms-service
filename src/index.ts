@@ -82,7 +82,7 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
         await runServer();
       }
     } catch (err) {
-      loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
+      loggerService.error(`Error while starting ${configuration.functionName}`, err);
       process.exit(1);
     }
   })();
