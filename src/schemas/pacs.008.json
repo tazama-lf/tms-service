@@ -504,8 +504,36 @@
           "properties": {
             "Envlp": {
               "type": "object",
-              "properties": {},
-              "required": []
+              "properties": {
+                "Doc": {
+                  "type": "object",
+                  "properties": {
+                    "InitgPty": {
+                      "type": "object",
+                      "properties": {
+                        "Glctn": {
+                          "type": "object",
+                          "properties": {
+                            "Lat": {
+                              "type": "string"
+                            },
+                            "Long": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["Lat", "Long"]
+                        }
+                      },
+                      "required": ["Glctn"]
+                    },
+                    "Xprtn": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["InitgPty", "Xprtn"]
+                }
+              },
+              "required": ["Doc"]
             }
           },
           "required": ["Envlp"]
