@@ -2,7 +2,7 @@
 
 # 1. Transaction Monitoring Service (TMS)
 
-See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlassian.net/wiki/spaces/ACTIO/pages/1737938/Actio+Transaction+Monitoring+Service+overview)
+See also, [Tazama Transaction Monitoring Service overview](https://github.com/tazama-lf/docs/blob/dev/Product/transaction-monitoring-service-api.md)
 
 - [1. Transaction Monitoring Service (TMS)](#1-transaction-monitoring-service-tms)
   - [Sequence Diagram ISO Messages](#sequence-diagram-iso-messages)
