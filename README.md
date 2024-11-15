@@ -21,7 +21,7 @@ sequenceDiagram
     participant TMS as "Transaction Monitoring Service"
     participant log as "Logger"
     participant Ara as "ArangoDB"
-    participant Cache as "Redis Cache"
+    participant Cache as "Valkey Cache"
     participant ED as "Event-Director"
 
     %% ISO20022 Message Pain001
