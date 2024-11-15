@@ -81,13 +81,11 @@ describe('App Controller & Logic Service', () => {
     it('should handle pain.001, database error', async () => {
       const request = Pain001Sample as Pain001;
 
-      jest
-        .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
-        .mockImplementation((transaction: any, transactionhistorycollection: string) => {
-          return new Promise((resolve, reject) => {
-            throw new Error('Deliberate Error');
-          });
+      jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory').mockImplementation((transaction: any) => {
+        return new Promise((resolve, reject) => {
+          throw new Error('Deliberate Error');
         });
+      });
 
       let error = '';
       try {
@@ -102,13 +100,11 @@ describe('App Controller & Logic Service', () => {
   it('should handle pain.001, database error that not of type Error', async () => {
     const request = Pain001Sample as Pain001;
 
-    jest
-      .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
-      .mockImplementation((transaction: any, transactionhistorycollection: string) => {
-        return new Promise((resolve, reject) => {
-          throw { error: 'Deliberate Error' };
-        });
+    jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory').mockImplementation((transaction: any) => {
+      return new Promise((resolve, reject) => {
+        throw { error: 'Deliberate Error' };
       });
+    });
 
     let error = '';
     try {
@@ -133,13 +129,11 @@ describe('App Controller & Logic Service', () => {
     it('should handle pain.013, database error', async () => {
       const request = Pain013Sample as Pain013;
 
-      jest
-        .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
-        .mockImplementation((transaction: any, transactionhistorycollection: string) => {
-          return new Promise((resolve, reject) => {
-            throw new Error('Deliberate Error');
-          });
+      jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory').mockImplementation((transaction: any) => {
+        return new Promise((resolve, reject) => {
+          throw new Error('Deliberate Error');
         });
+      });
 
       let error = '';
       try {
@@ -176,14 +170,14 @@ describe('App Controller & Logic Service', () => {
       } catch (err) {
         expect(handleSpy).toHaveBeenCalledTimes(1);
         expect(handleSpy).toHaveReturned();
-        expect(err).toStrictEqual(new Error('[pacs008] data cache could not be serialised'));
+        expect(err).toStrictEqual(new Error('[pacs008] data cache could not be serialized'));
       }
     });
 
     it('should handle pacs.008, database error', async () => {
       jest
         .spyOn(cacheDatabaseManager, 'saveTransactionHistory')
-        .mockImplementation((transaction: Pain001 | Pain013 | Pacs008 | Pacs002, transactionhistorycollection: string) => {
+        .mockImplementation((transaction: Pain001 | Pain013 | Pacs008 | Pacs002) => {
           return new Promise((resolve, reject) => {
             throw new Error('Deliberate Error');
           });
