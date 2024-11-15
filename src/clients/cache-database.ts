@@ -113,16 +113,29 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async saveTransactionHistory(
-    transaction: Pain001 | Pain013 | Pacs008 | Pacs002,
-    transactionHistoryCollection: string,
-    redisKey = '',
-  ): Promise<void> {
+  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002, redisKey = ''): Promise<void> {
+    switch (transaction.TxTp) {
+      case 'pain.001.001.11': {
+        await this.dbManager.saveTransactionHistoryPain001(transaction as Pain001);
+        break;
+      }
+      case 'pain.013.001.09': {
+        await this.dbManager.saveTransactionHistoryPain013(transaction as Pain013);
+        break;
+      }
+      case 'pacs.008.001.10': {
+        await this.dbManager.saveTransactionHistoryPacs008(transaction as Pacs008);
+        break;
+      }
+      case 'pacs.002.001.12': {
+        await this.dbManager.saveTransactionHistoryPacs002(transaction as Pacs002);
+        break;
+      }
+      default:
+        throw Error('Error while selecting transaction type.');
+    }
     const buff = createMessageBuffer({ ...transaction });
-
     if (redisKey && buff) await this.dbManager.set(redisKey, buff, this.cacheExpireTime);
-
-    await this.dbManager.saveTransactionHistory(transaction, transactionHistoryCollection);
   }
 
   /**
