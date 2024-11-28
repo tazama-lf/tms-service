@@ -314,13 +314,21 @@
                               "type": "string"
                             }
                           },
+                          "CcyOfTrf": {
+                            "type": "string"
+                          },
                           "required": ["Amt", "Ccy"]
                         },
-                        "CcyOfTrf": {
-                          "type": "string"
-                        },
                         "XchgRate": {
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "UnitCcy": {
+                              "type": "string"
+                            },
+                            "XchgRate": {
+                              "type": "number"
+                            }
+                          }
                         }
                       },
                       "required": ["Amt", "CcyOfTrf"]
