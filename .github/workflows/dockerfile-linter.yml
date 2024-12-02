@@ -8,6 +8,8 @@
 # that helps you build best practice Docker images.
 # More details at https://github.com/hadolint/hadolint
 
+# Please do not attempt to edit this flow without the direct consent from the DevOps team. This file is managed centrally.
+
 name: Hadolint
 
 on:
@@ -24,6 +26,7 @@ permissions:
 
 jobs:
   hadolint:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     name: Run hadolint scanning
     runs-on: ubuntu-latest
     permissions:
@@ -43,7 +46,7 @@ jobs:
           no-fail: true
 
       - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: hadolint-results.sarif
           wait-for-processing: true

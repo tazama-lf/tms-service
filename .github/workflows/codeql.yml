@@ -11,6 +11,9 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
+
+# Please do not attempt to edit this flow without the direct consent from the DevOps team. This file is managed centrally.
+
 name: "CodeQL"
 
 on:
@@ -24,6 +27,7 @@ on:
 
 jobs:
   analyze:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     name: Analyze
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:

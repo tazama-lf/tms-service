@@ -2,6 +2,8 @@
 
 # This GitHub Actions workflow is designed to close a milestone and trigger a release workflow.
 
+# Please do not attempt to edit this flow without the direct consent from the DevOps team. This file is managed centrally.
+
 name: Milestone Workflow
 
 # This workflow can be manually triggered with a specified milestone ID.
@@ -15,27 +17,13 @@ on:
 
 jobs:
   close_milestone:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     runs-on: ubuntu-latest
 
     steps:
       # Step to check out the repository code.
       - name: Checkout Repository
         uses: actions/checkout@v2
-
-      # Step to set up Node.js environment, required for running npm commands.
-      - name: Setup Node.js (.npmrc)
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: https://npm.pkg.github.com/
-          # Scope is set to the user or organization that owns the workflow file.
-          scope: '@frmscoe'
-          
-      # Step to install npm dependencies using the `npm ci` command.
-      - name: Install dependencies
-        run: npm ci
-        env:
-          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         
       # Step to set up environment variables required for the script.
       - name: Set up environment variables

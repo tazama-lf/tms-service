@@ -8,6 +8,8 @@
 # This workflow integrates njsscan with GitHub's Code Scanning feature
 # nodejsscan is a static security code scanner that finds insecure code patterns in your Node.js applications
 
+# Please do not attempt to edit this flow without the direct consent from the DevOps team. This file is managed centrally.
+
 name: njsscan sarif
 
 on:
@@ -24,6 +26,7 @@ permissions:
 
 jobs:
   njsscan:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
