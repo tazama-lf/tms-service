@@ -319,7 +319,7 @@
                           },
                           "required": ["Amt", "Ccy"]
                         },
-                        "XchgRate": {
+                        "XchgRateInf": {
                           "type": "object",
                           "properties": {
                             "UnitCcy": {
