@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createMessageBuffer } from '@frmscoe/frms-coe-lib/lib/helpers/protobuf';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { CreateDatabaseManager, type DatabaseManagerInstance, type ManagerConfig } from '@frmscoe/frms-coe-lib/lib/services/dbManager';
+import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
+import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
+import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
+import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
+import { type Configuration } from '../config';
 
 export class CacheDatabaseService<T extends ManagerConfig> {
   private readonly dbManager: DatabaseManagerInstance<T>;
@@ -24,9 +27,13 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<CacheDatabaseService>}
    * @memberof CacheDatabaseService
    */
-  public static async create<T extends ManagerConfig>(databaseManagerConfig: T, expire: number): Promise<CacheDatabaseService<T>> {
-    const dbManager = await CreateDatabaseManager(databaseManagerConfig);
-    return new CacheDatabaseService<T>(dbManager, expire);
+  public static async create<T extends ManagerConfig>(
+    configuration: Configuration,
+  ): Promise<{ db: CacheDatabaseService<T>; config: ManagerConfig }> {
+    const auth = configuration.nodeEnv === 'production';
+    const { db, config } = await CreateStorageManager([Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED], auth);
+    const databaseManager = db as DatabaseManagerInstance<T>;
+    return { db: new CacheDatabaseService<T>(databaseManager, config.redisConfig?.distributedCacheTTL ?? 0), config };
   }
 
   /**
@@ -106,16 +113,29 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async saveTransactionHistory(
-    transaction: Pain001 | Pain013 | Pacs008 | Pacs002,
-    transactionHistoryCollection: string,
-    redisKey = '',
-  ): Promise<void> {
+  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002, redisKey = ''): Promise<void> {
+    switch (transaction.TxTp) {
+      case 'pain.001.001.11': {
+        await this.dbManager.saveTransactionHistoryPain001(transaction as Pain001);
+        break;
+      }
+      case 'pain.013.001.09': {
+        await this.dbManager.saveTransactionHistoryPain013(transaction as Pain013);
+        break;
+      }
+      case 'pacs.008.001.10': {
+        await this.dbManager.saveTransactionHistoryPacs008(transaction as Pacs008);
+        break;
+      }
+      case 'pacs.002.001.12': {
+        await this.dbManager.saveTransactionHistoryPacs002(transaction as Pacs002);
+        break;
+      }
+      default:
+        throw Error('Error while selecting transaction type.');
+    }
     const buff = createMessageBuffer({ ...transaction });
-
     if (redisKey && buff) await this.dbManager.set(redisKey, buff, this.cacheExpireTime);
-
-    await this.dbManager.saveTransactionHistory(transaction, transactionHistoryCollection);
   }
 
   /**

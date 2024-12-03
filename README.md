@@ -2,7 +2,7 @@
 
 # 1. Transaction Monitoring Service (TMS)
 
-See also, [Tazama Transaction Monitoring Service overview](https://frmscoe.atlassian.net/wiki/spaces/ACTIO/pages/1737938/Actio+Transaction+Monitoring+Service+overview)
+See also, [Tazama Transaction Monitoring Service overview](https://github.com/tazama-lf/docs/blob/dev/Product/transaction-monitoring-service-api.md)
 
 - [1. Transaction Monitoring Service (TMS)](#1-transaction-monitoring-service-tms)
   - [Sequence Diagram ISO Messages](#sequence-diagram-iso-messages)
@@ -21,7 +21,7 @@ sequenceDiagram
     participant TMS as "Transaction Monitoring Service"
     participant log as "Logger"
     participant Ara as "ArangoDB"
-    participant Cache as "Redis Cache"
+    participant Cache as "Valkey Cache"
     participant ED as "Event-Director"
 
     %% ISO20022 Message Pain001
@@ -142,6 +142,8 @@ Transaction monitoring is one of many risk management activities that an organiz
 
 Currently, the TMS API is able to accept ISO20022 pain.001.001.11, pain.013.001.09, pacs.002.001.12 and pacs.008.001.10 messages. Depending on the configuration of the TMS API service via the `QUOTING` environment variable, the pain.001 and pain.013 messages may be excluded (`QUOTING=false`).
 
+API authentication is turned off by default (ENV: `AUTHENTICATED=false`) but when turned on a public key (ENV `CERT_PATH_PUBLIC=/path/to/public/key`) is required to be able to validate tokens received via the Auth-Service login.
+
 ## Activity Diagram
 
 The activity diagram below applies to Pain001, Pain013, Pacs008 and Pacs002 messages.
@@ -178,9 +180,9 @@ flowchart TD
 ```mermaid
 graph TD
     A([Start]) --> B{Check Cache}
-    B -->|Cache Hit?| C[Retrieve Pain.001 from Cache]
-    B -->|No| D[Get Pain.001 from Database]
-    D --> E[Cache Pain.001]
+    B -->|Cache Hit?| C[Retrieve Pacs.008 from Cache]
+    B -->|No| D[Get Pacs.008 from Database]
+    D --> E[Cache Pacs.008]
     C --> F[Insert TransactionHistory]
     E --> F
     F --> G[Insert Creditor and Debtor Accounts]
@@ -310,7 +312,8 @@ graph TD
               "Amt": 31020.89,
               "Ccy": "USD"
             },
-            "CcyOfTrf": "USD"
+            "CcyOfTrf": "USD",
+            "XchgRate": 1.00,
           }
         },
         "ChrgBr": "DEBT",
@@ -670,6 +673,7 @@ graph TD
           "Ccy": "XTS"
         }
       },
+      "XchgRate": 1.00,
       "ChrgBr": "DEBT",
       "ChrgsInf": {
         "Amt": {
