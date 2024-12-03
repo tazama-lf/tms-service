@@ -79,6 +79,9 @@
               },
               "required": ["Amt"]
             },
+            "XchgRate": {
+              "type": "string"
+            },
             "ChrgBr": {
               "type": "string"
             },

@@ -23,7 +23,7 @@
   },
   "keywords": [
     "mojaloop",
-    "actio",
+    "tazama",
     "frm"
   ],
   "contributors": [
@@ -40,8 +40,9 @@
     "@fastify/response-validation": "^2.6.0",
     "@fastify/swagger": "^8.8.0",
     "@fastify/swagger-ui": "^3.0.0",
-    "@frmscoe/frms-coe-lib": "4.0.0",
-    "@frmscoe/frms-coe-startup-lib": "2.2.0",
+    "@tazama-lf/auth-lib": "^0.0.9",
+    "@tazama-lf/frms-coe-lib": "5.0.0",
+    "@tazama-lf/frms-coe-startup-lib": "2.3.0",
     "ajv": "^8.16.0",
     "arangojs": "^8.8.0",
     "copyfiles": "^2.4.1",
