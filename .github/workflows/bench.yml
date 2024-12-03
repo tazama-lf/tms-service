@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 name: Benchmark CI
 env:
   GITHUB_TOKEN: ${{ secrets.GH_WRITE_TOKEN }}
@@ -34,7 +36,7 @@ jobs:
           cat "${{ env.PROCCESSOR_REPO_NAME }}".csv.tmp >> "${{ env.PROCCESSOR_REPO_NAME }}".csv
           git reset "${{ env.PROCCESSOR_REPO_NAME }}".csv.tmp
           git add "${{ env.PROCCESSOR_REPO_NAME }}".csv
-          git commit -m "#${{ github.event.number}} Pushed update of ${{ env.PROCCESSOR_REPO_NAME }}"
+          git commit -m "#${{ github.event.number }} Pushed update of ${{ env.PROCCESSOR_REPO_NAME }}"
       - name: push data
         run: |
           cd ${{ env.REPO_NAME }}
