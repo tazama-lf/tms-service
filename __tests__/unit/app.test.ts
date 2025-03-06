@@ -254,6 +254,11 @@ describe('App Controller & Logic Service', () => {
       const request = Pacs002Sample as Pacs002;
 
       const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
+
+      jest.spyOn(cacheDatabaseManager, 'getBuffer').mockImplementationOnce(() => {
+        return Promise.resolve({}); // expected behaviour for bad key
+      });
+
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
 
       await LogicService.handlePacs002(request, 'pacs.002.001.12');

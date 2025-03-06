@@ -360,7 +360,7 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
   try {
     const dataCacheJSON = (await cacheDatabaseManager.getBuffer(EndToEndId)).DataCache;
-    dataCache = dataCacheJSON as DataCache;
+    dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, id);
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
     loggerService.log('Proceeding with Arango Call', logContext, id);
