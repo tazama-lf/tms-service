@@ -225,23 +225,12 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const EndToEndId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.EndToEndId;
   const MsgId = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
-  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
-  const debtorId = `${debtorOthr.Id}${debtorOthr.SchmeNm.Prtry}`;
 
-  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
-  const creditorId = `${creditorOthr.Id}${creditorOthr.SchmeNm.Prtry}`;
-
-  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
-  const debtorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
-
-  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
-  const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
+  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction);
 
   const transactionRelationship: TransactionRelationship = {
-    from: `accounts/${debtorAcctId}`,
-    to: `accounts/${creditorAcctId}`,
+    from: `accounts/${dbtrAcctId}`,
+    to: `accounts/${cdtrAcctId}`,
     Amt: InstdAmt,
     Ccy,
     CreDtTm: creDtTm,
@@ -251,13 +240,13 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     TxTp,
   };
 
-  const pendingPromises = [cacheDatabaseManager.addAccount(debtorAcctId), cacheDatabaseManager.addAccount(creditorAcctId)];
+  const pendingPromises = [cacheDatabaseManager.addAccount(dbtrAcctId), cacheDatabaseManager.addAccount(cdtrAcctId)];
 
   const dataCache: DataCache = {
-    cdtrId: creditorId,
-    dbtrId: debtorId,
-    cdtrAcctId: creditorAcctId,
-    dbtrAcctId: debtorAcctId,
+    cdtrId,
+    dbtrId,
+    cdtrAcctId,
+    dbtrAcctId,
     creDtTm,
     instdAmt: {
       amt: parseFloat(InstdAmt),
@@ -281,14 +270,14 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   }
 
   if (!configuration.QUOTING) {
-    pendingPromises.push(cacheDatabaseManager.addEntity(creditorId, creDtTm));
-    pendingPromises.push(cacheDatabaseManager.addEntity(debtorId, creDtTm));
+    pendingPromises.push(cacheDatabaseManager.addEntity(cdtrId, creDtTm));
+    pendingPromises.push(cacheDatabaseManager.addEntity(dbtrId, creDtTm));
 
     await Promise.all(pendingPromises);
 
     await Promise.all([
-      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, creDtTm),
-      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(cdtrId, cdtrAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(dbtrId, dbtrAcctId, creDtTm),
     ]);
   } else {
     await Promise.all(pendingPromises);
@@ -376,21 +365,9 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
   try {
     await cacheDatabaseManager.saveTransactionHistory(transaction, `pacs002_${EndToEndId}`);
 
-    const result = (await cacheDatabaseManager.getTransactionPacs008(EndToEndId)) as [Pacs008[]];
-
-    const debtorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
-    const debtorMmbId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-
-    const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
-
-    const creditorAcctOthr = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
-
-    const creditorMmbId = result[0][0].FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-
-    const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
-
-    transactionRelationship.to = `accounts/${debtorAcctId}`;
-    transactionRelationship.from = `accounts/${creditorAcctId}`;
+    // data cache is valid at this point
+    transactionRelationship.to = `accounts/${dataCache?.dbtrAcctId}`;
+    transactionRelationship.from = `accounts/${dataCache?.cdtrAcctId}`;
 
     await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
@@ -446,11 +423,13 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
 
   const cdtTrfTxInf = pacs008.FIToFICstmrCdtTrf.CdtTrfTxInf;
 
+  const { cdtrId, cdtrAcctId, dbtrId, dbtrAcctId } = parseDataCache(pacs008);
+
   const dataCache: DataCache = {
-    cdtrId: cdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0].Id,
-    dbtrId: cdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0].Id,
-    cdtrAcctId: cdtTrfTxInf.CdtrAcct.Id.Othr[0].Id,
-    dbtrAcctId: cdtTrfTxInf.DbtrAcct.Id.Othr[0].Id,
+    cdtrId,
+    dbtrId,
+    cdtrAcctId,
+    dbtrAcctId,
     creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
     instdAmt: {
       amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
@@ -477,3 +456,30 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
   span?.end();
   return dataCache;
 };
+
+// A utility type for the fields we are extracting from the pacs008 entity
+type AccountIds = Required<Pick<DataCache, 'cdtrId' | 'dbtrId' | 'dbtrAcctId' | 'cdtrAcctId'>>;
+
+// reused by the pacs008 handler and rebuildCache function
+function parseDataCache(transaction: Pacs008): AccountIds {
+  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
+  const debtorId = `${debtorOthr.Id}${debtorOthr.SchmeNm.Prtry}`;
+
+  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const creditorId = `${creditorOthr.Id}${creditorOthr.SchmeNm.Prtry}`;
+
+  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+  const debtorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
+
+  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
+
+  return {
+    cdtrId: creditorId,
+    dbtrId: debtorId,
+    cdtrAcctId: creditorAcctId,
+    dbtrAcctId: debtorAcctId,
+  };
+}
