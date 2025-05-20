@@ -103,5 +103,7 @@ ENV LOGSTASH_PORT=8080
 ENV LOGSTASH_LEVEL='info'
 ENV SIDECAR_HOST=0.0.0.0:5000
 
+ENV CORS_POLICY=prod
+
 # Execute watchdog command
 CMD ["build/index.js"]

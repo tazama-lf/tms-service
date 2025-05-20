@@ -17,12 +17,18 @@ export const additionalEnvironmentVariables: AdditionalConfig[] = [
     name: 'AUTHENTICATED',
     type: 'boolean',
   },
+  {
+    name: 'CORS_POLICY',
+    type: 'string',
+    optional: true,
+  },
 ];
 
 export interface ExtendedConfig {
   PORT: number;
   QUOTING: boolean;
   AUTHENTICATED: boolean;
+  CORS_POLICY?: 'demo' | 'prod';
 }
 
 type Databases = Required<Pick<ManagerConfig, 'transactionHistory' | 'pseudonyms' | 'redisConfig'>>;
