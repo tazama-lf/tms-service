@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
+import apm from './apm';
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
 import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
-import { type DataCache, type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import type { DataCache, Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { cacheDatabaseManager, loggerService, server } from '.';
-import apm from './apm';
 import { configuration } from './';
-import { type TransactionRelationship } from './interfaces/iTransactionRelationship';
+import type { TransactionRelationship } from './interfaces/iTransactionRelationship';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
@@ -19,8 +19,8 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   const startTime = process.hrtime.bigint();
   const TxTp = transactionType;
   transaction.TxTp = TxTp;
-  const Amt = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
-  const Ccy = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
+  const { Amt } = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt;
+  const { Ccy } = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt;
 
   const othrCreditorAcct = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
   const creditorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
@@ -32,17 +32,17 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   const othrDebtor = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0];
   const debtorId = `${othrDebtor.Id}${othrDebtor.SchmeNm.Prtry}`;
 
-  const CreDtTm = transaction.CstmrCdtTrfInitn.GrpHdr.CreDtTm;
+  const { CreDtTm } = transaction.CstmrCdtTrfInitn.GrpHdr;
 
   const othrDebtorAcct = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0];
   const debtorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
   const debtorAcctId = `${othrDebtorAcct.Id}${othrDebtorAcct.SchmeNm.Prtry}${debtorMmbId}`;
 
-  const EndToEndId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
+  const { EndToEndId } = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
   const long = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Long;
-  const MsgId = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
-  const PmtInfId = transaction.CstmrCdtTrfInitn.PmtInf.PmtInfId;
+  const { MsgId } = transaction.CstmrCdtTrfInitn.GrpHdr;
+  const { PmtInfId } = transaction.CstmrCdtTrfInitn.PmtInf;
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${debtorAcctId}`,
@@ -122,12 +122,12 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
 
   const TxTp = transactionType;
   transaction.TxTp = TxTp;
-  const Amt = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Amt;
-  const Ccy = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt.Ccy;
-  const CreDtTm = transaction.CdtrPmtActvtnReq.GrpHdr.CreDtTm;
-  const EndToEndId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
-  const MsgId = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
-  const PmtInfId = transaction.CdtrPmtActvtnReq.PmtInf.PmtInfId;
+  const { Amt } = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt;
+  const { Ccy } = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt;
+  const { CreDtTm } = transaction.CdtrPmtActvtnReq.GrpHdr;
+  const { EndToEndId } = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.PmtId;
+  const { MsgId } = transaction.CdtrPmtActvtnReq.GrpHdr;
+  const { PmtInfId } = transaction.CdtrPmtActvtnReq.PmtInf;
 
   const creditorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
   const creditorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
@@ -219,11 +219,11 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const InstdAmtCcy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Ccy;
   const IntrBkSttlmAmt = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt;
   const IntrBkSttlmAmtCcy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy;
-  const XchgRate = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.XchgRate;
-  const Ccy = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt.Ccy;
+  const { XchgRate } = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf;
+  const { Ccy } = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.InstdAmt.Amt;
   const creDtTm = transaction.FIToFICstmrCdtTrf.GrpHdr.CreDtTm;
-  const EndToEndId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.EndToEndId;
-  const MsgId = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
+  const { EndToEndId } = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId;
+  const { MsgId } = transaction.FIToFICstmrCdtTrf.GrpHdr;
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
 
   const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction);
@@ -263,7 +263,7 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
     const redisTTL = configuration.redisConfig.distributedCacheTTL;
-    pendingPromises.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, redisTTL ? Number(redisTTL) : 0));
+    pendingPromises.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, redisTTL ?? 0));
   } else {
     // this is fatal
     throw new Error('[pacs008] data cache could not be serialized');
@@ -328,11 +328,11 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
 
   const TxTp = transactionType;
   transaction.TxTp = TxTp;
-  const CreDtTm = transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
+  const { CreDtTm } = transaction.FIToFIPmtSts.GrpHdr;
   const EndToEndId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlEndToEndId;
-  const MsgId = transaction.FIToFIPmtSts.GrpHdr.MsgId;
+  const { MsgId } = transaction.FIToFIPmtSts.GrpHdr;
   const PmtInfId = transaction.FIToFIPmtSts.TxInfAndSts.OrgnlInstrId;
-  const TxSts = transaction.FIToFIPmtSts.TxInfAndSts.TxSts;
+  const { TxSts } = transaction.FIToFIPmtSts.TxInfAndSts;
 
   const transactionRelationship: TransactionRelationship = {
     from: '',
@@ -447,7 +447,7 @@ export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id
 
     if (buffer) {
       const redisTTL = configuration.redisConfig.distributedCacheTTL;
-      await cacheDatabaseManager.set(endToEndId, buffer, redisTTL ? Number(redisTTL) : 0);
+      await cacheDatabaseManager.set(endToEndId, buffer, redisTTL ?? 0);
     } else {
       loggerService.error('[pacs008] could not rebuild redis cache');
     }

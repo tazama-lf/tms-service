@@ -1,28 +1,26 @@
 // SPDX-License-Identifier: Apache-2.0
-import { type FastifyReply, type FastifyRequest, type RouteHandlerMethod } from 'fastify';
-import { type FastifySchema } from 'fastify/types/schema';
+import type { FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
+import type { FastifySchema } from 'fastify/types/schema';
 import { loggerService } from '..';
 import { tokenHandler } from '../auth/authHandler';
 import { configuration } from '../';
 
 type preHandler = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
 
-const responseSchema = (schemaTransactionName: string): Record<string, unknown> => {
-  return {
-    '2xx': {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-        },
-        data: {
-          type: 'object',
-          $ref: `${schemaTransactionName}#`,
-        },
+const responseSchema = (schemaTransactionName: string): Record<string, unknown> => ({
+  '2xx': {
+    type: 'object',
+    properties: {
+      message: {
+        type: 'string',
+      },
+      data: {
+        type: 'object',
+        $ref: `${schemaTransactionName}#`,
       },
     },
-  };
-};
+  },
+});
 
 const SetOptions = (
   handler: RouteHandlerMethod,

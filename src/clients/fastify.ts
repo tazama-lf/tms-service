@@ -61,14 +61,10 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     },
     staticCSP: true,
     transformStaticCSP: (header) => header,
-    transformSpecification: (swaggerObject, request, reply) => {
-      return swaggerObject;
-    },
+    transformSpecification: (swaggerObject, request, reply) => swaggerObject,
     transformSpecificationClone: true,
   });
-  fastify.setValidatorCompiler(({ schema }) => {
-    return ajv.compile(schema);
-  });
+  fastify.setValidatorCompiler(({ schema }) => ajv.compile(schema));
   const methods = configuration.CORS_POLICY?.toLowerCase() === 'demo' ? ['GET', 'POST'] : ['POST'];
   await fastify.register(fastifyCors, {
     origin: '*',

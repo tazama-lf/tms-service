@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { type FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { Pacs002Handler, Pacs008Handler, Pain001Handler, Pain013Handler, handleHealthCheck } from './app.controller';
 import { configuration } from './';
 import SetOptions from './utils/schema-utils';
@@ -12,7 +12,7 @@ const routePrivilege = {
   pacs002: 'POST_V1_EVALUATE_ISO20022_PACS_002_001_12',
 };
 
-async function Routes(fastify: FastifyInstance, options: unknown): Promise<void> {
+function Routes(fastify: FastifyInstance, options: unknown): void {
   fastify.get('/', handleHealthCheck);
   fastify.get('/health', handleHealthCheck);
   if (configuration.QUOTING) {

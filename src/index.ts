@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-import { LoggerService, type ManagerConfig } from '@tazama-lf/frms-coe-lib';
+import './apm';
+import { LoggerService } from '@tazama-lf/frms-coe-lib';
 import { validateProcessorConfig } from '@tazama-lf/frms-coe-lib/lib/config';
 import { StartupFactory, type IStartupService } from '@tazama-lf/frms-coe-startup-lib';
-import cluster from 'cluster';
-import os from 'os';
-import './apm';
+import cluster from 'node:cluster';
+import os from 'node:os';
+import { setTimeout } from 'node:timers/promises';
+import * as util from 'node:util';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
 import { additionalEnvironmentVariables, type Configuration } from './config';
@@ -14,7 +16,7 @@ let configuration = validateProcessorConfig(additionalEnvironmentVariables) as C
 export const loggerService: LoggerService = new LoggerService(configuration);
 export let server: IStartupService;
 
-let cacheDatabaseManager: CacheDatabaseService<ManagerConfig>;
+let cacheDatabaseManager: CacheDatabaseService;
 
 export const dbInit = async (): Promise<void> => {
   const { config, db } = await CacheDatabaseService.create(configuration);
@@ -28,7 +30,7 @@ const connect = async (): Promise<void> => {
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     loggerService.log('Connecting to nats server...');
     if (!(await server.initProducer())) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await setTimeout(5000);
     } else {
       loggerService.log('Connected to nats');
       isConnected = true;
@@ -44,7 +46,7 @@ const connect = async (): Promise<void> => {
   fastify.listen({ port: configuration.PORT, host: '0.0.0.0' }, (err, address) => {
     if (err) {
       loggerService.error(err);
-      throw Error(`${err.message}`);
+      throw Error(err.message);
     }
 
     loggerService.log(`Fastify listening on ${address}`);
@@ -61,7 +63,7 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (err) => {
-  loggerService.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
+  loggerService.error(`process on unhandledRejection error: ${util.inspect(err)}`);
 });
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
