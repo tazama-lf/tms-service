@@ -23,6 +23,7 @@ const ajv = new Ajv({
   useDefaults: true,
   coerceTypes: 'array',
   strictTuples: false,
+  strict: false,
 });
 
 ajv.addSchema(schemaPain001);
