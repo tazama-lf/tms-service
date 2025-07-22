@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
-import { type FastifyRequest, type FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 export const Pain001Handler = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   const urlPath = JSON.stringify(req.routeOptions.url);
@@ -113,10 +113,8 @@ export const Pacs002Handler = async (req: FastifyRequest, reply: FastifyReply): 
   }
 };
 
-const handleHealthCheck = async (): Promise<{ status: string }> => {
-  return {
-    status: 'UP',
-  };
-};
+const handleHealthCheck = (): { status: string } => ({
+  status: 'UP',
+});
 
 export { handleHealthCheck };
