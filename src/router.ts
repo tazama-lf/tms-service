@@ -15,10 +15,14 @@ const routePrivilege = {
 function Routes(fastify: FastifyInstance, options: unknown): void {
   fastify.get('/', handleHealthCheck);
   fastify.get('/health', handleHealthCheck);
+
   if (configuration.QUOTING) {
+    // Pain001 and Pain013 routes (tenant-aware via middleware)
     fastify.post('/v1/evaluate/iso20022/pain.001.001.11', SetOptions(Pain001Handler, 'messageSchemaPain001', routePrivilege.pain001));
     fastify.post('/v1/evaluate/iso20022/pain.013.001.09', SetOptions(Pain013Handler, 'messageSchemaPain013', routePrivilege.pain013));
   }
+
+  // Pacs008 and Pacs002 routes (tenant-aware via middleware)
   fastify.post('/v1/evaluate/iso20022/pacs.008.001.10', SetOptions(Pacs008Handler, 'messageSchemaPacs008', routePrivilege.pacs008));
   fastify.post('/v1/evaluate/iso20022/pacs.002.001.12', SetOptions(Pacs002Handler, 'messageSchemaPacs002', routePrivilege.pacs002));
 }

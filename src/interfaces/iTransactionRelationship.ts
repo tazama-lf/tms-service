@@ -12,4 +12,5 @@ export interface TransactionRelationship {
   lat?: string;
   long?: string;
   TxSts?: string;
+  tenantId: string; // Always required - no longer optional
 }

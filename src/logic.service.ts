@@ -1,21 +1,29 @@
 // SPDX-License-Identifier: Apache-2.0
 import apm from './apm';
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
-import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
 import type { DataCache, Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { cacheDatabaseManager, loggerService, server } from '.';
 import { configuration } from './';
 import type { TransactionRelationship } from './interfaces/iTransactionRelationship';
 
-const calculateDuration = (startTime: bigint): number => {
-  const endTime = process.hrtime.bigint();
-  return Number(endTime - startTime);
-};
+// Utility imports
+import { calculateDuration } from './utils/commonUtils';
+import { parseDataCacheTenantAware } from './utils/dataCacheUtils';
+import { rebuildCache } from './utils/cacheRebuildUtils';
+import {
+  generateDebtorEntityKey,
+  generateCreditorEntityKey,
+  generateDebtorAccountKey,
+  generateCreditorAccountKey,
+} from './utils/tenantKeyGenerator';
 
-export const handlePain001 = async (transaction: Pain001, transactionType: string): Promise<void> => {
+export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
-  loggerService.log('Start - Handle transaction data', 'handlePain001()', id);
-  const span = apm.startSpan('transaction.pain001');
+
+  loggerService.log(`Start - Handle transaction data for tenant ${tenantId}`, 'handlePain001()', id);
+
+  const span = apm.startSpan('transaction.pain001.tenant');
   const startTime = process.hrtime.bigint();
   const TxTp = transactionType;
   transaction.TxTp = TxTp;
@@ -24,19 +32,19 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
 
   const othrCreditorAcct = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
   const creditorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const creditorAcctId = `${othrCreditorAcct.Id}${othrCreditorAcct.SchmeNm.Prtry}${creditorMmbId}`;
 
   const othrCreditor = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
-  const creditorId = `${othrCreditor.Id}${othrCreditor.SchmeNm.Prtry}`;
-
   const othrDebtor = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0];
-  const debtorId = `${othrDebtor.Id}${othrDebtor.SchmeNm.Prtry}`;
-
-  const { CreDtTm } = transaction.CstmrCdtTrfInitn.GrpHdr;
-
   const othrDebtorAcct = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0];
   const debtorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const debtorAcctId = `${othrDebtorAcct.Id}${othrDebtorAcct.SchmeNm.Prtry}${debtorMmbId}`;
+
+  // Always use tenant-aware key generation
+  const creditorAcctId = generateCreditorAccountKey(tenantId, othrCreditorAcct.Id, othrCreditorAcct.SchmeNm.Prtry, creditorMmbId);
+  const creditorId = generateCreditorEntityKey(tenantId, othrCreditor.Id, othrCreditor.SchmeNm.Prtry);
+  const debtorId = generateDebtorEntityKey(tenantId, othrDebtor.Id, othrDebtor.SchmeNm.Prtry);
+  const debtorAcctId = generateDebtorAccountKey(tenantId, othrDebtorAcct.Id, othrDebtorAcct.SchmeNm.Prtry, debtorMmbId);
+
+  const { CreDtTm } = transaction.CstmrCdtTrfInitn.GrpHdr;
 
   const { EndToEndId } = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId;
   const lat = transaction.CstmrCdtTrfInitn.SplmtryData.Envlp.Doc.InitgPty.Glctn.Lat;
@@ -56,6 +64,7 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
     MsgId,
     PmtInfId,
     TxTp,
+    tenantId, // Always include tenantId
   };
 
   const dataCache: DataCache = {
@@ -67,7 +76,7 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
 
   transaction.DataCache = dataCache;
 
-  const spanInsert = apm.startSpan('db.insert.pain001');
+  const spanInsert = apm.startSpan('db.insert.pain001.tenant');
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionHistory(transaction, `pain001_${EndToEndId}`),
@@ -113,11 +122,14 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
-export const handlePain013 = async (transaction: Pain013, transactionType: string): Promise<void> => {
+export const handlePain013 = async (transaction: Pain013 | (Pain013 & { tenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
-  loggerService.log('Start - Handle transaction data', logContext, id);
-  const span = apm.startSpan('transaction.pain013');
+
+  loggerService.log(`Start - Handle transaction data for tenant ${tenantId}`, logContext, id);
+
+  const span = apm.startSpan('transaction.pain013.tenant');
   const startTime = process.hrtime.bigint();
 
   const TxTp = transactionType;
@@ -129,19 +141,19 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   const { MsgId } = transaction.CdtrPmtActvtnReq.GrpHdr;
   const { PmtInfId } = transaction.CdtrPmtActvtnReq.PmtInf;
 
+  // Extract raw IDs for key generation
   const creditorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
   const creditorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
-
   const debtorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr[0];
   const debtorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
-
   const dbtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr[0];
-  const dbtrId = `${dbtrOthr.Id}${dbtrOthr.SchmeNm.Prtry}`;
-
   const cdtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
-  const cdtrId = `${cdtrOthr.Id}${cdtrOthr.SchmeNm.Prtry}`;
+
+  // Always use tenant-aware key generation
+  const creditorAcctId = generateCreditorAccountKey(tenantId, creditorAcctOthr.Id, creditorAcctOthr.SchmeNm.Prtry, creditorMmbId);
+  const debtorAcctId = generateDebtorAccountKey(tenantId, debtorAcctOthr.Id, debtorAcctOthr.SchmeNm.Prtry, debtorMmbId);
+  const dbtrId = generateDebtorEntityKey(tenantId, dbtrOthr.Id, dbtrOthr.SchmeNm.Prtry);
+  const cdtrId = generateCreditorEntityKey(tenantId, cdtrOthr.Id, cdtrOthr.SchmeNm.Prtry);
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${creditorAcctId}`,
@@ -153,6 +165,7 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
     MsgId,
     PmtInfId,
     TxTp,
+    tenantId, // Always include tenantId
   };
 
   const dataCache: DataCache = {
@@ -165,7 +178,7 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   transaction.DataCache = dataCache;
   transaction._key = MsgId;
 
-  const spanInsert = apm.startSpan('db.insert.pain013');
+  const spanInsert = apm.startSpan('db.insert.pain013.tenant');
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionHistory(transaction, `pain013_${EndToEndId}`),
@@ -206,11 +219,14 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   loggerService.log('END - Handle transaction data', logContext, id);
 };
 
-export const handlePacs008 = async (transaction: Pacs008, transactionType: string): Promise<void> => {
+export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
   const logContext = 'handlePacs008()';
   const id = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
-  loggerService.log('Start - Handle transaction data', logContext, id);
-  const span = apm.startSpan('transaction.pacs008');
+
+  loggerService.log(`Start - Handle transaction data for tenant ${tenantId}`, logContext, id);
+
+  const span = apm.startSpan('transaction.pacs008.tenant');
   const startTime = process.hrtime.bigint();
 
   const TxTp = transactionType;
@@ -226,7 +242,8 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const { MsgId } = transaction.FIToFICstmrCdtTrf.GrpHdr;
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
 
-  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction);
+  // Always use tenant-aware parseDataCache
+  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCacheTenantAware(transaction as Pacs008, tenantId);
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${dbtrAcctId}`,
@@ -238,6 +255,7 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     MsgId,
     PmtInfId,
     TxTp,
+    tenantId, // Always include tenantId
   };
 
   const pendingPromises = [cacheDatabaseManager.addAccount(dbtrAcctId), cacheDatabaseManager.addAccount(cdtrAcctId)];
@@ -263,9 +281,10 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
     const redisTTL = configuration.redisConfig.distributedCacheTTL;
-    pendingPromises.push(cacheDatabaseManager.set(EndToEndId, cacheBuffer, redisTTL ?? 0));
+    // Use tenant-aware cache key for complete tenant isolation
+    const tenantCacheKey = `${tenantId}:${EndToEndId}`;
+    pendingPromises.push(cacheDatabaseManager.set(tenantCacheKey, cacheBuffer, redisTTL ?? 0));
   } else {
-    // this is fatal
     throw new Error('[pacs008] data cache could not be serialized');
   }
 
@@ -319,11 +338,14 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   span?.end();
 };
 
-export const handlePacs002 = async (transaction: Pacs002, transactionType: string): Promise<void> => {
+export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { tenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
-  loggerService.log('Start - Handle transaction data', logContext, id);
-  const span = apm.startSpan('transactions.pacs002');
+
+  loggerService.log(`Start - Handle transaction data for tenant ${tenantId}`, logContext, id);
+
+  const span = apm.startSpan('transactions.pacs002.tenant');
   const startTime = process.hrtime.bigint();
 
   const TxTp = transactionType;
@@ -343,17 +365,20 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
     PmtInfId,
     TxTp,
     TxSts,
+    tenantId, // Always include tenantId
   };
 
   let dataCache;
-  const spanDataCache = apm.startSpan('req.get.dataCache.pacs002');
+  const spanDataCache = apm.startSpan('req.get.dataCache.pacs002.tenant');
   try {
-    const dataCacheJSON = (await cacheDatabaseManager.getBuffer(EndToEndId)).DataCache;
-    dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, id);
+    // Use tenant-aware cache key for complete tenant isolation
+    const tenantCacheKey = `${tenantId}:${EndToEndId}`;
+    const dataCacheJSON = (await cacheDatabaseManager.getBuffer(tenantCacheKey)).DataCache;
+    dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, tenantId, id);
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
     loggerService.log('Proceeding with Arango Call', logContext, id);
-    dataCache = await rebuildCache(EndToEndId, false, id);
+    dataCache = await rebuildCache(EndToEndId, false, tenantId, id);
   } finally {
     spanDataCache?.end();
   }
@@ -401,85 +426,3 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
   span?.end();
   loggerService.log('END - Handle transaction data', logContext, id);
 };
-
-/**
- * Rebuilds the DataCache object using the given endToEndId to fetch a stored Pacs008 message
- *
- * @param {string} endToEndId
- * @return {*}  {(Promise<DataCache | undefined>)}
- */
-export const rebuildCache = async (endToEndId: string, writeToRedis: boolean, id?: string): Promise<DataCache | undefined> => {
-  const span = apm.startSpan('db.cache.rebuild');
-  const context = 'rebuildCache()';
-  const currentPacs008 = (await cacheDatabaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
-
-  const pacs008 = unwrap(currentPacs008);
-
-  if (!pacs008) {
-    loggerService.error('Could not find pacs008 transaction to rebuild dataCache with', context, id);
-    span?.end();
-    return undefined;
-  }
-
-  const cdtTrfTxInf = pacs008.FIToFICstmrCdtTrf.CdtTrfTxInf;
-
-  const { cdtrId, cdtrAcctId, dbtrId, dbtrAcctId } = parseDataCache(pacs008);
-
-  const dataCache: DataCache = {
-    cdtrId,
-    dbtrId,
-    cdtrAcctId,
-    dbtrAcctId,
-    creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
-    instdAmt: {
-      amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
-      ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
-    },
-    intrBkSttlmAmt: {
-      amt: parseFloat(cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt),
-      ccy: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy,
-    },
-    xchgRate: cdtTrfTxInf.XchgRate,
-  };
-
-  if (writeToRedis) {
-    const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
-
-    if (buffer) {
-      const redisTTL = configuration.redisConfig.distributedCacheTTL;
-      await cacheDatabaseManager.set(endToEndId, buffer, redisTTL ?? 0);
-    } else {
-      loggerService.error('[pacs008] could not rebuild redis cache');
-    }
-  }
-
-  span?.end();
-  return dataCache;
-};
-
-// A utility type for the fields we are extracting from the pacs008 entity
-type AccountIds = Required<Pick<DataCache, 'cdtrId' | 'dbtrId' | 'dbtrAcctId' | 'cdtrAcctId'>>;
-
-// reused by the pacs008 handler and rebuildCache function
-function parseDataCache(transaction: Pacs008): AccountIds {
-  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
-  const debtorId = `${debtorOthr.Id}${debtorOthr.SchmeNm.Prtry}`;
-
-  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
-  const creditorId = `${creditorOthr.Id}${creditorOthr.SchmeNm.Prtry}`;
-
-  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
-  const debtorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const debtorAcctId = `${debtorAcctOthr.Id}${debtorAcctOthr.SchmeNm.Prtry}${debtorMmbId}`;
-
-  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
-  const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const creditorAcctId = `${creditorAcctOthr.Id}${creditorAcctOthr.SchmeNm.Prtry}${creditorMmbId}`;
-
-  return {
-    cdtrId: creditorId,
-    dbtrId: debtorId,
-    cdtrAcctId: creditorAcctId,
-    dbtrAcctId: debtorAcctId,
-  };
-}
