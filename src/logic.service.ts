@@ -1,21 +1,221 @@
 // SPDX-License-Identifier: Apache-2.0
 import apm from './apm';
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
+import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
 import type { DataCache, Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { cacheDatabaseManager, loggerService, server } from '.';
 import { configuration } from './';
 import type { TransactionRelationship } from './interfaces/iTransactionRelationship';
 
-// Utility imports
-import { calculateDuration } from './utils/commonUtils';
-import { parseDataCacheTenantAware } from './utils/dataCacheUtils';
-import { rebuildCache } from './utils/cacheRebuildUtils';
-import {
-  generateDebtorEntityKey,
-  generateCreditorEntityKey,
-  generateDebtorAccountKey,
-  generateCreditorAccountKey,
-} from './utils/tenantKeyGenerator';
+// ============================================================================
+// CONSOLIDATED UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Calculates the duration in nanoseconds from a start time
+ */
+const calculateDuration = (startTime: bigint): number => {
+  const endTime = process.hrtime.bigint();
+  return Number(endTime - startTime);
+};
+
+/**
+ * Common error handling utility for database operations
+ */
+const handleDatabaseError = (err: unknown, span?: { end: () => void } | null, mainSpan?: { end: () => void } | null): Error => {
+  let error: Error;
+  if (err instanceof Error) {
+    error = err;
+  } else {
+    const strErr = JSON.stringify(err);
+    error = new Error(strErr);
+  }
+  span?.end();
+  mainSpan?.end();
+  return error;
+};
+
+/**
+ * Common server response utility for notifying event-director
+ */
+const notifyEventDirector = (transaction: unknown, dataCache: DataCache | undefined, startTime: bigint): void => {
+  server.handleResponse({
+    transaction,
+    DataCache: dataCache,
+    metaData: {
+      prcgTmDP: calculateDuration(startTime),
+      traceParent: apm.getCurrentTraceparent(),
+    },
+  });
+};
+
+/**
+ * Multi-tenant key generation utilities
+ * Ensures all entity and account keys are prefixed with tenantId for proper isolation
+ */
+
+/**
+ * Generates a tenant-aware debtor entity key
+ * @param tenantId The tenant identifier
+ * @param debtorId The debtor's other ID
+ * @param schemeProprietary The scheme proprietary value
+ * @returns Tenant-prefixed debtor entity key
+ */
+const generateDebtorEntityKey = (tenantId: string, debtorId: string, schemeProprietary: string): string =>
+  `${tenantId}${debtorId}${schemeProprietary}`;
+
+/**
+ * Generates a tenant-aware creditor entity key
+ * @param tenantId The tenant identifier
+ * @param creditorId The creditor's other ID
+ * @param schemeProprietary The scheme proprietary value
+ * @returns Tenant-prefixed creditor entity key
+ */
+const generateCreditorEntityKey = (tenantId: string, creditorId: string, schemeProprietary: string): string =>
+  `${tenantId}${creditorId}${schemeProprietary}`;
+
+/**
+ * Generates a tenant-aware debtor account key
+ * @param tenantId The tenant identifier
+ * @param debtorAcctId The debtor's account other ID
+ * @param schemeProprietary The scheme proprietary value
+ * @param membershipId The membership ID
+ * @returns Tenant-prefixed debtor account key
+ */
+const generateDebtorAccountKey = (tenantId: string, debtorAcctId: string, schemeProprietary: string, membershipId: string): string =>
+  `${tenantId}${debtorAcctId}${schemeProprietary}${membershipId}`;
+
+/**
+ * Generates a tenant-aware creditor account key
+ * @param tenantId The tenant identifier
+ * @param creditorAcctId The creditor's account other ID
+ * @param schemeProprietary The scheme proprietary value
+ * @param membershipId The membership ID
+ * @returns Tenant-prefixed creditor account key
+ */
+const generateCreditorAccountKey = (tenantId: string, creditorAcctId: string, schemeProprietary: string, membershipId: string): string =>
+  `${tenantId}${creditorAcctId}${schemeProprietary}${membershipId}`;
+
+/**
+ * Generates a tenant-aware cache key by prefixing the original key with tenantId
+ * @param tenantId The tenant identifier
+ * @param originalKey The original cache key
+ * @returns Tenant-prefixed cache key
+ */
+const generateTenantCacheKey = (tenantId: string, originalKey: string): string => `${tenantId}:${originalKey}`;
+
+/**
+ * Utility function to extract tenant ID from a tenant-prefixed key
+ * @param tenantPrefixedKey The key with tenant prefix
+ * @returns The extracted tenant ID
+ */
+const extractTenantFromKey = (tenantPrefixedKey: string): string => {
+  const INVALID_INDEX = -1;
+  const START_INDEX = 0;
+  const colonIndex = tenantPrefixedKey.indexOf(':');
+
+  if (colonIndex === INVALID_INDEX) {
+    throw new Error('Invalid tenant-prefixed key format');
+  }
+  return tenantPrefixedKey.substring(START_INDEX, colonIndex);
+};
+
+// A utility type for the fields we are extracting from the pacs008 entity
+type AccountIds = Required<Pick<DataCache, 'cdtrId' | 'dbtrId' | 'dbtrAcctId' | 'cdtrAcctId'>>;
+
+// Tenant-aware parseDataCache function
+const parseDataCache = (transaction: Pacs008, tenantId = 'DEFAULT'): AccountIds => {
+  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
+  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+  const debtorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
+
+  // Generate tenant-aware keys
+  const debtorId = generateDebtorEntityKey(tenantId, debtorOthr.Id, debtorOthr.SchmeNm.Prtry);
+  const creditorId = generateCreditorEntityKey(tenantId, creditorOthr.Id, creditorOthr.SchmeNm.Prtry);
+  const debtorAcctId = generateDebtorAccountKey(tenantId, debtorAcctOthr.Id, debtorAcctOthr.SchmeNm.Prtry, debtorMmbId);
+  const creditorAcctId = generateCreditorAccountKey(tenantId, creditorAcctOthr.Id, creditorAcctOthr.SchmeNm.Prtry, creditorMmbId);
+
+  return {
+    cdtrId: creditorId,
+    dbtrId: debtorId,
+    cdtrAcctId: creditorAcctId,
+    dbtrAcctId: debtorAcctId,
+  };
+};
+
+/**
+ * Rebuilds the DataCache object using the given endToEndId to fetch a stored Pacs008 message
+ * Always uses tenant-aware key generation with DEFAULT tenant fallback
+ *
+ * @param {string} endToEndId
+ * @param {boolean} writeToRedis
+ * @param {string} tenantId - Tenant ID (defaults to 'DEFAULT' if not provided)
+ * @param {string} id - Optional ID for logging
+ * @return {*}  {(Promise<DataCache | undefined>)}
+ */
+export const rebuildCache = async (
+  endToEndId: string,
+  writeToRedis: boolean,
+  tenantId = 'DEFAULT',
+  id?: string,
+): Promise<DataCache | undefined> => {
+  const span = apm.startSpan('db.cache.rebuild.tenant');
+  const context = 'rebuildCache()';
+  const currentPacs008 = (await cacheDatabaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
+
+  const pacs008 = unwrap(currentPacs008);
+
+  if (!pacs008) {
+    loggerService.error('Could not find pacs008 transaction to rebuild dataCache with', context, id);
+    span?.end();
+    return undefined;
+  }
+
+  const cdtTrfTxInf = pacs008.FIToFICstmrCdtTrf.CdtTrfTxInf;
+
+  // Always use tenant-aware parsing with DEFAULT fallback
+  const { cdtrId, cdtrAcctId, dbtrId, dbtrAcctId } = parseDataCache(pacs008, tenantId);
+
+  const dataCache: DataCache = {
+    cdtrId,
+    dbtrId,
+    cdtrAcctId,
+    dbtrAcctId,
+    creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
+    instdAmt: {
+      amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
+      ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
+    },
+    intrBkSttlmAmt: {
+      amt: parseFloat(cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt),
+      ccy: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy,
+    },
+    xchgRate: cdtTrfTxInf.XchgRate,
+  };
+
+  if (writeToRedis) {
+    const buffer = createMessageBuffer({ DataCache: { ...dataCache } });
+
+    if (buffer) {
+      const redisTTL = configuration.redisConfig.distributedCacheTTL;
+      // Use tenant-aware cache key for complete tenant isolation
+      const tenantCacheKey = `${tenantId}:${endToEndId}`;
+      await cacheDatabaseManager.set(tenantCacheKey, buffer, redisTTL ?? 0);
+    } else {
+      loggerService.error('[pacs008] could not rebuild redis cache');
+    }
+  }
+
+  span?.end();
+  return dataCache;
+};
+
+// ============================================================================
+// MAIN BUSINESS LOGIC FUNCTIONS
+// ============================================================================
 
 export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId: string }), transactionType: string): Promise<void> => {
   const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
@@ -64,7 +264,7 @@ export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId
     MsgId,
     PmtInfId,
     TxTp,
-    tenantId, // Always include tenantId
+    TenantId: tenantId, // Standardized tenant identifier
   };
 
   const dataCache: DataCache = {
@@ -80,42 +280,25 @@ export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionHistory(transaction, `pain001_${EndToEndId}`),
-      cacheDatabaseManager.addAccount(debtorAcctId),
-      cacheDatabaseManager.addAccount(creditorAcctId),
-      cacheDatabaseManager.addEntity(creditorId, CreDtTm),
-      cacheDatabaseManager.addEntity(debtorId, CreDtTm),
+      cacheDatabaseManager.addAccount(debtorAcctId, tenantId),
+      cacheDatabaseManager.addAccount(creditorAcctId, tenantId),
+      cacheDatabaseManager.addEntity(creditorId, CreDtTm, tenantId),
+      cacheDatabaseManager.addEntity(debtorId, CreDtTm, tenantId),
     ]);
 
     await Promise.all([
       cacheDatabaseManager.saveTransactionRelationship(transactionRelationship),
-      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, CreDtTm),
-      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, CreDtTm),
+      cacheDatabaseManager.addAccountHolder(creditorId, creditorAcctId, CreDtTm, tenantId),
+      cacheDatabaseManager.addAccountHolder(debtorId, debtorAcctId, CreDtTm, tenantId),
     ]);
   } catch (err) {
-    let error: Error;
-    if (err instanceof Error) {
-      loggerService.error(err.message);
-      error = err;
-    } else {
-      const strErr = JSON.stringify(err);
-      loggerService.error(strErr);
-      error = new Error(strErr);
-    }
-    spanInsert?.end();
-    span?.end();
-    throw error;
+    loggerService.error(err instanceof Error ? err.message : JSON.stringify(err));
+    throw handleDatabaseError(err, spanInsert, span);
   }
   spanInsert?.end();
 
   // Notify event-director
-  server.handleResponse({
-    transaction,
-    DataCache: dataCache,
-    metaData: {
-      prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.getCurrentTraceparent(),
-    },
-  });
+  notifyEventDirector(transaction, dataCache, startTime);
   loggerService.log('Transaction send to event-director service', 'handlePain001()', id);
 
   span?.end();
@@ -165,7 +348,7 @@ export const handlePain013 = async (transaction: Pain013 | (Pain013 & { tenantId
     MsgId,
     PmtInfId,
     TxTp,
-    tenantId, // Always include tenantId
+    TenantId: tenantId, // Standardized tenant identifier
   };
 
   const dataCache: DataCache = {
@@ -182,37 +365,20 @@ export const handlePain013 = async (transaction: Pain013 | (Pain013 & { tenantId
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionHistory(transaction, `pain013_${EndToEndId}`),
-      cacheDatabaseManager.addAccount(debtorAcctId),
-      cacheDatabaseManager.addAccount(creditorAcctId),
+      cacheDatabaseManager.addAccount(debtorAcctId, tenantId),
+      cacheDatabaseManager.addAccount(creditorAcctId, tenantId),
     ]);
 
     await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
-    let error: Error;
-    if (err instanceof Error) {
-      loggerService.error(err.message, logContext, id);
-      error = err;
-    } else {
-      const strErr = JSON.stringify(err);
-      error = new Error(strErr);
-      loggerService.error(strErr, logContext, id);
-    }
-    spanInsert?.end();
-    span?.end();
-    throw error;
+    loggerService.error(err instanceof Error ? err.message : JSON.stringify(err), logContext, id);
+    throw handleDatabaseError(err, spanInsert, span);
   }
 
   spanInsert?.end();
 
   // Notify event-director
-  server.handleResponse({
-    transaction,
-    DataCache: dataCache,
-    metaData: {
-      prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.getCurrentTraceparent(),
-    },
-  });
+  notifyEventDirector(transaction, dataCache, startTime);
   loggerService.log('Transaction send to event-director service', logContext, id);
 
   span?.end();
@@ -243,7 +409,7 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
 
   // Always use tenant-aware parseDataCache
-  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCacheTenantAware(transaction as Pacs008, tenantId);
+  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction as Pacs008, tenantId);
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${dbtrAcctId}`,
@@ -255,10 +421,10 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId
     MsgId,
     PmtInfId,
     TxTp,
-    tenantId, // Always include tenantId
+    TenantId: tenantId, // Standardized tenant identifier
   };
 
-  const pendingPromises = [cacheDatabaseManager.addAccount(dbtrAcctId), cacheDatabaseManager.addAccount(cdtrAcctId)];
+  const pendingPromises = [cacheDatabaseManager.addAccount(dbtrAcctId, tenantId), cacheDatabaseManager.addAccount(cdtrAcctId, tenantId)];
 
   const dataCache: DataCache = {
     cdtrId,
@@ -289,14 +455,14 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId
   }
 
   if (!configuration.QUOTING) {
-    pendingPromises.push(cacheDatabaseManager.addEntity(cdtrId, creDtTm));
-    pendingPromises.push(cacheDatabaseManager.addEntity(dbtrId, creDtTm));
+    pendingPromises.push(cacheDatabaseManager.addEntity(cdtrId, creDtTm, tenantId));
+    pendingPromises.push(cacheDatabaseManager.addEntity(dbtrId, creDtTm, tenantId));
 
     await Promise.all(pendingPromises);
 
     await Promise.all([
-      cacheDatabaseManager.addAccountHolder(cdtrId, cdtrAcctId, creDtTm),
-      cacheDatabaseManager.addAccountHolder(dbtrId, dbtrAcctId, creDtTm),
+      cacheDatabaseManager.addAccountHolder(cdtrId, cdtrAcctId, creDtTm, tenantId),
+      cacheDatabaseManager.addAccountHolder(dbtrId, dbtrAcctId, creDtTm, tenantId),
     ]);
   } else {
     await Promise.all(pendingPromises);
@@ -309,31 +475,14 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId
       cacheDatabaseManager.saveTransactionHistory(transaction, `pacs008_${EndToEndId}`),
     ]);
   } catch (err) {
-    let error: Error;
-    if (err instanceof Error) {
-      loggerService.error(err.message, logContext, id);
-      error = err;
-    } else {
-      const strErr = JSON.stringify(err);
-      loggerService.error(strErr, logContext, id);
-      error = new Error(strErr);
-    }
-    spanInsert?.end();
-    span?.end();
-    throw error;
+    loggerService.error(err instanceof Error ? err.message : JSON.stringify(err), logContext, id);
+    throw handleDatabaseError(err, spanInsert, span);
   } finally {
     spanInsert?.end();
   }
 
   // Notify event-director
-  server.handleResponse({
-    transaction,
-    DataCache: dataCache,
-    metaData: {
-      prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.getCurrentTraceparent(),
-    },
-  });
+  notifyEventDirector(transaction, dataCache, startTime);
   loggerService.log('Transaction send to event-director service', logContext, id);
   span?.end();
 };
@@ -365,7 +514,7 @@ export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { tenantId
     PmtInfId,
     TxTp,
     TxSts,
-    tenantId, // Always include tenantId
+    TenantId: tenantId, // Standardized tenant identifier
   };
 
   let dataCache;
@@ -396,33 +545,33 @@ export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { tenantId
 
     await cacheDatabaseManager.saveTransactionRelationship(transactionRelationship);
   } catch (err) {
-    let error: Error;
-    if (err instanceof Error) {
-      loggerService.log(err.message, logContext, id);
-      error = err;
-    } else {
-      const strErr = JSON.stringify(err);
-      loggerService.log(strErr, logContext, id);
-      error = new Error(strErr);
-    }
-    spanInsert?.end();
-    span?.end();
-    throw error;
+    loggerService.log(err instanceof Error ? err.message : JSON.stringify(err), logContext, id);
+    throw handleDatabaseError(err, spanInsert, span);
   } finally {
     spanInsert?.end();
   }
 
   // Notify event-director
-  server.handleResponse({
-    transaction,
-    DataCache: dataCache,
-    metaData: {
-      prcgTmDP: calculateDuration(startTime),
-      traceParent: apm.getCurrentTraceparent(),
-    },
-  });
+  notifyEventDirector(transaction, dataCache, startTime);
   loggerService.log('Transaction send to event-director service', logContext, id);
 
   span?.end();
   loggerService.log('END - Handle transaction data', logContext, id);
+};
+
+// ============================================================================
+// EXPORTS FOR TESTING AND EXTERNAL USE
+// ============================================================================
+
+// Export utility functions for testing and external usage
+export {
+  calculateDuration,
+  generateDebtorEntityKey,
+  generateCreditorEntityKey,
+  generateDebtorAccountKey,
+  generateCreditorAccountKey,
+  generateTenantCacheKey,
+  extractTenantFromKey,
+  parseDataCache,
+  type AccountIds,
 };

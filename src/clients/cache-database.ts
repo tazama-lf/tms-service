@@ -61,23 +61,30 @@ export class CacheDatabaseService {
    * Wrapper method for dbManager.saveAccount
    *
    * @param {string} hash
+   * @param {string} tenantId
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccount(hash: string): Promise<void> {
-    await this.dbManager.saveAccount(hash);
+  async addAccount(hash: string, tenantId = 'DEFAULT'): Promise<void> {
+    await this.dbManager.saveAccount(hash, tenantId);
   }
 
   /**
    * Wrapper method for dbManager.saveEntity
    *
-   * @param {string} entityId
-   * @param {string} CreDtTm
-   * @return {*}  {Promise<void>}
+   * @param entityId - The entity ID
+   * @param tenantId - The tenant ID (default: 'DEFAULT')
+   * @param CreDtTm - The creation date time
+   * @returns Promise<void>
    * @memberof CacheDatabaseService
+   *
+   * @remarks
+   * BREAKING CHANGE: The parameter order for saveEntity has changed from (entityId, CreDtTm) to (entityId, tenantId, CreDtTm).
+   * Ensure all callers are updated accordingly.er order for saveEntity has changed from (entityId, CreDtTm) to (entityId, tenantId, CreDtTm).
+   * Ensure all callers are updated accordingly.
    */
-  async addEntity(entityId: string, CreDtTm: string): Promise<void> {
-    await this.dbManager.saveEntity(entityId, CreDtTm);
+  async addEntity(entityId: string, tenantId = 'DEFAULT', CreDtTm: string): Promise<void> {
+    await this.dbManager.saveEntity(entityId, tenantId, CreDtTm);
   }
 
   /**
@@ -86,11 +93,12 @@ export class CacheDatabaseService {
    * @param {string} entityId
    * @param {string} accountId
    * @param {string} CreDtTm
+   * @param {string} tenantId
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string): Promise<void> {
-    await this.dbManager.saveAccountHolder(entityId, accountId, CreDtTm);
+  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string, tenantId = 'DEFAULT'): Promise<void> {
+    await this.dbManager.saveAccountHolder(entityId, accountId, CreDtTm, tenantId);
   }
 
   /**

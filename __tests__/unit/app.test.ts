@@ -7,13 +7,24 @@ import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@tazama-lf/frms-
 import { configuration } from '../../src/';
 import { cacheDatabaseManager, dbInit, loggerService, runServer, server } from '../../src/index';
 import * as LogicService from '../../src/logic.service';
-import * as CacheRebuildUtils from '../../src/utils/cacheRebuildUtils';
 import {
   generateDebtorEntityKey,
   generateCreditorEntityKey,
   generateDebtorAccountKey,
   generateCreditorAccountKey,
-} from '../../src/utils/tenantKeyGenerator';
+  rebuildCache,
+  generateTenantCacheKey,
+  extractTenantFromKey,
+  parseDataCache,
+  calculateDuration,
+} from '../../src/logic.service';
+
+// Common test data constants to avoid duplication
+const PACS008_TEST_JSON =
+  '{"TxTp":"pacs.008.001.10","FIToFICstmrCdtTrf":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"InstgAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"InstdAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"IntrmyAgt1":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1999-05-09","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"60409827ba274853a2ec2475c64566d5","SchmeNm":{"Prtry":"TAZAMA_EID"}}]}},"CtctDtls":{"MobNb":"+27-730975224"}},"DbtrAcct":{"Id":{"Othr":[{"Id":"+27-730975224","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"dfsp002"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"Cdtr":{"Nm":"James Ricci Rubin","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1956-01-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"c49a1e8a-a8f8-4819-b1dd-3abf25325a7f","SchmeNm":{"Prtry":"TAZAMA_EID"}}]}},"CtctDtls":{"MobNb":"+27-710694778"}},"CdtrAcct":{"Id":{"Othr":[{"Id":"+27-710694778","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"typology003"},"xchgRate":17.536082}}';
+const PACS008_TEST_JSON_WITH_TENANT = (tenantId: string) =>
+  `[[{"TxTp":"pacs.008.001.10","tenantId":"${tenantId}","FIToFICstmrCdtTrf":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"xchgRate":17.536082,"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"InstgAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"InstdAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"IntrmyAgt1":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1999-05-09","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"60409827ba274853a2ec2475c64566d5","SchmeNm":{"Prtry":"TAZAMA_EID"}}]}},"CtctDtls":{"MobNb":"+27-730975224"}},"DbtrAcct":{"Id":{"Othr":[{"Id":"+27-730975224","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"dfsp002"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"Cdtr":{"Nm":"James Ricci Rubin","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1956-01-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"c49a1e8a-a8f8-4819-b1dd-3abf25325a7f","SchmeNm":{"Prtry":"TAZAMA_EID"}}]}},"CtctDtls":{"MobNb":"+27-710694778"}},"CdtrAcct":{"Id":{"Othr":[{"Id":"+27-710694778","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"typology003"},"xchgRate":17.536082}}]]`;
+const PACS008_ARRAY_TEST_JSON = `[[${PACS008_TEST_JSON}]]`;
 
 jest.mock('@tazama-lf/frms-coe-lib/lib/config/processor.config', () => ({
   validateProcessorConfig: jest.fn().mockReturnValue({
@@ -239,7 +250,7 @@ describe('App Controller & Logic Service', () => {
 
       const request = Pacs002Sample as Pacs002;
 
-      const rebuildCacheSpy = jest.spyOn(CacheRebuildUtils, 'rebuildCache');
+      const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
       const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
 
       await LogicService.handlePacs002(request, 'pacs.002.001.12');
@@ -260,7 +271,7 @@ describe('App Controller & Logic Service', () => {
 
       const request = Pacs002Sample as Pacs002;
 
-      const rebuildCacheSpy = jest.spyOn(CacheRebuildUtils, 'rebuildCache');
+      const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
 
       jest.spyOn(cacheDatabaseManager, 'getBuffer').mockImplementationOnce(() => {
         return Promise.resolve({}); // expected behaviour for bad key
@@ -393,10 +404,10 @@ describe('App Controller & Logic Service', () => {
         return Promise.resolve([[]]);
       });
 
-      const rebuildCacheSpy = jest.spyOn(CacheRebuildUtils, 'rebuildCache');
+      const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
       const loggerErrorSpy = jest.spyOn(loggerService, 'error');
 
-      await CacheRebuildUtils.rebuildCache(EndToEndId, true, 'DEFAULT', Id);
+      await LogicService.rebuildCache(EndToEndId, true, 'DEFAULT', Id);
       expect(rebuildCacheSpy).toHaveBeenCalledTimes(1);
       expect(loggerErrorSpy).toHaveBeenCalledWith('Could not find pacs008 transaction to rebuild dataCache with', 'rebuildCache()', Id);
     });
@@ -415,9 +426,9 @@ describe('App Controller & Logic Service', () => {
         ]);
       });
 
-      const rebuildCacheSpy = jest.spyOn(CacheRebuildUtils, 'rebuildCache');
+      const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
 
-      await CacheRebuildUtils.rebuildCache(EndToEndId, true, 'DEFAULT', Id);
+      await LogicService.rebuildCache(EndToEndId, true, 'DEFAULT', Id);
       expect(rebuildCacheSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -437,10 +448,10 @@ describe('App Controller & Logic Service', () => {
 
       jest.spyOn(protobuf, 'createMessageBuffer').mockImplementationOnce(() => undefined);
 
-      const rebuildCacheSpy = jest.spyOn(CacheRebuildUtils, 'rebuildCache');
+      const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
       const loggerErrorSpy = jest.spyOn(loggerService, 'error');
 
-      await CacheRebuildUtils.rebuildCache(EndToEndId, true, 'DEFAULT', Id);
+      await LogicService.rebuildCache(EndToEndId, true, 'DEFAULT', Id);
       expect(rebuildCacheSpy).toHaveBeenCalledTimes(1);
       expect(loggerErrorSpy).toHaveBeenCalledWith('[pacs008] could not rebuild redis cache');
     });
@@ -628,6 +639,76 @@ describe('App Controller & Logic Service', () => {
 
         const key = generateCreditorAccountKey(tenantId, accountId, scheme, memberId);
         expect(key).toEqual('tenant999ACC002IBANBANK002');
+      });
+    });
+
+    describe('Additional Utility Functions', () => {
+      it('should generate tenant-aware cache keys', () => {
+        const tenantId = 'tenant123';
+        const originalKey = 'original-cache-key';
+
+        const key = generateTenantCacheKey(tenantId, originalKey);
+        expect(key).toEqual('tenant123:original-cache-key');
+      });
+
+      it('should extract tenant ID from tenant-prefixed key', () => {
+        const tenantPrefixedKey = 'tenant456:some-key-value';
+
+        const tenantId = extractTenantFromKey(tenantPrefixedKey);
+        expect(tenantId).toEqual('tenant456');
+      });
+
+      it('should throw error for invalid tenant-prefixed key format', () => {
+        const invalidKey = 'invalid-key-without-colon';
+
+        expect(() => extractTenantFromKey(invalidKey)).toThrow('Invalid tenant-prefixed key format');
+      });
+
+      it('should parse data cache with default tenant', () => {
+        const transaction = Pacs008Sample as Pacs008;
+
+        const result = parseDataCache(transaction);
+        expect(result).toHaveProperty('cdtrId');
+        expect(result).toHaveProperty('dbtrId');
+        expect(result).toHaveProperty('cdtrAcctId');
+        expect(result).toHaveProperty('dbtrAcctId');
+        expect(result.cdtrId).toContain('DEFAULT');
+      });
+
+      it('should parse data cache with specified tenant', () => {
+        const transaction = Pacs008Sample as Pacs008;
+        const tenantId = 'specific-tenant';
+
+        const result = parseDataCache(transaction, tenantId);
+        expect(result).toHaveProperty('cdtrId');
+        expect(result).toHaveProperty('dbtrId');
+        expect(result).toHaveProperty('cdtrAcctId');
+        expect(result).toHaveProperty('dbtrAcctId');
+        expect(result.cdtrId).toContain('specific-tenant');
+      });
+
+      it('should parse data cache tenant-aware', () => {
+        const transaction = Pacs008Sample as Pacs008;
+        const tenantId = 'tenant-aware-test';
+
+        const result = parseDataCache(transaction, tenantId);
+        expect(result).toHaveProperty('cdtrId');
+        expect(result).toHaveProperty('dbtrId');
+        expect(result).toHaveProperty('cdtrAcctId');
+        expect(result).toHaveProperty('dbtrAcctId');
+        expect(result.cdtrId).toContain('tenant-aware-test');
+        expect(result.dbtrId).toContain('tenant-aware-test');
+      });
+
+      it('should calculate duration', () => {
+        const startTime = process.hrtime.bigint();
+
+        // Wait a small amount
+        const endTime = process.hrtime.bigint();
+        const duration = calculateDuration(startTime);
+
+        expect(typeof duration).toBe('number');
+        expect(duration).toBeGreaterThanOrEqual(0);
       });
     });
 
@@ -863,7 +944,7 @@ describe('App Controller & Logic Service', () => {
 
         const request = { ...Pacs002Sample, tenantId: 'tenant999' } as Pacs002 & { tenantId: string };
 
-        const rebuildCacheSpy = jest.spyOn(CacheRebuildUtils, 'rebuildCache');
+        const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
         const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
 
         await LogicService.handlePacs002(request, 'pacs.002.001.12');
@@ -904,40 +985,40 @@ describe('App Controller & Logic Service', () => {
     });
 
     describe('Transaction Relationship Tenant Integration', () => {
-      it('should include tenantId in TransactionRelationship for pain.001', async () => {
+      it('should include TenantId in TransactionRelationship for pain.001', async () => {
         const request = { ...Pain001Sample, tenantId: 'tenant_rel_001' } as Pain001 & { tenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
-          expect(relationship.tenantId).toEqual('tenant_rel_001');
+          expect(relationship.TenantId).toEqual('tenant_rel_001');
           return Promise.resolve();
         });
 
         await LogicService.handlePain001(request, 'pain.001.001.11');
       });
 
-      it('should include tenantId in TransactionRelationship for pain.013', async () => {
+      it('should include TenantId in TransactionRelationship for pain.013', async () => {
         const request = { ...Pain013Sample, tenantId: 'tenant_rel_013' } as Pain013 & { tenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
-          expect(relationship.tenantId).toEqual('tenant_rel_013');
+          expect(relationship.TenantId).toEqual('tenant_rel_013');
           return Promise.resolve();
         });
 
         await LogicService.handlePain013(request, 'pain.013.001.09');
       });
 
-      it('should include tenantId in TransactionRelationship for pacs.008', async () => {
+      it('should include TenantId in TransactionRelationship for pacs.008', async () => {
         const request = { ...Pacs008Sample, tenantId: 'tenant_rel_008' } as Pacs008 & { tenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
-          expect(relationship.tenantId).toEqual('tenant_rel_008');
+          expect(relationship.TenantId).toEqual('tenant_rel_008');
           return Promise.resolve();
         });
 
         await LogicService.handlePacs008(request, 'pacs.008.001.10');
       });
 
-      it('should include tenantId in TransactionRelationship for pacs.002', async () => {
+      it('should include TenantId in TransactionRelationship for pacs.002', async () => {
         jest.spyOn(cacheDatabaseManager, 'getBuffer').mockImplementationOnce(() => {
           return Promise.resolve({
             DataCache: {
@@ -952,18 +1033,18 @@ describe('App Controller & Logic Service', () => {
         const request = { ...Pacs002Sample, tenantId: 'tenant_rel_002' } as Pacs002 & { tenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
-          expect(relationship.tenantId).toEqual('tenant_rel_002');
+          expect(relationship.TenantId).toEqual('tenant_rel_002');
           return Promise.resolve();
         });
 
         await LogicService.handlePacs002(request, 'pacs.002.001.12');
       });
 
-      it('should include tenantId=DEFAULT in TransactionRelationship for non-tenant transactions', async () => {
+      it('should include TenantId=DEFAULT in TransactionRelationship for non-tenant transactions', async () => {
         const request = Pain001Sample as Pain001;
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
-          expect(relationship.tenantId).toEqual('DEFAULT');
+          expect(relationship.TenantId).toEqual('DEFAULT');
           return Promise.resolve();
         });
 

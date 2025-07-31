@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, RouteHandlerMethod, preHandlerHookHandler } from 'fastify';
 import { Pacs002Handler, Pacs008Handler, Pain001Handler, Pain013Handler, handleHealthCheck } from './app.controller';
+import { validateAndExtractTenantMiddleware } from './middleware/tenantMiddleware';
 import { configuration } from './';
 import SetOptions from './utils/schema-utils';
 
@@ -18,13 +18,25 @@ function Routes(fastify: FastifyInstance, options: unknown): void {
 
   if (configuration.QUOTING) {
     // Pain001 and Pain013 routes (tenant-aware via middleware)
-    fastify.post('/v1/evaluate/iso20022/pain.001.001.11', SetOptions(Pain001Handler, 'messageSchemaPain001', routePrivilege.pain001));
-    fastify.post('/v1/evaluate/iso20022/pain.013.001.09', SetOptions(Pain013Handler, 'messageSchemaPain013', routePrivilege.pain013));
+    fastify.post('/v1/evaluate/iso20022/pain.001.001.11', {
+      preHandler: validateAndExtractTenantMiddleware as preHandlerHookHandler,
+      ...SetOptions(Pain001Handler as RouteHandlerMethod, 'messageSchemaPain001', routePrivilege.pain001),
+    });
+    fastify.post('/v1/evaluate/iso20022/pain.013.001.09', {
+      preHandler: validateAndExtractTenantMiddleware as preHandlerHookHandler,
+      ...SetOptions(Pain013Handler as RouteHandlerMethod, 'messageSchemaPain013', routePrivilege.pain013),
+    });
   }
 
   // Pacs008 and Pacs002 routes (tenant-aware via middleware)
-  fastify.post('/v1/evaluate/iso20022/pacs.008.001.10', SetOptions(Pacs008Handler, 'messageSchemaPacs008', routePrivilege.pacs008));
-  fastify.post('/v1/evaluate/iso20022/pacs.002.001.12', SetOptions(Pacs002Handler, 'messageSchemaPacs002', routePrivilege.pacs002));
+  fastify.post('/v1/evaluate/iso20022/pacs.008.001.10', {
+    preHandler: validateAndExtractTenantMiddleware as preHandlerHookHandler,
+    ...SetOptions(Pacs008Handler as RouteHandlerMethod, 'messageSchemaPacs008', routePrivilege.pacs008),
+  });
+  fastify.post('/v1/evaluate/iso20022/pacs.002.001.12', {
+    preHandler: validateAndExtractTenantMiddleware as preHandlerHookHandler,
+    ...SetOptions(Pacs002Handler as RouteHandlerMethod, 'messageSchemaPacs002', routePrivilege.pacs002),
+  });
 }
 
 export default Routes;

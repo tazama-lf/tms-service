@@ -12,5 +12,5 @@ export interface TransactionRelationship {
   lat?: string;
   long?: string;
   TxSts?: string;
-  tenantId: string; // Always required - no longer optional
+  TenantId: string; // Standardized tenant identifier - capital T
 }

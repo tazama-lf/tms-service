@@ -3,16 +3,8 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { loggerService, configuration } from '../';
 
 export interface TenantRequest extends FastifyRequest {
-  tenantId?: string;
+  tenantId: string; // Required - middleware guarantees this will be set
 }
-
-// Constants for HTTP status codes
-const HTTP_STATUS = {
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  INTERNAL_SERVER_ERROR: 500,
-} as const;
 
 // Constants for JWT handling
 const BEARER_PREFIX = 'Bearer ';
@@ -28,14 +20,14 @@ interface JWTPayload {
  * Middleware to validate that incoming messages don't contain predefined tenantId
  * and to always extract/assign a tenant ID
  */
-export const validateAndExtractTenantMiddleware = async (req: TenantRequest, reply: FastifyReply): Promise<void> => {
+export const validateAndExtractTenantMiddleware = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   try {
     // VALIDATION: Reject messages with predefined tenantId attribute
     if (req.body && typeof req.body === 'object') {
       const bodyObj = req.body as Record<string, unknown>;
       if ('tenantId' in bodyObj) {
         loggerService.error('Message contains predefined tenantId attribute', 'validateAndExtractTenantMiddleware');
-        reply.code(HTTP_STATUS.BAD_REQUEST).send({
+        reply.code(400).send({
           error: 'Bad Request',
           message: 'Messages must not contain a predefined tenantId attribute',
         });
@@ -51,7 +43,7 @@ export const validateAndExtractTenantMiddleware = async (req: TenantRequest, rep
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith(BEARER_PREFIX)) {
-        reply.code(HTTP_STATUS.UNAUTHORIZED).send({ error: 'Missing or invalid authorization header' });
+        reply.code(401).send({ error: 'Missing or invalid authorization header' });
         return;
       }
 
@@ -66,7 +58,7 @@ export const validateAndExtractTenantMiddleware = async (req: TenantRequest, rep
           loggerService.log(`Extracted tenant ID: ${tenantId}`, 'validateAndExtractTenantMiddleware');
         } else {
           loggerService.error('TENANT_ID attribute is blank in JWT token', 'validateAndExtractTenantMiddleware');
-          reply.code(HTTP_STATUS.FORBIDDEN).send({
+          reply.code(403).send({
             error: 'Forbidden',
             message: 'TENANT_ID attribute is required and cannot be blank',
           });
@@ -74,7 +66,7 @@ export const validateAndExtractTenantMiddleware = async (req: TenantRequest, rep
         }
       } catch (jwtError) {
         loggerService.error('Failed to decode JWT token', 'validateAndExtractTenantMiddleware');
-        reply.code(HTTP_STATUS.UNAUTHORIZED).send({ error: 'Invalid JWT token' });
+        reply.code(401).send({ error: 'Invalid JWT token' });
         return;
       }
     } else {
@@ -83,11 +75,11 @@ export const validateAndExtractTenantMiddleware = async (req: TenantRequest, rep
     }
 
     // Always assign tenantId (either extracted or default)
-    req.tenantId = tenantId;
+    (req as TenantRequest).tenantId = tenantId;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     loggerService.error(`Error in tenant validation middleware: ${errorMessage}`, 'validateAndExtractTenantMiddleware');
-    reply.code(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    reply.code(500).send({ error: 'Internal Server Error' });
   }
 };
 
@@ -102,7 +94,7 @@ export const extractTenantMiddleware = async (req: TenantRequest, reply: Fastify
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith(BEARER_PREFIX)) {
-        reply.code(HTTP_STATUS.UNAUTHORIZED).send({ error: 'Missing or invalid authorization header' });
+        reply.code(401).send({ error: 'Missing or invalid authorization header' });
         return;
       }
 
@@ -120,7 +112,7 @@ export const extractTenantMiddleware = async (req: TenantRequest, reply: Fastify
         }
       } catch (jwtError) {
         loggerService.error('Failed to decode JWT token', 'extractTenantMiddleware');
-        reply.code(HTTP_STATUS.UNAUTHORIZED).send({ error: 'Invalid JWT token' });
+        reply.code(401).send({ error: 'Invalid JWT token' });
       }
     } else {
       // In non-authenticated mode, tenant ID could come from headers
