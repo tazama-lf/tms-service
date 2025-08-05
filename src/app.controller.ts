@@ -4,24 +4,29 @@ import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
 import type { FastifyReply } from 'fastify';
 import { enhanceTransactionWithTenant, type TenantRequest } from './middleware/tenantMiddleware';
+import { extractTransactionType } from './utils/transaction-utils';
 
 // Common constants to avoid magic numbers
 const JSON_INDENT = 4;
 
 // Utility functions to reduce duplication
-const extractTransactionType = (url: string | undefined): string => {
-  const urlPath = JSON.stringify(url ?? '');
-  const lastIndexOfForwardSlash = urlPath.lastIndexOf('/') + 1;
-  return urlPath.substring(lastIndexOfForwardSlash, urlPath.length - 1);
-};
-
 const createResponseBody = (data: unknown, transactionType?: string): { message: string; data: unknown } => ({
   message: 'Transaction is valid',
   data: transactionType ? { ...(data as Record<string, unknown>), TxTp: transactionType } : data,
 });
 
 const handleError = (err: unknown, reply: FastifyReply): void => {
-  const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, JSON_INDENT)}`;
+  let errorMessage = 'Unknown error occurred';
+
+  if (err instanceof Error) {
+    errorMessage = err.message;
+  } else if (typeof err === 'string') {
+    errorMessage = err;
+  } else {
+    errorMessage = JSON.stringify(err, Object.getOwnPropertyNames(err), JSON_INDENT);
+  }
+
+  const failMessage = `Failed to process execution request. \n${errorMessage}`;
   loggerService.error(failMessage, 'ApplicationService');
   reply.status(500);
   reply.send(failMessage);

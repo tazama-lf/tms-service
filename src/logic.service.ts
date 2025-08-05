@@ -6,6 +6,13 @@ import type { DataCache, Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/f
 import { cacheDatabaseManager, loggerService, server } from '.';
 import { configuration } from './';
 import type { TransactionRelationship } from './interfaces/iTransactionRelationship';
+import {
+  generateDebtorEntityKey,
+  generateCreditorEntityKey,
+  generateDebtorAccountKey,
+  generateCreditorAccountKey,
+  generateTenantCacheKey,
+} from './utils/tenantUtils';
 
 // ============================================================================
 // CONSOLIDATED UTILITY FUNCTIONS
@@ -49,87 +56,20 @@ const notifyEventDirector = (transaction: unknown, dataCache: DataCache | undefi
   });
 };
 
-/**
- * Multi-tenant key generation utilities
- * Ensures all entity and account keys are prefixed with tenantId for proper isolation
- */
-
-/**
- * Generates a tenant-aware debtor entity key
- * @param tenantId The tenant identifier
- * @param debtorId The debtor's other ID
- * @param schemeProprietary The scheme proprietary value
- * @returns Tenant-prefixed debtor entity key
- */
-const generateDebtorEntityKey = (tenantId: string, debtorId: string, schemeProprietary: string): string =>
-  `${tenantId}${debtorId}${schemeProprietary}`;
-
-/**
- * Generates a tenant-aware creditor entity key
- * @param tenantId The tenant identifier
- * @param creditorId The creditor's other ID
- * @param schemeProprietary The scheme proprietary value
- * @returns Tenant-prefixed creditor entity key
- */
-const generateCreditorEntityKey = (tenantId: string, creditorId: string, schemeProprietary: string): string =>
-  `${tenantId}${creditorId}${schemeProprietary}`;
-
-/**
- * Generates a tenant-aware debtor account key
- * @param tenantId The tenant identifier
- * @param debtorAcctId The debtor's account other ID
- * @param schemeProprietary The scheme proprietary value
- * @param membershipId The membership ID
- * @returns Tenant-prefixed debtor account key
- */
-const generateDebtorAccountKey = (tenantId: string, debtorAcctId: string, schemeProprietary: string, membershipId: string): string =>
-  `${tenantId}${debtorAcctId}${schemeProprietary}${membershipId}`;
-
-/**
- * Generates a tenant-aware creditor account key
- * @param tenantId The tenant identifier
- * @param creditorAcctId The creditor's account other ID
- * @param schemeProprietary The scheme proprietary value
- * @param membershipId The membership ID
- * @returns Tenant-prefixed creditor account key
- */
-const generateCreditorAccountKey = (tenantId: string, creditorAcctId: string, schemeProprietary: string, membershipId: string): string =>
-  `${tenantId}${creditorAcctId}${schemeProprietary}${membershipId}`;
-
-/**
- * Generates a tenant-aware cache key by prefixing the original key with tenantId
- * @param tenantId The tenant identifier
- * @param originalKey The original cache key
- * @returns Tenant-prefixed cache key
- */
-const generateTenantCacheKey = (tenantId: string, originalKey: string): string => `${tenantId}:${originalKey}`;
-
-/**
- * Utility function to extract tenant ID from a tenant-prefixed key
- * @param tenantPrefixedKey The key with tenant prefix
- * @returns The extracted tenant ID
- */
-const extractTenantFromKey = (tenantPrefixedKey: string): string => {
-  const INVALID_INDEX = -1;
-  const START_INDEX = 0;
-  const colonIndex = tenantPrefixedKey.indexOf(':');
-
-  if (colonIndex === INVALID_INDEX) {
-    throw new Error('Invalid tenant-prefixed key format');
-  }
-  return tenantPrefixedKey.substring(START_INDEX, colonIndex);
-};
-
 // A utility type for the fields we are extracting from the pacs008 entity
 type AccountIds = Required<Pick<DataCache, 'cdtrId' | 'dbtrId' | 'dbtrAcctId' | 'cdtrAcctId'>>;
 
+// Constants for magic numbers
+const DEFAULT_TTL = 0;
+
 // Tenant-aware parseDataCache function
 const parseDataCache = (transaction: Pacs008, tenantId = 'DEFAULT'): AccountIds => {
-  const debtorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr[0];
-  const creditorOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
-  const debtorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr[0];
+  // Access nested properties directly since Pacs008 type guarantees structure
+  const [debtorOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr;
+  const [creditorOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr;
+  const [debtorAcctOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr;
   const debtorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const creditorAcctOthr = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const [creditorAcctOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr;
   const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
 
   // Generate tenant-aware keys
@@ -164,7 +104,7 @@ export const rebuildCache = async (
 ): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild.tenant');
   const context = 'rebuildCache()';
-  const currentPacs008 = (await cacheDatabaseManager.getTransactionPacs008(endToEndId)) as [Pacs008[]];
+  const currentPacs008 = (await cacheDatabaseManager.getTransactionPacs008(endToEndId, tenantId)) as [Pacs008[]];
 
   const pacs008 = unwrap(currentPacs008);
 
@@ -202,8 +142,8 @@ export const rebuildCache = async (
     if (buffer) {
       const redisTTL = configuration.redisConfig.distributedCacheTTL;
       // Use tenant-aware cache key for complete tenant isolation
-      const tenantCacheKey = `${tenantId}:${endToEndId}`;
-      await cacheDatabaseManager.set(tenantCacheKey, buffer, redisTTL ?? 0);
+      const tenantCacheKey = generateTenantCacheKey(tenantId, endToEndId);
+      await cacheDatabaseManager.set(tenantCacheKey, buffer, redisTTL ?? DEFAULT_TTL);
     } else {
       loggerService.error('[pacs008] could not rebuild redis cache');
     }
@@ -217,8 +157,8 @@ export const rebuildCache = async (
 // MAIN BUSINESS LOGIC FUNCTIONS
 // ============================================================================
 
-export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
+export const handlePain001 = async (transaction: Pain001 | (Pain001 & { TenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
 
   loggerService.log(`Start - Handle transaction data for tenant ${tenantId}`, 'handlePain001()', id);
@@ -230,12 +170,12 @@ export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId
   const { Amt } = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt;
   const { Ccy } = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Amt.InstdAmt.Amt;
 
-  const othrCreditorAcct = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const [othrCreditorAcct] = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr;
   const creditorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
 
-  const othrCreditor = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
-  const othrDebtor = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr[0];
-  const othrDebtorAcct = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr[0];
+  const [othrCreditor] = transaction.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr;
+  const [othrDebtor] = transaction.CstmrCdtTrfInitn.PmtInf.Dbtr.Id.PrvtId.Othr;
+  const [othrDebtorAcct] = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr;
   const debtorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
 
   // Always use tenant-aware key generation
@@ -305,8 +245,8 @@ export const handlePain001 = async (transaction: Pain001 | (Pain001 & { tenantId
   loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
-export const handlePain013 = async (transaction: Pain013 | (Pain013 & { tenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
+export const handlePain013 = async (transaction: Pain013 | (Pain013 & { TenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
 
@@ -325,12 +265,12 @@ export const handlePain013 = async (transaction: Pain013 | (Pain013 & { tenantId
   const { PmtInfId } = transaction.CdtrPmtActvtnReq.PmtInf;
 
   // Extract raw IDs for key generation
-  const creditorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr[0];
+  const [creditorAcctOthr] = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr;
   const creditorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const debtorAcctOthr = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr[0];
+  const [debtorAcctOthr] = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAcct.Id.Othr;
   const debtorMmbId = transaction.CdtrPmtActvtnReq.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
-  const dbtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr[0];
-  const cdtrOthr = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr[0];
+  const [dbtrOthr] = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr;
+  const [cdtrOthr] = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr;
 
   // Always use tenant-aware key generation
   const creditorAcctId = generateCreditorAccountKey(tenantId, creditorAcctOthr.Id, creditorAcctOthr.SchmeNm.Prtry, creditorMmbId);
@@ -385,8 +325,8 @@ export const handlePain013 = async (transaction: Pain013 | (Pain013 & { tenantId
   loggerService.log('END - Handle transaction data', logContext, id);
 };
 
-export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
+export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { TenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
   const logContext = 'handlePacs008()';
   const id = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
 
@@ -448,8 +388,8 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId
   if (cacheBuffer) {
     const redisTTL = configuration.redisConfig.distributedCacheTTL;
     // Use tenant-aware cache key for complete tenant isolation
-    const tenantCacheKey = `${tenantId}:${EndToEndId}`;
-    pendingPromises.push(cacheDatabaseManager.set(tenantCacheKey, cacheBuffer, redisTTL ?? 0));
+    const tenantCacheKey = generateTenantCacheKey(tenantId, EndToEndId);
+    pendingPromises.push(cacheDatabaseManager.set(tenantCacheKey, cacheBuffer, redisTTL ?? DEFAULT_TTL));
   } else {
     throw new Error('[pacs008] data cache could not be serialized');
   }
@@ -487,8 +427,8 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { tenantId
   span?.end();
 };
 
-export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { tenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'tenantId' in transaction && transaction.tenantId ? transaction.tenantId : 'DEFAULT';
+export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { TenantId: string }), transactionType: string): Promise<void> => {
+  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
@@ -521,7 +461,7 @@ export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { tenantId
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002.tenant');
   try {
     // Use tenant-aware cache key for complete tenant isolation
-    const tenantCacheKey = `${tenantId}:${EndToEndId}`;
+    const tenantCacheKey = generateTenantCacheKey(tenantId, EndToEndId);
     const dataCacheJSON = (await cacheDatabaseManager.getBuffer(tenantCacheKey)).DataCache;
     dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, tenantId, id);
   } catch (ex) {
@@ -564,14 +504,4 @@ export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { tenantId
 // ============================================================================
 
 // Export utility functions for testing and external usage
-export {
-  calculateDuration,
-  generateDebtorEntityKey,
-  generateCreditorEntityKey,
-  generateDebtorAccountKey,
-  generateCreditorAccountKey,
-  generateTenantCacheKey,
-  extractTenantFromKey,
-  parseDataCache,
-  type AccountIds,
-};
+export { calculateDuration, parseDataCache, type AccountIds };

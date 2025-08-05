@@ -7,17 +7,15 @@ import { CacheDatabaseClientMocks, DatabaseManagerMocks } from '@tazama-lf/frms-
 import { configuration } from '../../src/';
 import { cacheDatabaseManager, dbInit, loggerService, runServer, server } from '../../src/index';
 import * as LogicService from '../../src/logic.service';
+import { rebuildCache, parseDataCache, calculateDuration } from '../../src/logic.service';
 import {
   generateDebtorEntityKey,
   generateCreditorEntityKey,
   generateDebtorAccountKey,
   generateCreditorAccountKey,
-  rebuildCache,
   generateTenantCacheKey,
   extractTenantFromKey,
-  parseDataCache,
-  calculateDuration,
-} from '../../src/logic.service';
+} from '../../src/utils/tenantUtils';
 
 // Common test data constants to avoid duplication
 const PACS008_TEST_JSON =
@@ -477,7 +475,7 @@ describe('App Controller & Logic Service', () => {
         expect(mockReply.code).toHaveBeenCalledWith(400);
         expect(mockReply.send).toHaveBeenCalledWith({
           error: 'Bad Request',
-          message: 'Messages must not contain a predefined tenantId attribute',
+          message: 'Messages must not contain a predefined tenantId or TenantId attribute',
         });
       });
 
@@ -714,7 +712,7 @@ describe('App Controller & Logic Service', () => {
 
     describe('Tenant-Aware Pain001 Handler', () => {
       it('should handle tenant-aware pain.001', async () => {
-        const request = { ...Pain001Sample, tenantId: 'tenant123' } as Pain001 & { tenantId: string };
+        const request = { ...Pain001Sample, TenantId: 'tenant123' } as Pain001 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePain001');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -727,7 +725,8 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle non-tenant pain.001 for backward compatibility', async () => {
-        const request = Pain001Sample as Pain001;
+        const { tenantId, TenantId, ...requestWithoutTenant } = Pain001Sample as any;
+        const request = requestWithoutTenant as Pain001;
 
         const handleSpy = jest.spyOn(LogicService, 'handlePain001');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -740,7 +739,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle tenant-aware pain.001, database error', async () => {
-        const request = { ...Pain001Sample, tenantId: 'tenant123' } as Pain001 & { tenantId: string };
+        const request = { ...Pain001Sample, TenantId: 'tenant123' } as Pain001 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory').mockImplementation((transaction: any) => {
           return new Promise((resolve, reject) => {
@@ -760,7 +759,7 @@ describe('App Controller & Logic Service', () => {
 
     describe('Tenant-Aware Pain013 Handler', () => {
       it('should handle tenant-aware pain.013', async () => {
-        const request = { ...Pain013Sample, tenantId: 'tenant456' } as Pain013 & { tenantId: string };
+        const request = { ...Pain013Sample, TenantId: 'tenant456' } as Pain013 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePain013');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -773,7 +772,8 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle non-tenant pain.013 for backward compatibility', async () => {
-        const request = Pain013Sample as Pain013;
+        const { tenantId, TenantId, ...requestWithoutTenant } = Pain013Sample as any;
+        const request = requestWithoutTenant as Pain013;
 
         const handleSpy = jest.spyOn(LogicService, 'handlePain013');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -786,7 +786,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle tenant-aware pain.013, database error', async () => {
-        const request = { ...Pain013Sample, tenantId: 'tenant456' } as Pain013 & { tenantId: string };
+        const request = { ...Pain013Sample, TenantId: 'tenant456' } as Pain013 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory').mockImplementation((transaction: any) => {
           return new Promise((resolve, reject) => {
@@ -806,7 +806,7 @@ describe('App Controller & Logic Service', () => {
 
     describe('Tenant-Aware Pacs008 Handler', () => {
       it('should handle tenant-aware pacs.008', async () => {
-        const request = { ...Pacs008Sample, tenantId: 'tenant789' } as Pacs008 & { tenantId: string };
+        const request = { ...Pacs008Sample, TenantId: 'tenant789' } as Pacs008 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -819,7 +819,8 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle non-tenant pacs.008 for backward compatibility', async () => {
-        const request = Pacs008Sample as Pacs008;
+        const { tenantId, TenantId, ...requestWithoutTenant } = Pacs008Sample as any;
+        const request = requestWithoutTenant as Pacs008;
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -833,7 +834,7 @@ describe('App Controller & Logic Service', () => {
 
       it('should handle tenant-aware pacs.008 with quoting enabled', async () => {
         configuration.QUOTING = true;
-        const request = { ...Pacs008Sample, tenantId: 'tenant789' } as Pacs008 & { tenantId: string };
+        const request = { ...Pacs008Sample, TenantId: 'tenant789' } as Pacs008 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
 
@@ -846,7 +847,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle tenant-aware pacs.008, createMessageBuffer undefined', async () => {
-        const request = { ...Pacs008Sample, tenantId: 'tenant789' } as Pacs008 & { tenantId: string };
+        const request = { ...Pacs008Sample, TenantId: 'tenant789' } as Pacs008 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
         jest.spyOn(protobuf, 'createMessageBuffer').mockImplementationOnce(() => undefined);
@@ -862,7 +863,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle tenant-aware pacs.008, database error', async () => {
-        const request = { ...Pacs008Sample, tenantId: 'tenant789' } as Pacs008 & { tenantId: string };
+        const request = { ...Pacs008Sample, TenantId: 'tenant789' } as Pacs008 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory').mockImplementation((transaction: any) => {
           return new Promise((resolve, reject) => {
@@ -893,7 +894,7 @@ describe('App Controller & Logic Service', () => {
           });
         });
 
-        const request = { ...Pacs002Sample, tenantId: 'tenant999' } as Pacs002 & { tenantId: string };
+        const request = { ...Pacs002Sample, TenantId: 'tenant999' } as Pacs002 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -917,7 +918,8 @@ describe('App Controller & Logic Service', () => {
           });
         });
 
-        const request = Pacs002Sample as Pacs002;
+        const { tenantId, TenantId, ...requestWithoutTenant } = Pacs002Sample as any;
+        const request = requestWithoutTenant as Pacs002;
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -942,7 +944,7 @@ describe('App Controller & Logic Service', () => {
           return Promise.reject(new Error('Cache miss'));
         });
 
-        const request = { ...Pacs002Sample, tenantId: 'tenant999' } as Pacs002 & { tenantId: string };
+        const request = { ...Pacs002Sample, TenantId: 'tenant999' } as Pacs002 & { TenantId: string };
 
         const rebuildCacheSpy = jest.spyOn(LogicService, 'rebuildCache');
         const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
@@ -972,7 +974,7 @@ describe('App Controller & Logic Service', () => {
           });
         });
 
-        const request = { ...Pacs002Sample, tenantId: 'tenant999' } as Pacs002 & { tenantId: string };
+        const request = { ...Pacs002Sample, TenantId: 'tenant999' } as Pacs002 & { TenantId: string };
 
         let error = '';
         try {
@@ -986,7 +988,7 @@ describe('App Controller & Logic Service', () => {
 
     describe('Transaction Relationship Tenant Integration', () => {
       it('should include TenantId in TransactionRelationship for pain.001', async () => {
-        const request = { ...Pain001Sample, tenantId: 'tenant_rel_001' } as Pain001 & { tenantId: string };
+        const request = { ...Pain001Sample, TenantId: 'tenant_rel_001' } as Pain001 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
           expect(relationship.TenantId).toEqual('tenant_rel_001');
@@ -997,7 +999,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should include TenantId in TransactionRelationship for pain.013', async () => {
-        const request = { ...Pain013Sample, tenantId: 'tenant_rel_013' } as Pain013 & { tenantId: string };
+        const request = { ...Pain013Sample, TenantId: 'tenant_rel_013' } as Pain013 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
           expect(relationship.TenantId).toEqual('tenant_rel_013');
@@ -1008,7 +1010,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should include TenantId in TransactionRelationship for pacs.008', async () => {
-        const request = { ...Pacs008Sample, tenantId: 'tenant_rel_008' } as Pacs008 & { tenantId: string };
+        const request = { ...Pacs008Sample, TenantId: 'tenant_rel_008' } as Pacs008 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
           expect(relationship.TenantId).toEqual('tenant_rel_008');
@@ -1030,7 +1032,7 @@ describe('App Controller & Logic Service', () => {
           });
         });
 
-        const request = { ...Pacs002Sample, tenantId: 'tenant_rel_002' } as Pacs002 & { tenantId: string };
+        const request = { ...Pacs002Sample, TenantId: 'tenant_rel_002' } as Pacs002 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
           expect(relationship.TenantId).toEqual('tenant_rel_002');
@@ -1041,7 +1043,8 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should include TenantId=DEFAULT in TransactionRelationship for non-tenant transactions', async () => {
-        const request = Pain001Sample as Pain001;
+        const { tenantId, TenantId, ...requestWithoutTenant } = Pain001Sample as any;
+        const request = requestWithoutTenant as Pain001;
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
           expect(relationship.TenantId).toEqual('DEFAULT');

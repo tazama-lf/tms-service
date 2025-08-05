@@ -49,11 +49,12 @@ export class CacheDatabaseService {
    * Wrapper method for dbManager.getTransactionPacs008
    *
    * @param {string} EndToEndId
+   * @param {string} tenantId - Tenant ID for filtering (defaults to 'DEFAULT')
    * @return {*}  {Promise<unknown>}
    * @memberof CacheDatabaseService
    */
-  async getTransactionPacs008(EndToEndId: string): Promise<unknown> {
-    const pacs008 = await this.dbManager.getTransactionPacs008(EndToEndId);
+  async getTransactionPacs008(EndToEndId: string, tenantId = 'DEFAULT'): Promise<unknown> {
+    const pacs008 = await this.dbManager.getTransactionPacs008(EndToEndId, tenantId);
     return pacs008;
   }
 
