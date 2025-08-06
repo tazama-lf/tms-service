@@ -1,6 +1,6 @@
 {
   "name": "tms-service",
-  "version": "1.2.0",
+  "version": "2.1.0",
   "description": "transaction monitoring service",
   "main": "build/index.js",
   "types": "build/index.d.ts",
