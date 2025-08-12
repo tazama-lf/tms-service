@@ -157,8 +157,8 @@ export const rebuildCache = async (
 // MAIN BUSINESS LOGIC FUNCTIONS
 // ============================================================================
 
-export const handlePain001 = async (transaction: Pain001 | (Pain001 & { TenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
+export const handlePain001 = async (transaction: Pain001 & { TenantId: string }, transactionType: string): Promise<void> => {
+  const tenantId = transaction.TenantId;
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
 
   loggerService.log(`Start - Handle transaction data for tenant ${tenantId}`, 'handlePain001()', id);
@@ -245,8 +245,8 @@ export const handlePain001 = async (transaction: Pain001 | (Pain001 & { TenantId
   loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
-export const handlePain013 = async (transaction: Pain013 | (Pain013 & { TenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
+export const handlePain013 = async (transaction: Pain013 & { TenantId: string }, transactionType: string): Promise<void> => {
+  const tenantId = transaction.TenantId;
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
 
@@ -325,8 +325,8 @@ export const handlePain013 = async (transaction: Pain013 | (Pain013 & { TenantId
   loggerService.log('END - Handle transaction data', logContext, id);
 };
 
-export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { TenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
+export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string }, transactionType: string): Promise<void> => {
+  const tenantId = transaction.TenantId;
   const logContext = 'handlePacs008()';
   const id = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
 
@@ -427,8 +427,8 @@ export const handlePacs008 = async (transaction: Pacs008 | (Pacs008 & { TenantId
   span?.end();
 };
 
-export const handlePacs002 = async (transaction: Pacs002 | (Pacs002 & { TenantId: string }), transactionType: string): Promise<void> => {
-  const tenantId = 'TenantId' in transaction && transaction.TenantId ? transaction.TenantId : 'DEFAULT';
+export const handlePacs002 = async (transaction: Pacs002 & { TenantId: string }, transactionType: string): Promise<void> => {
+  const tenantId = transaction.TenantId;
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
 

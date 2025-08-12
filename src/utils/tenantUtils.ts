@@ -74,3 +74,14 @@ export const extractTenantFromKey = (tenantPrefixedKey: string): string => {
   }
   return tenantPrefixedKey.substring(START_INDEX, colonIndex);
 };
+
+/**
+ * Helper function to enhance transaction with tenant ID
+ * @param transaction The transaction object to enhance
+ * @param tenantId The tenant identifier to add to the transaction
+ * @returns Transaction object with TenantId property added
+ */
+export const enhanceTransactionWithTenant = <T>(transaction: T, tenantId: string): T & { TenantId: string } => ({
+  ...transaction,
+  TenantId: tenantId,
+});

@@ -460,10 +460,13 @@ describe('App Controller & Logic Service', () => {
     describe('Tenant Validation Middleware', () => {
       const { validateAndExtractTenantMiddleware } = require('../../src/middleware/tenantMiddleware');
 
-      it('should reject messages with predefined tenantId attribute', async () => {
+      it('should set tenantId from header when AUTHENTICATED=false', async () => {
+        const originalAuthenticated = configuration.AUTHENTICATED;
+        configuration.AUTHENTICATED = false;
+
         const mockRequest: any = {
-          body: { tenantId: 'malicious-tenant', CstmrCdtTrfInitn: Pain001Sample.CstmrCdtTrfInitn },
-          headers: {},
+          body: { CstmrCdtTrfInitn: Pain001Sample.CstmrCdtTrfInitn },
+          headers: { tenantId: 'test-tenant' },
         };
         const mockReply: any = {
           code: jest.fn().mockReturnThis(),
@@ -472,11 +475,8 @@ describe('App Controller & Logic Service', () => {
 
         await validateAndExtractTenantMiddleware(mockRequest, mockReply);
 
-        expect(mockReply.code).toHaveBeenCalledWith(400);
-        expect(mockReply.send).toHaveBeenCalledWith({
-          error: 'Bad Request',
-          message: 'Messages must not contain a predefined tenantId or TenantId attribute',
-        });
+        expect(mockRequest.tenantId).toBe('test-tenant');
+        configuration.AUTHENTICATED = originalAuthenticated;
       });
 
       it('should set tenantId to DEFAULT when AUTHENTICATED=false', async () => {
@@ -725,8 +725,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle non-tenant pain.001 for backward compatibility', async () => {
-        const { tenantId, TenantId, ...requestWithoutTenant } = Pain001Sample as any;
-        const request = requestWithoutTenant as Pain001;
+        const request = { ...Pain001Sample, TenantId: 'DEFAULT' } as Pain001 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePain001');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -772,8 +771,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle non-tenant pain.013 for backward compatibility', async () => {
-        const { tenantId, TenantId, ...requestWithoutTenant } = Pain013Sample as any;
-        const request = requestWithoutTenant as Pain013;
+        const request = { ...Pain013Sample, TenantId: 'DEFAULT' } as Pain013 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePain013');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -819,8 +817,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should handle non-tenant pacs.008 for backward compatibility', async () => {
-        const { tenantId, TenantId, ...requestWithoutTenant } = Pacs008Sample as any;
-        const request = requestWithoutTenant as Pacs008;
+        const request = { ...Pacs008Sample, TenantId: 'DEFAULT' } as Pacs008 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs008');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -918,8 +915,7 @@ describe('App Controller & Logic Service', () => {
           });
         });
 
-        const { tenantId, TenantId, ...requestWithoutTenant } = Pacs002Sample as any;
-        const request = requestWithoutTenant as Pacs002;
+        const request = { ...Pacs002Sample, TenantId: 'DEFAULT' } as Pacs002 & { TenantId: string };
 
         const handleSpy = jest.spyOn(LogicService, 'handlePacs002');
         const loggerSpy = jest.spyOn(loggerService, 'log');
@@ -1043,8 +1039,7 @@ describe('App Controller & Logic Service', () => {
       });
 
       it('should include TenantId=DEFAULT in TransactionRelationship for non-tenant transactions', async () => {
-        const { tenantId, TenantId, ...requestWithoutTenant } = Pain001Sample as any;
-        const request = requestWithoutTenant as Pain001;
+        const request = { ...Pain001Sample, TenantId: 'DEFAULT' } as Pain001 & { TenantId: string };
 
         jest.spyOn(cacheDatabaseManager, 'saveTransactionRelationship').mockImplementation((relationship: any) => {
           expect(relationship.TenantId).toEqual('DEFAULT');

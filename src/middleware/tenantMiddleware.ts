@@ -17,19 +17,6 @@ const JWT_PAYLOAD_INDEX = 1;
  */
 export const validateAndExtractTenantMiddleware = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
   try {
-    // VALIDATION: Reject messages with predefined tenantId attribute
-    if (req.body && typeof req.body === 'object') {
-      const bodyObj = req.body as Record<string, unknown>;
-      if ('tenantId' in bodyObj || 'TenantId' in bodyObj) {
-        loggerService.error('Message contains predefined tenantId attribute', 'validateAndExtractTenantMiddleware');
-        reply.code(400).send({
-          error: 'Bad Request',
-          message: 'Messages must not contain a predefined tenantId or TenantId attribute',
-        });
-        return;
-      }
-    }
-
     // Always extract or assign tenant ID
     let tenantId = 'DEFAULT'; // Default value
 
@@ -83,15 +70,4 @@ export const validateAndExtractTenantMiddleware = async (req: FastifyRequest, re
     loggerService.error(`Error in tenant validation middleware: ${errorMessage}`, 'validateAndExtractTenantMiddleware');
     reply.code(500).send({ error: 'Internal Server Error' });
   }
-};
-
-/**
- * Helper function to enhance transaction with tenant ID
- */
-export const enhanceTransactionWithTenant = <T>(transaction: T, tenantId?: string): T & { TenantId: string } => {
-  const finalTenantId = tenantId ?? 'DEFAULT';
-  return {
-    ...transaction,
-    TenantId: finalTenantId,
-  };
 };

@@ -3,11 +3,10 @@ import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib
 import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
 import type { FastifyReply } from 'fastify';
-import { enhanceTransactionWithTenant, type TenantRequest } from './middleware/tenantMiddleware';
+import type { TenantRequest } from './middleware/tenantMiddleware';
 import { extractTransactionType } from './utils/transaction-utils';
-
-// Common constants to avoid magic numbers
-const JSON_INDENT = 4;
+import { enhanceTransactionWithTenant } from './utils/tenantUtils';
+import * as util from 'node:util';
 
 // Utility functions to reduce duplication
 const createResponseBody = (data: unknown, transactionType?: string): { message: string; data: unknown } => ({
@@ -23,7 +22,7 @@ const handleError = (err: unknown, reply: FastifyReply): void => {
   } else if (typeof err === 'string') {
     errorMessage = err;
   } else {
-    errorMessage = JSON.stringify(err, Object.getOwnPropertyNames(err), JSON_INDENT);
+    errorMessage = util.inspect(err);
   }
 
   const failMessage = `Failed to process execution request. \n${errorMessage}`;
