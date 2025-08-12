@@ -1,7 +1,7 @@
 {
   "name": "tms-service",
-  "version": "2.1.0",
-  "description": "transaction monitoring service",
+  "version": "2.2.0",
+  "description": "Tazama Transaction Monitoring Service API",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -22,18 +22,10 @@
     "test:watch": "jest --config=jest.config.ts --watch"
   },
   "keywords": [
-    "mojaloop",
     "tazama",
     "frm"
   ],
-  "contributors": [
-    {
-      "name": "Len Bekker"
-    },
-    {
-      "name": "Jean-Pierre Nell"
-    }
-  ],
+  "author": "Tazama.org",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22.17"
@@ -44,8 +36,8 @@
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
     "@tazama-lf/auth-lib": "2.1.0",
-    "@tazama-lf/frms-coe-lib": "5.1.0-rc.7",
-    "@tazama-lf/frms-coe-startup-lib": "2.4.0-rc.4",
+    "@tazama-lf/frms-coe-lib": "5.1.1",
+    "@tazama-lf/frms-coe-startup-lib": "2.4.1",
     "ajv": "^8.17.1",
     "arangojs": "^10.1.1",
     "copyfiles": "^2.4.1",
