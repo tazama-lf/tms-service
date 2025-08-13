@@ -9,6 +9,7 @@ import messageSchemaPacs002 from '../schemas/pacs.002.json';
 import messageSchemaPacs008 from '../schemas/pacs.008.json';
 import messageSchemaPain001 from '../schemas/pain.001.json';
 import messageSchemaPain013 from '../schemas/pain.013.json';
+import { configuration } from '..';
 
 const schemaPacs002 = { ...messageSchemaPacs002, $id: 'messageSchemaPacs002' };
 const schemaPacs008 = { ...messageSchemaPacs008, $id: 'messageSchemaPacs008' };
@@ -22,6 +23,7 @@ const ajv = new Ajv({
   useDefaults: true,
   coerceTypes: 'array',
   strictTuples: false,
+  strict: false,
 });
 
 ajv.addSchema(schemaPain001);
@@ -60,17 +62,14 @@ export default async function initializeFastifyClient(): Promise<FastifyInstance
     },
     staticCSP: true,
     transformStaticCSP: (header) => header,
-    transformSpecification: (swaggerObject, request, reply) => {
-      return swaggerObject;
-    },
+    transformSpecification: (swaggerObject, request, reply) => swaggerObject,
     transformSpecificationClone: true,
   });
-  fastify.setValidatorCompiler(({ schema }) => {
-    return ajv.compile(schema);
-  });
+  fastify.setValidatorCompiler(({ schema }) => ajv.compile(schema));
+  const methods = configuration.CORS_POLICY?.toLowerCase() === 'demo' ? ['GET', 'POST'] : ['POST'];
   await fastify.register(fastifyCors, {
     origin: '*',
-    methods: ['POST'],
+    methods,
     allowedHeaders: '*',
   });
   fastify.register(Routes);

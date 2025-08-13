@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
-import { type Pacs002, type Pacs008, type Pain001, type Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
-import { type TransactionRelationship } from '../interfaces/iTransactionRelationship';
+import type { TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
-import { type Configuration } from '../config';
+import type { Configuration } from '../config';
 
-export class CacheDatabaseService<T extends ManagerConfig> {
-  private readonly dbManager: DatabaseManagerInstance<T>;
+export class CacheDatabaseService {
+  private readonly dbManager: DatabaseManagerInstance<Configuration>;
 
   cacheExpireTime: number;
 
-  private constructor(dbInstance: DatabaseManagerInstance<T>, expire: number) {
+  private constructor(dbInstance: DatabaseManagerInstance<Configuration>, expire: number) {
     this.dbManager = dbInstance;
     this.cacheExpireTime = expire;
   }
@@ -27,13 +27,13 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<CacheDatabaseService>}
    * @memberof CacheDatabaseService
    */
-  public static async create<T extends ManagerConfig>(
-    configuration: Configuration,
-  ): Promise<{ db: CacheDatabaseService<T>; config: ManagerConfig }> {
+  public static async create(configuration: Configuration): Promise<{ db: CacheDatabaseService; config: ManagerConfig }> {
     const auth = configuration.nodeEnv === 'production';
-    const { db, config } = await CreateStorageManager([Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED], auth);
-    const databaseManager = db as DatabaseManagerInstance<T>;
-    return { db: new CacheDatabaseService<T>(databaseManager, config.redisConfig?.distributedCacheTTL ?? 0), config };
+    const { db, config } = await CreateStorageManager<typeof configuration>(
+      [Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED],
+      auth,
+    );
+    return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? 0) };
   }
 
   /**
@@ -42,7 +42,7 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @memberof CacheDatabaseService
    */
   quit = (): void => {
-    this.dbManager.quit?.();
+    this.dbManager.quit();
   };
 
   /**
@@ -169,8 +169,10 @@ export class CacheDatabaseService<T extends ManagerConfig> {
    * @return {*}  {Promise<Record<string, unknown>>}
    * @memberof CacheDatabaseService
    */
-  async isReadyCheck(): Promise<Record<string, unknown>> {
-    const ready = await this.dbManager.isReadyCheck();
-    return ready;
+  async isReadyCheck(): Promise<Record<string, unknown> | undefined> {
+    const ready = (await this.dbManager.isReadyCheck()) as Record<string, unknown>;
+    if (typeof ready === 'object') {
+      return ready;
+    }
   }
 }
