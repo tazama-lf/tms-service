@@ -1051,4 +1051,3 @@ describe('App Controller & Logic Service', () => {
     });
   });
 });
-
