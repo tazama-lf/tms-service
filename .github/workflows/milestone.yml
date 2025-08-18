@@ -24,7 +24,7 @@ jobs:
       # Step to check out the repository code.
       - name: Checkout Repository
         uses: actions/checkout@v2
-        
+
       # Step to set up environment variables required for the script.
       - name: Set up environment variables
         run: |
@@ -47,8 +47,8 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MILESTONE_NUMBER: ${{ github.event.inputs.milestoneId }}
-          API_URL: "https://api.github.com"
-            
+          API_URL: 'https://api.github.com'
+
       # Step to trigger another workflow for releasing, passing the milestone number.
       - name: Trigger Release Workflow
         uses: peter-evans/repository-dispatch@v1
