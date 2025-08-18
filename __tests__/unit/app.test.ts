@@ -547,7 +547,7 @@ describe('App Controller & Logic Service', () => {
         expect(mockReply.code).toHaveBeenCalledWith(403);
         expect(mockReply.send).toHaveBeenCalledWith({
           error: 'Forbidden',
-          message: 'TENANT_ID attribute is required and cannot be blank',
+          message: 'TENANT_ID or tenantId attribute is required and cannot be blank',
         });
 
         configuration.AUTHENTICATED = originalAuthenticated;

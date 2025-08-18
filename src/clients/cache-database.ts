@@ -7,6 +7,11 @@ import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
 import type { Configuration } from '../config';
 
+// Cache Constants
+const CACHE_CONSTANTS = {
+  DEFAULT_TTL: 0,
+} as const;
+
 export class CacheDatabaseService {
   private readonly dbManager: DatabaseManagerInstance<Configuration>;
 
@@ -33,7 +38,7 @@ export class CacheDatabaseService {
       [Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED],
       auth,
     );
-    return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? 0) };
+    return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? CACHE_CONSTANTS.DEFAULT_TTL) };
   }
 
   /**
