@@ -1,5 +1,6 @@
 {
   "type": "object",
+  "not": { "required": ["TenantId"] },
   "properties": {
     "CdtrPmtActvtnReq": {
       "type": "object",

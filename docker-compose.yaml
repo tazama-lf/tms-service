@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-version: "2"
+version: '2'
 services:
   node:
     container_name: tms-service
@@ -7,4 +7,4 @@ services:
       context: .
       args:
         - GH_TOKEN
-    restart: "no"
+    restart: 'no'

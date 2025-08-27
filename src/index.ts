@@ -11,6 +11,15 @@ import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
 import { additionalEnvironmentVariables, type Configuration } from './config';
 
+// Application Constants
+const APP_CONSTANTS = {
+  MAX_LISTENERS: 10,
+  TIMEOUT_MS: 5000,
+  RETRY_INCREMENT: 1,
+  PRIMARY_WORKER_OFFSET: 1,
+  EXIT_CODE_ERROR: 1,
+} as const;
+
 let configuration = validateProcessorConfig(additionalEnvironmentVariables) as Configuration;
 
 export const loggerService: LoggerService = new LoggerService(configuration);
@@ -27,10 +36,10 @@ export const dbInit = async (): Promise<void> => {
 
 const connect = async (): Promise<void> => {
   let isConnected = false;
-  for (let retryCount = 0; retryCount < 10; retryCount++) {
+  for (let retryCount = 0; retryCount < APP_CONSTANTS.MAX_LISTENERS; retryCount++) {
     loggerService.log('Connecting to nats server...');
     if (!(await server.initProducer())) {
-      await setTimeout(5000);
+      await setTimeout(APP_CONSTANTS.TIMEOUT_MS);
     } else {
       loggerService.log('Connected to nats');
       isConnected = true;
@@ -66,10 +75,13 @@ process.on('unhandledRejection', (err) => {
   loggerService.error(`process on unhandledRejection error: ${util.inspect(err)}`);
 });
 
-const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
+const numCPUs =
+  os.cpus().length > configuration.maxCPU
+    ? configuration.maxCPU + APP_CONSTANTS.PRIMARY_WORKER_OFFSET
+    : os.cpus().length + APP_CONSTANTS.PRIMARY_WORKER_OFFSET;
 
-if (cluster.isPrimary && configuration.maxCPU !== 1) {
-  for (let i = 1; i < numCPUs; i++) {
+if (cluster.isPrimary && configuration.maxCPU !== APP_CONSTANTS.PRIMARY_WORKER_OFFSET) {
+  for (let i = APP_CONSTANTS.PRIMARY_WORKER_OFFSET; i < numCPUs; i++) {
     cluster.fork();
   }
 
@@ -85,7 +97,7 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
       }
     } catch (err) {
       loggerService.error(`Error while starting ${configuration.functionName}`, err);
-      process.exit(1);
+      process.exit(APP_CONSTANTS.EXIT_CODE_ERROR);
     }
   })();
 }

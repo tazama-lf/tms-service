@@ -13,7 +13,7 @@ export const tokenHandler =
     }
 
     try {
-      const token = authHeader.split(' ')[1];
+      const [, token] = authHeader.split(' ');
       const validated = validateTokenAndClaims(token, [claim]);
       if (!validated[claim]) {
         reply.code(401).send({ error: 'Unauthorized' });
