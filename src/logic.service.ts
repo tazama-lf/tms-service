@@ -42,8 +42,8 @@ export const handlePain001 = async (transaction: Pain001, transactionType: strin
   const { MsgId } = transaction.CstmrCdtTrfInitn.GrpHdr;
 
   const transactionDetails: TransactionDetails = {
-    source: `accounts/${debtorAcctId}`,
-    destination: `accounts/${creditorAcctId}`,
+    source: debtorAcctId,
+    destination: creditorAcctId,
     Amt,
     Ccy,
     CreDtTm,
@@ -139,8 +139,8 @@ export const handlePain013 = async (transaction: Pain013, transactionType: strin
   const cdtrId = `${cdtrOthr.Id}${cdtrOthr.SchmeNm.Prtry}`;
 
   const transactionDetails: TransactionDetails = {
-    source: `accounts/${creditorAcctId}`,
-    destination: `accounts/${debtorAcctId}`,
+    source: creditorAcctId,
+    destination: debtorAcctId,
     Amt,
     Ccy,
     CreDtTm,
@@ -221,8 +221,8 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
   const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction);
 
   const transactionDetails: TransactionDetails = {
-    source: `accounts/${dbtrAcctId}`,
-    destination: `accounts/${cdtrAcctId}`,
+    source: dbtrAcctId,
+    destination: cdtrAcctId,
     Amt: InstdAmt,
     Ccy,
     CreDtTm: creDtTm,
@@ -354,8 +354,11 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
     await cacheDatabaseManager.saveTransactionHistory(transaction, `pacs002_${EndToEndId}`);
 
     // data cache is valid at this point
-    transactionDetails.destination = `accounts/${dataCache?.dbtrAcctId}`;
-    transactionDetails.source = `accounts/${dataCache?.cdtrAcctId}`;
+
+    if (dataCache?.cdtrAcctId && dataCache.dbtrAcctId) {
+      transactionDetails.destination = dataCache.dbtrAcctId;
+      transactionDetails.source = dataCache.cdtrAcctId;
+    }
 
     await cacheDatabaseManager.saveTransactionDetails(transactionDetails);
   } catch (err) {
