@@ -506,15 +506,15 @@ describe('App Controller & Logic Service', () => {
         configuration.AUTHENTICATED = originalAuthenticated;
       });
 
-      it('should extract TENANT_ID from JWT when AUTHENTICATED=true', async () => {
+      it('should extract tenantId from JWT when AUTHENTICATED=true', async () => {
         const originalAuthenticated = configuration.AUTHENTICATED;
         configuration.AUTHENTICATED = true;
 
         // Set mock return value for this test
         const { validateTokenAndClaims } = require('@tazama-lf/auth-lib');
-        validateTokenAndClaims.mockReturnValueOnce({ TENANT_ID: 'valid-tenant-123' });
+        validateTokenAndClaims.mockReturnValueOnce({ tenantId: 'valid-tenant-123' });
 
-        const payload = { TENANT_ID: 'valid-tenant-123' };
+        const payload = { tenantId: 'valid-tenant-123' };
         const token = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
 
         const mockRequest: any = {
@@ -535,15 +535,15 @@ describe('App Controller & Logic Service', () => {
         configuration.AUTHENTICATED = originalAuthenticated;
       });
 
-      it('should return 403 when TENANT_ID is blank in JWT', async () => {
+      it('should return 403 when tenantId is blank in JWT', async () => {
         const originalAuthenticated = configuration.AUTHENTICATED;
         configuration.AUTHENTICATED = true;
 
         // Set mock return value for this test
         const { validateTokenAndClaims } = require('@tazama-lf/auth-lib');
-        validateTokenAndClaims.mockReturnValueOnce({ TENANT_ID: '' });
+        validateTokenAndClaims.mockReturnValueOnce({ tenantId: '' });
 
-        const payload = { TENANT_ID: '' };
+        const payload = { tenantId: '' };
         const token = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
 
         const mockRequest: any = {
@@ -560,7 +560,7 @@ describe('App Controller & Logic Service', () => {
         expect(mockReply.code).toHaveBeenCalledWith(403);
         expect(mockReply.send).toHaveBeenCalledWith({
           error: 'Forbidden',
-          message: 'TENANT_ID or tenantId attribute is required and cannot be blank',
+          message: 'tenantId attribute is required and cannot be blank',
         });
 
         configuration.AUTHENTICATED = originalAuthenticated;
