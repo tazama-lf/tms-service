@@ -31,5 +31,5 @@ export interface ExtendedConfig {
   CORS_POLICY?: 'demo' | 'prod';
 }
 
-type Databases = Required<Pick<ManagerConfig, 'transactionHistory' | 'pseudonyms' | 'redisConfig'>>;
+type Databases = Required<Pick<ManagerConfig, 'rawHistory' | 'eventHistory' | 'redisConfig'>>;
 export type Configuration = ProcessorConfig & Databases & ExtendedConfig;

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
-import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import type { Pacs002, Pacs008, Pain001, Pain013, TransactionDetails } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
-import type { TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
 import type { Configuration } from '../config';
@@ -30,7 +29,7 @@ export class CacheDatabaseService {
   public static async create(configuration: Configuration): Promise<{ db: CacheDatabaseService; config: ManagerConfig }> {
     const auth = configuration.nodeEnv === 'production';
     const { db, config } = await CreateStorageManager<typeof configuration>(
-      [Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED],
+      [Database.RAW_HISTORY, Database.EVENT_HISTORY, Cache.DISTRIBUTED],
       auth,
     );
     return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? 0) };
@@ -52,9 +51,8 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<unknown>}
    * @memberof CacheDatabaseService
    */
-  async getTransactionPacs008(EndToEndId: string): Promise<unknown> {
-    const pacs008 = await this.dbManager.getTransactionPacs008(EndToEndId);
-    return pacs008;
+  async getTransactionPacs008(EndToEndId: string): Promise<Pacs008 | undefined> {
+    return await this.dbManager.getTransactionPacs008(EndToEndId);
   }
 
   /**
@@ -96,12 +94,12 @@ export class CacheDatabaseService {
   /**
    * Wrapper method for dbManager.saveTransactionRelationship
    *
-   * @param {TransactionRelationship} tR
+   * @param {TransactionDetails} td
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async saveTransactionRelationship(tR: TransactionRelationship): Promise<void> {
-    await this.dbManager.saveTransactionRelationship(tR);
+  async saveTransactionDetails(td: TransactionDetails): Promise<void> {
+    await this.dbManager.saveTransactionDetails(td);
   }
 
   /**
