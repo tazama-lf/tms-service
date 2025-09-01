@@ -20,7 +20,7 @@ sequenceDiagram
     participant Client as "External Client"
     participant TMS as "Transaction Monitoring Service"
     participant log as "Logger"
-    participant Ara as "ArangoDB"
+    participant DB as "Postgres"
     participant Cache as "Valkey Cache"
     participant ED as "Event-Director"
 
@@ -32,17 +32,17 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
         end
-                par save in ArangoDB
-                    TMS ->> Ara: saveTransactionHistory(pain001)
-                    TMS ->> Ara: addAccount(debtor)
-                    TMS ->> Ara: addAccount(creditor)
-                    TMS ->> Ara: addEntity(debtor)
-                    TMS ->> Ara: addEntity(creditor)                   
+                par save in Postgres
+                    TMS ->> DB: saveTransactionHistory(pain001)
+                    TMS ->> DB: addAccount(debtor)
+                    TMS ->> DB: addAccount(creditor)
+                    TMS ->> DB: addEntity(debtor)
+                    TMS ->> DB: addEntity(creditor)                   
                 end
-                par save in ArangoDB
-                    TMS ->> Ara: saveTransactionRelationship(pain001)
-                    TMS ->> Ara: addAccountHolder(debtor)
-                    TMS ->> Ara: addAccountHolder(creditor)                
+                par save in Postgres
+                    TMS ->> DB: saveTransactionRelationship(pain001)
+                    TMS ->> DB: addAccountHolder(debtor)
+                    TMS ->> DB: addAccountHolder(creditor)                
                 end
             
         alt Error
@@ -61,12 +61,12 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
         end
-            par save in ArangoDB
-                TMS ->> Ara: saveTransactionHistory(pain013)
-                TMS ->> Ara: addAccount(debtor)
-                TMS ->> Ara: addAccount(creditor)
+            par save in Postgres
+                TMS ->> DB: saveTransactionHistory(pain013)
+                TMS ->> DB: addAccount(debtor)
+                TMS ->> DB: addAccount(creditor)
             end
-            TMS ->> Ara: saveTransactionRelationship(pain013)
+            TMS ->> DB: saveTransactionRelationship(pain013)
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
@@ -83,25 +83,25 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
         end
-            par save in ArangoDB
-                TMS ->> Ara: addAccount(debtor)
-                TMS ->> Ara: addAccount(creditor)
+            par save in Postgres
+                TMS ->> DB: addAccount(debtor)
+                TMS ->> DB: addAccount(creditor)
                 TMS ->> Cache: save Data Cache
-                %% TMS ->> Ara: saveTransactionHistory(pacs008)
+                %% TMS ->> DB: saveTransactionHistory(pacs008)
             end
             alt Quoting Enabled
-                par save in ArangoDB
-                  TMS ->> Ara: addEntity(creditor)
-                  TMS ->> Ara: addEntity(debtor)
+                par save in Postgres
+                  TMS ->> DB: addEntity(creditor)
+                  TMS ->> DB: addEntity(debtor)
                 end
 
-                par save in ArangoDB
-                  TMS ->> Ara: addAccountHolder(creditor)
-                  TMS ->> Ara: addAccountHolder(debtor)
+                par save in Postgres
+                  TMS ->> DB: addAccountHolder(creditor)
+                  TMS ->> DB: addAccountHolder(debtor)
                 end
             end
-            TMS ->> Ara: saveTransactionRelationship
-            TMS ->> Ara: saveTransactionHistory(pacs008)
+            TMS ->> DB: saveTransactionRelationship
+            TMS ->> DB: saveTransactionHistory(pacs008)
 
             
         alt Error
@@ -122,12 +122,12 @@ sequenceDiagram
         end
         TMS ->> Cache: getCache
         alt cache miss
-          TMS ->> Ara: get Pacs008
+          TMS ->> DB: get Pacs008
           TMS ->> TMS: rebuild cache
         end
-        TMS ->> Ara: saveTransactionHistory
-        TMS ->> Ara: get Pacs008
-        TMS ->> Ara: saveTransactionRelationship
+        TMS ->> DB: saveTransactionHistory
+        TMS ->> DB: get Pacs008
+        TMS ->> DB: saveTransactionRelationship
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error

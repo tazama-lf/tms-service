@@ -341,7 +341,7 @@ export const handlePacs002 = async (transaction: Pacs002, transactionType: strin
     dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, id);
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
-    loggerService.log('Proceeding with Arango Call', logContext, id);
+    loggerService.log('Proceeding with Datacache rebuild', logContext, id);
     dataCache = await rebuildCache(EndToEndId, false, id);
   } finally {
     spanDataCache?.end();
