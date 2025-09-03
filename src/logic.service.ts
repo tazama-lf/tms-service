@@ -14,21 +14,11 @@ import {
   generateTenantCacheKey,
 } from './utils/tenantUtils';
 
-// ============================================================================
-// CONSOLIDATED UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Calculates the duration in nanoseconds from a start time
- */
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
   return Number(endTime - startTime);
 };
 
-/**
- * Common error handling utility for database operations
- */
 const handleDatabaseError = (err: unknown, span?: { end: () => void } | null, mainSpan?: { end: () => void } | null): Error => {
   let error: Error;
   if (err instanceof Error) {
@@ -42,9 +32,6 @@ const handleDatabaseError = (err: unknown, span?: { end: () => void } | null, ma
   return error;
 };
 
-/**
- * Common server response utility for notifying event-director
- */
 const notifyEventDirector = (transaction: unknown, dataCache: DataCache | undefined, startTime: bigint): void => {
   server.handleResponse({
     transaction,
@@ -59,12 +46,7 @@ const notifyEventDirector = (transaction: unknown, dataCache: DataCache | undefi
 // A utility type for the fields we are extracting from the pacs008 entity
 type AccountIds = Required<Pick<DataCache, 'cdtrId' | 'dbtrId' | 'dbtrAcctId' | 'cdtrAcctId'>>;
 
-// Constants for magic numbers
-const DEFAULT_TTL = 0;
-
-// Tenant-aware parseDataCache function
 const parseDataCache = (transaction: Pacs008, tenantId = 'DEFAULT'): AccountIds => {
-  // Access nested properties directly since Pacs008 type guarantees structure
   const [debtorOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Dbtr.Id.PrvtId.Othr;
   const [creditorOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr;
   const [debtorAcctOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.DbtrAcct.Id.Othr;
@@ -72,7 +54,6 @@ const parseDataCache = (transaction: Pacs008, tenantId = 'DEFAULT'): AccountIds 
   const [creditorAcctOthr] = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAcct.Id.Othr;
   const creditorMmbId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId;
 
-  // Generate tenant-aware keys
   const debtorId = generateDebtorEntityKey(tenantId, debtorOthr.Id, debtorOthr.SchmeNm.Prtry);
   const creditorId = generateCreditorEntityKey(tenantId, creditorOthr.Id, creditorOthr.SchmeNm.Prtry);
   const debtorAcctId = generateDebtorAccountKey(tenantId, debtorAcctOthr.Id, debtorAcctOthr.SchmeNm.Prtry, debtorMmbId);
@@ -116,7 +97,6 @@ export const rebuildCache = async (
 
   const cdtTrfTxInf = pacs008.FIToFICstmrCdtTrf.CdtTrfTxInf;
 
-  // Always use tenant-aware parsing with DEFAULT fallback
   const { cdtrId, cdtrAcctId, dbtrId, dbtrAcctId } = parseDataCache(pacs008, tenantId);
 
   const dataCache: DataCache = {
@@ -141,9 +121,8 @@ export const rebuildCache = async (
 
     if (buffer) {
       const redisTTL = configuration.redisConfig.distributedCacheTTL;
-      // Use tenant-aware cache key for complete tenant isolation
       const tenantCacheKey = generateTenantCacheKey(tenantId, endToEndId);
-      await cacheDatabaseManager.set(tenantCacheKey, buffer, redisTTL ?? DEFAULT_TTL);
+      await cacheDatabaseManager.set(tenantCacheKey, buffer, redisTTL ?? 0);
     } else {
       loggerService.error('[pacs008] could not rebuild redis cache');
     }
@@ -152,10 +131,6 @@ export const rebuildCache = async (
   span?.end();
   return dataCache;
 };
-
-// ============================================================================
-// MAIN BUSINESS LOGIC FUNCTIONS
-// ============================================================================
 
 export const handlePain001 = async (transaction: Pain001 & { TenantId: string }, transactionType: string): Promise<void> => {
   const tenantId = transaction.TenantId;
@@ -178,7 +153,6 @@ export const handlePain001 = async (transaction: Pain001 & { TenantId: string },
   const [othrDebtorAcct] = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAcct.Id.Othr;
   const debtorMmbId = transaction.CstmrCdtTrfInitn.PmtInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId;
 
-  // Always use tenant-aware key generation
   const creditorAcctId = generateCreditorAccountKey(tenantId, othrCreditorAcct.Id, othrCreditorAcct.SchmeNm.Prtry, creditorMmbId);
   const creditorId = generateCreditorEntityKey(tenantId, othrCreditor.Id, othrCreditor.SchmeNm.Prtry);
   const debtorId = generateDebtorEntityKey(tenantId, othrDebtor.Id, othrDebtor.SchmeNm.Prtry);
@@ -204,7 +178,7 @@ export const handlePain001 = async (transaction: Pain001 & { TenantId: string },
     MsgId,
     PmtInfId,
     TxTp,
-    TenantId: tenantId, // Standardized tenant identifier
+    TenantId: tenantId,
   };
 
   const dataCache: DataCache = {
@@ -272,7 +246,6 @@ export const handlePain013 = async (transaction: Pain013 & { TenantId: string },
   const [dbtrOthr] = transaction.CdtrPmtActvtnReq.PmtInf.Dbtr.Id.PrvtId.Othr;
   const [cdtrOthr] = transaction.CdtrPmtActvtnReq.PmtInf.CdtTrfTxInf.Cdtr.Id.PrvtId.Othr;
 
-  // Always use tenant-aware key generation
   const creditorAcctId = generateCreditorAccountKey(tenantId, creditorAcctOthr.Id, creditorAcctOthr.SchmeNm.Prtry, creditorMmbId);
   const debtorAcctId = generateDebtorAccountKey(tenantId, debtorAcctOthr.Id, debtorAcctOthr.SchmeNm.Prtry, debtorMmbId);
   const dbtrId = generateDebtorEntityKey(tenantId, dbtrOthr.Id, dbtrOthr.SchmeNm.Prtry);
@@ -288,7 +261,7 @@ export const handlePain013 = async (transaction: Pain013 & { TenantId: string },
     MsgId,
     PmtInfId,
     TxTp,
-    TenantId: tenantId, // Standardized tenant identifier
+    TenantId: tenantId,
   };
 
   const dataCache: DataCache = {
@@ -348,7 +321,6 @@ export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string },
   const { MsgId } = transaction.FIToFICstmrCdtTrf.GrpHdr;
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
 
-  // Always use tenant-aware parseDataCache
   const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction as Pacs008, tenantId);
 
   const transactionRelationship: TransactionRelationship = {
@@ -361,7 +333,7 @@ export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string },
     MsgId,
     PmtInfId,
     TxTp,
-    TenantId: tenantId, // Standardized tenant identifier
+    TenantId: tenantId,
   };
 
   const pendingPromises = [cacheDatabaseManager.addAccount(dbtrAcctId, tenantId), cacheDatabaseManager.addAccount(cdtrAcctId, tenantId)];
@@ -387,9 +359,8 @@ export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string },
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
     const redisTTL = configuration.redisConfig.distributedCacheTTL;
-    // Use tenant-aware cache key for complete tenant isolation
     const tenantCacheKey = generateTenantCacheKey(tenantId, EndToEndId);
-    pendingPromises.push(cacheDatabaseManager.set(tenantCacheKey, cacheBuffer, redisTTL ?? DEFAULT_TTL));
+    pendingPromises.push(cacheDatabaseManager.set(tenantCacheKey, cacheBuffer, redisTTL ?? 0));
   } else {
     throw new Error('[pacs008] data cache could not be serialized');
   }
@@ -454,13 +425,12 @@ export const handlePacs002 = async (transaction: Pacs002 & { TenantId: string },
     PmtInfId,
     TxTp,
     TxSts,
-    TenantId: tenantId, // Standardized tenant identifier
+    TenantId: tenantId,
   };
 
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002.tenant');
   try {
-    // Use tenant-aware cache key for complete tenant isolation
     const tenantCacheKey = generateTenantCacheKey(tenantId, EndToEndId);
     const dataCacheJSON = (await cacheDatabaseManager.getBuffer(tenantCacheKey)).DataCache;
     dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, tenantId, id);
@@ -498,10 +468,6 @@ export const handlePacs002 = async (transaction: Pacs002 & { TenantId: string },
   span?.end();
   loggerService.log('END - Handle transaction data', logContext, id);
 };
-
-// ============================================================================
-// EXPORTS FOR TESTING AND EXTERNAL USE
-// ============================================================================
 
 // Export utility functions for testing and external usage
 export { calculateDuration, parseDataCache, type AccountIds };

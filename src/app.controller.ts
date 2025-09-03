@@ -8,7 +8,6 @@ import { enhanceTransactionWithTenant } from './utils/tenantUtils';
 import type { TenantRequest } from './middleware/tenantMiddleware';
 import * as util from 'node:util';
 
-// Utility functions to reduce duplication
 const createResponseBody = (data: unknown, transactionType?: string): { message: string; data: unknown } => ({
   message: 'Transaction is valid',
   data: transactionType ? { ...(data as Record<string, unknown>), TxTp: transactionType } : data,

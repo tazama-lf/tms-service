@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Multi-tenant key generation utilities
- * Ensures all entity and account keys are prefixed with tenantId for proper isolation
- */
-
-/**
  * Generates a tenant-aware debtor entity key
  * @param tenantId The tenant identifier
  * @param debtorId The debtor's other ID

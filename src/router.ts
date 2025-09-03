@@ -16,7 +16,6 @@ function Routes(fastify: FastifyInstance, options: unknown): void {
   fastify.get('/health', handleHealthCheck);
 
   if (configuration.QUOTING) {
-    // Pain001 and Pain013 routes (tenant-aware via SetOptions middleware)
     fastify.post('/v1/evaluate/iso20022/pain.001.001.11', {
       ...SetOptions(Pain001Handler as RouteHandlerMethod, 'messageSchemaPain001', routePrivilege.pain001),
     });
