@@ -98,9 +98,7 @@ ENV APM_SERVICE_NAME=transaction-monitoring-service
 ENV APM_URL=http://apm-server.development.svc.cluster.local:8200/
 ENV APM_SECRET_TOKEN=
 
-# Logstash
-ENV LOGSTASH_HOST=logstash.development.svc.cluster.local
-ENV LOGSTASH_PORT=8080
+# Logging
 ENV LOG_LEVEL='info'
 ENV SIDECAR_HOST=0.0.0.0:5000
 

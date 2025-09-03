@@ -193,7 +193,7 @@ graph TD
 
 ## Repository
 
-[GitHub - frmscoe/tms-service](https://github.com/frmscoe/tms-service)
+[GitHub - tazama-lf/tms-service](https://github.com/tazama-lf/tms-service)
 
 ## Pain001 Message
 
@@ -910,3 +910,29 @@ graph TD
 }
 ```
   </details>
+
+## Environment variables
+
+You then need to configure your environment: a [sample](.env.template) configuration file has been provided and you may adapt that to your environment. Copy it to `.env` and modify as needed:
+
+```sh
+cp .env.template .env
+```
+A [registry](https://github.com/tazama-lf/docs/blob/f292c9ddabf52d6fe62addc1c61957419ed4ad05/Technical/processor-startup-config-registry.md) of environment variables is provided to provide more context for what each variable is used for.
+
+##### Additional Variables
+
+| Variable                           | Purpose                         | Example         |
+|------------------------------------|---------------------------------|-----------------|
+| `CONFIGURATION_DATABASE`           | PostgreSQL database name        | `configuration` |
+| `CONFIGURATION_DATABASE_HOST`      | PostgreSQL hostname or endpoint | `localhost`     |
+| `CONFIGURATION_DATABASE_PORT`      | PostgreSQL post used            | `5432`          |
+| `CONFIGURATION_DATABASE_USER`      | PostgreSQL username             | `root`          |
+| `CONFIGURATION_DATABASE_PASSWORD`  | PostgreSQL database password    | `password`      |
+| `CONFIGURATION_DATABASE_CERT_PATH` | PostgreSQL certificate path     | `/path/to/cert` |
+| `EVENT_HISTORY_DATABASE`           | PostgreSQL database name        | `event_history` |
+| `EVENT_HISTORY_DATABASE_HOST`      | PostgreSQL hostname or endpoint | `localhost`     |
+| `EVENT_HISTORY_DATABASE_PORT`      | PostgreSQL post used            | `5432`          |
+| `EVENT_HISTORY_DATABASE_USER`      | PostgreSQL username             | `root`          |
+| `EVENT_HISTORY_DATABASE_PASSWORD`  | PostgreSQL database password    | `password`      |
+| `EVENT_HISTORY_DATABASE_CERT_PATH` | PostgreSQL certificate path     | `/path/to/cert` |
