@@ -3,9 +3,9 @@ import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib
 import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
 import type { FastifyReply } from 'fastify';
-import type { TenantRequest } from './middleware/tenantMiddleware';
 import { extractTransactionType } from './utils/transaction-utils';
 import { enhanceTransactionWithTenant } from './utils/tenantUtils';
+import type { TenantRequest } from './middleware/tenantMiddleware';
 import * as util from 'node:util';
 
 // Utility functions to reduce duplication

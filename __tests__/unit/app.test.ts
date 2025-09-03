@@ -19,9 +19,11 @@ import {
 
 // Common test data constants to avoid duplication
 
-// Mock validateTokenAndClaims globally
+// Mock auth-lib globally
 jest.mock('@tazama-lf/auth-lib', () => ({
   validateTokenAndClaims: jest.fn(),
+  validateTokenAndExtractTenant: jest.fn(),
+  validateAndExtractTenant: jest.fn(),
 }));
 const PACS008_TEST_JSON =
   '{"TxTp":"pacs.008.001.10","FIToFICstmrCdtTrf":{"GrpHdr":{"MsgId":"cabb-32c3-4ecf-944e-654855c80c38","CreDtTm":"2023-02-03T07:17:52.216Z","NbOfTxs":1,"SttlmInf":{"SttlmMtd":"CLRG"}},"CdtTrfTxInf":{"PmtId":{"InstrId":"4ca819baa65d4a2c9e062f2055525046","EndToEndId":"701b-ae14-46fd-a2cf-88dda2875fdd"},"IntrBkSttlmAmt":{"Amt":{"Amt":31020.89,"Ccy":"USD"}},"InstdAmt":{"Amt":{"Amt":9000,"Ccy":"ZAR"}},"ChrgBr":"DEBT","ChrgsInf":{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}}},"InitgPty":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"InstgAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"InstdAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"IntrmyAgt1":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"Dbtr":{"Nm":"April Blake Grant","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1999-05-09","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"60409827ba274853a2ec2475c64566d5","SchmeNm":{"Prtry":"TAZAMA_EID"}}]}},"CtctDtls":{"MobNb":"+27-730975224"}},"DbtrAcct":{"Id":{"Othr":[{"Id":"+27-730975224","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"dfsp002"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"typology003"}}},"Cdtr":{"Nm":"James Ricci Rubin","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1956-01-01","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":[{"Id":"c49a1e8a-a8f8-4819-b1dd-3abf25325a7f","SchmeNm":{"Prtry":"TAZAMA_EID"}}]}},"CtctDtls":{"MobNb":"+27-710694778"}},"CdtrAcct":{"Id":{"Othr":[{"Id":"+27-710694778","SchmeNm":{"Prtry":"MSISDN"}}]},"Nm":"typology003"},"xchgRate":17.536082}}';
@@ -463,11 +465,19 @@ describe('App Controller & Logic Service', () => {
   // ============== TENANT-AWARE TESTS ==============
   describe('Multi-Tenancy Tests', () => {
     describe('Tenant Validation Middleware', () => {
+      // Import the middleware from the middleware directory
       const { validateAndExtractTenantMiddleware } = require('../../src/middleware/tenantMiddleware');
 
       it('should set tenantId from header when AUTHENTICATED=false', async () => {
         const originalAuthenticated = configuration.AUTHENTICATED;
         configuration.AUTHENTICATED = false;
+
+        // Set mock return value for unauthenticated mode with header
+        const { validateAndExtractTenant } = require('@tazama-lf/auth-lib');
+        validateAndExtractTenant.mockReturnValueOnce({
+          success: true,
+          tenantId: 'test-tenant',
+        });
 
         const mockRequest: any = {
           body: { CstmrCdtTrfInitn: Pain001Sample.CstmrCdtTrfInitn },
@@ -487,6 +497,13 @@ describe('App Controller & Logic Service', () => {
       it('should set tenantId to DEFAULT when AUTHENTICATED=false', async () => {
         const originalAuthenticated = configuration.AUTHENTICATED;
         configuration.AUTHENTICATED = false;
+
+        // Set mock return value for unauthenticated mode without header
+        const { validateAndExtractTenant } = require('@tazama-lf/auth-lib');
+        validateAndExtractTenant.mockReturnValueOnce({
+          success: true,
+          tenantId: 'DEFAULT',
+        });
 
         const mockRequest: any = {
           body: { CstmrCdtTrfInitn: Pain001Sample.CstmrCdtTrfInitn },
@@ -511,8 +528,11 @@ describe('App Controller & Logic Service', () => {
         configuration.AUTHENTICATED = true;
 
         // Set mock return value for this test
-        const { validateTokenAndClaims } = require('@tazama-lf/auth-lib');
-        validateTokenAndClaims.mockReturnValueOnce({ tenantId: 'valid-tenant-123' });
+        const { validateAndExtractTenant } = require('@tazama-lf/auth-lib');
+        validateAndExtractTenant.mockReturnValueOnce({
+          success: true,
+          tenantId: 'valid-tenant-123',
+        });
 
         const payload = { tenantId: 'valid-tenant-123' };
         const token = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
@@ -540,8 +560,12 @@ describe('App Controller & Logic Service', () => {
         configuration.AUTHENTICATED = true;
 
         // Set mock return value for this test
-        const { validateTokenAndClaims } = require('@tazama-lf/auth-lib');
-        validateTokenAndClaims.mockReturnValueOnce({ tenantId: '' });
+        const { validateAndExtractTenant } = require('@tazama-lf/auth-lib');
+        validateAndExtractTenant.mockReturnValueOnce({
+          success: false,
+          statusCode: 403,
+          error: 'tenantId attribute is required and cannot be blank',
+        });
 
         const payload = { tenantId: '' };
         const token = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
@@ -570,6 +594,14 @@ describe('App Controller & Logic Service', () => {
         const originalAuthenticated = configuration.AUTHENTICATED;
         configuration.AUTHENTICATED = true;
 
+        // Set mock return value for missing header
+        const { validateAndExtractTenant } = require('@tazama-lf/auth-lib');
+        validateAndExtractTenant.mockReturnValueOnce({
+          success: false,
+          statusCode: 401,
+          error: 'Missing or invalid authorization header',
+        });
+
         const mockRequest: any = {
           body: { CstmrCdtTrfInitn: Pain001Sample.CstmrCdtTrfInitn },
           headers: {},
@@ -583,7 +615,8 @@ describe('App Controller & Logic Service', () => {
 
         expect(mockReply.code).toHaveBeenCalledWith(401);
         expect(mockReply.send).toHaveBeenCalledWith({
-          error: 'Missing or invalid authorization header',
+          error: 'Unauthorized',
+          message: 'Missing or invalid authorization header',
         });
 
         configuration.AUTHENTICATED = originalAuthenticated;
@@ -592,6 +625,14 @@ describe('App Controller & Logic Service', () => {
       it('should return 401 when JWT token is invalid', async () => {
         const originalAuthenticated = configuration.AUTHENTICATED;
         configuration.AUTHENTICATED = true;
+
+        // Set mock return value for invalid JWT
+        const { validateAndExtractTenant } = require('@tazama-lf/auth-lib');
+        validateAndExtractTenant.mockReturnValueOnce({
+          success: false,
+          statusCode: 401,
+          error: 'Invalid JWT token',
+        });
 
         const mockRequest: any = {
           body: { CstmrCdtTrfInitn: Pain001Sample.CstmrCdtTrfInitn },
@@ -606,7 +647,8 @@ describe('App Controller & Logic Service', () => {
 
         expect(mockReply.code).toHaveBeenCalledWith(401);
         expect(mockReply.send).toHaveBeenCalledWith({
-          error: 'Invalid JWT token',
+          error: 'Unauthorized',
+          message: 'Invalid JWT token',
         });
 
         configuration.AUTHENTICATED = originalAuthenticated;
