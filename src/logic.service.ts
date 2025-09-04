@@ -196,8 +196,8 @@ export const handlePain001 = async (transaction: Pain001 & { TenantId: string },
       cacheDatabaseManager.saveTransactionHistory(transaction, `pain001_${EndToEndId}`),
       cacheDatabaseManager.addAccount(debtorAcctId, tenantId),
       cacheDatabaseManager.addAccount(creditorAcctId, tenantId),
-      cacheDatabaseManager.addEntity(creditorId, CreDtTm, tenantId),
-      cacheDatabaseManager.addEntity(debtorId, CreDtTm, tenantId),
+      cacheDatabaseManager.addEntity(creditorId, tenantId, CreDtTm),
+      cacheDatabaseManager.addEntity(debtorId, tenantId, CreDtTm),
     ]);
 
     await Promise.all([
@@ -366,8 +366,8 @@ export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string },
   }
 
   if (!configuration.QUOTING) {
-    pendingPromises.push(cacheDatabaseManager.addEntity(cdtrId, creDtTm, tenantId));
-    pendingPromises.push(cacheDatabaseManager.addEntity(dbtrId, creDtTm, tenantId));
+    pendingPromises.push(cacheDatabaseManager.addEntity(cdtrId, tenantId, creDtTm));
+    pendingPromises.push(cacheDatabaseManager.addEntity(dbtrId, tenantId, creDtTm));
 
     await Promise.all(pendingPromises);
 
