@@ -5,7 +5,7 @@ import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './lo
 import type { FastifyReply } from 'fastify';
 import { extractTransactionType } from './utils/transaction-utils';
 import { enhanceTransactionWithTenant } from './utils/tenantUtils';
-import type { TenantRequest } from './middleware/tenantMiddleware';
+import type { TenantRequest } from './interfaces/iTenantRequest';
 import * as util from 'node:util';
 
 const createResponseBody = (data: unknown, transactionType?: string): { message: string; data: unknown } => ({

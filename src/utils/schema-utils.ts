@@ -3,7 +3,7 @@ import type { FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
 import type { FastifySchema } from 'fastify/types/schema';
 import { loggerService } from '..';
 import { tokenHandler } from '../auth/authHandler';
-import { validateAndExtractTenantMiddleware } from '../middleware/tenantMiddleware';
+import { validateTenantMiddleware } from '../middleware/validateTenantMiddleware';
 import { configuration } from '../';
 
 type preHandler = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
@@ -30,13 +30,9 @@ const SetOptions = (
 ): { preHandler?: preHandler[]; handler: RouteHandlerMethod; schema: FastifySchema } => {
   loggerService.debug(`Authentication is ${configuration.AUTHENTICATED ? 'ENABLED' : 'DISABLED'} for ${handler.name}`);
 
-  // Always include tenant validation middleware
-  const preHandlers: preHandler[] = [validateAndExtractTenantMiddleware];
-
-  // Add authentication middleware if enabled
-  if (configuration.AUTHENTICATED) {
-    preHandlers.push(tokenHandler(claim));
-  }
+  const preHandlers: preHandler[] = configuration.AUTHENTICATED
+    ? [validateTenantMiddleware, tokenHandler(claim)]
+    : [validateTenantMiddleware];
 
   return {
     preHandler: preHandlers,
