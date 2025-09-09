@@ -48,7 +48,7 @@
     "@fastify/swagger-ui": "^5.2.3",
     "@tazama-lf/auth-lib": "2.2.0-rc.1",
     "@tazama-lf/frms-coe-lib": "6.0.0-rc.5",
-    "@tazama-lf/frms-coe-startup-lib": "2.4.0-rc.4",
+    "@tazama-lf/frms-coe-startup-lib": "3.0.0-rc.0",
     "ajv": "^8.17.1",
     "arangojs": "^10.1.1",
     "copyfiles": "^2.4.1",
