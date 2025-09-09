@@ -31,17 +31,13 @@ jobs:
 
           # Check the GPG verification status of each commit
           for commit in $commits; do
-            if git cat-file -e "$commit"; then
-              status=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-                https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$commit/check-runs \
-                | jq -r '.check_runs[] | select(.name == "GPG verify") | .conclusion')
-
-              if [[ "$status" != "success" ]]; then
-                echo "GPG signature verification failed for commit $commit."
-                exit 1
-              fi
-            else
-              echo "Commit $commit does not exist. Skipping."
-              continue
+            status=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$commit/check-runs \
+              | jq -r '.check_runs[] | select(.name == "GPG verify") | .conclusion')
+            
+            # If the GPG verification status is not successful, list the commit and exit with a non-zero status
+            if [[ "$status" != "success" ]]; then
+              echo "GPG signature verification failed for commit $commit."
+              exit 1
             fi
           done
