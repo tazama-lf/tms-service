@@ -132,7 +132,7 @@ export const rebuildCache = async (
   return dataCache;
 };
 
-export const handlePain001 = async (transaction: Pain001 & { TenantId: string }, transactionType: string): Promise<void> => {
+export const handlePain001 = async (transaction: Pain001, transactionType: string): Promise<void> => {
   const tenantId = transaction.TenantId;
   const id = transaction.CstmrCdtTrfInitn.GrpHdr.MsgId;
 
@@ -219,7 +219,7 @@ export const handlePain001 = async (transaction: Pain001 & { TenantId: string },
   loggerService.log('END - Handle transaction data', 'handlePain001()', id);
 };
 
-export const handlePain013 = async (transaction: Pain013 & { TenantId: string }, transactionType: string): Promise<void> => {
+export const handlePain013 = async (transaction: Pain013, transactionType: string): Promise<void> => {
   const tenantId = transaction.TenantId;
   const logContext = 'handlePain013()';
   const id = transaction.CdtrPmtActvtnReq.GrpHdr.MsgId;
@@ -298,7 +298,7 @@ export const handlePain013 = async (transaction: Pain013 & { TenantId: string },
   loggerService.log('END - Handle transaction data', logContext, id);
 };
 
-export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string }, transactionType: string): Promise<void> => {
+export const handlePacs008 = async (transaction: Pacs008, transactionType: string): Promise<void> => {
   const tenantId = transaction.TenantId;
   const logContext = 'handlePacs008()';
   const id = transaction.FIToFICstmrCdtTrf.GrpHdr.MsgId;
@@ -321,7 +321,7 @@ export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string },
   const { MsgId } = transaction.FIToFICstmrCdtTrf.GrpHdr;
   const PmtInfId = transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.PmtId.InstrId;
 
-  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction as Pacs008, tenantId);
+  const { dbtrAcctId, dbtrId, cdtrAcctId, cdtrId } = parseDataCache(transaction, tenantId);
 
   const transactionRelationship: TransactionRelationship = {
     from: `accounts/${dbtrAcctId}`,
@@ -398,7 +398,7 @@ export const handlePacs008 = async (transaction: Pacs008 & { TenantId: string },
   span?.end();
 };
 
-export const handlePacs002 = async (transaction: Pacs002 & { TenantId: string }, transactionType: string): Promise<void> => {
+export const handlePacs002 = async (transaction: Pacs002, transactionType: string): Promise<void> => {
   const tenantId = transaction.TenantId;
   const logContext = 'handlePacs002()';
   const id = transaction.FIToFIPmtSts.GrpHdr.MsgId;
