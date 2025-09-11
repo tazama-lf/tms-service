@@ -2,112 +2,113 @@
 import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { loggerService } from '.';
 import { handlePacs002, handlePacs008, handlePain001, handlePain013 } from './logic.service';
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyReply } from 'fastify';
+import { extractTransactionType } from './utils/transaction-utils';
+import { enhanceTransactionWithTenant } from './utils/tenantUtils';
+import type { TenantRequest } from './interfaces/iTenantRequest';
+import * as util from 'node:util';
 
-export const Pain001Handler = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-  const urlPath = JSON.stringify(req.routeOptions.url);
-  const lastIndexOfForwardSlash = urlPath.lastIndexOf('/') + 1;
-  const transactionType = urlPath.substring(lastIndexOfForwardSlash, urlPath.length - 1);
+const createResponseBody = (data: unknown, transactionType?: string): { message: string; data: unknown } => ({
+  message: 'Transaction is valid',
+  data: transactionType ? { ...(data as Record<string, unknown>), TxTp: transactionType } : data,
+});
 
-  loggerService.log(`Start - Handle ${transactionType} request`);
+const handleError = (err: unknown, reply: FastifyReply): void => {
+  let errorMessage = 'Unknown error occurred';
+
+  if (err instanceof Error) {
+    errorMessage = err.message;
+  } else if (typeof err === 'string') {
+    errorMessage = err;
+  } else {
+    errorMessage = util.inspect(err);
+  }
+
+  const failMessage = `Failed to process execution request. \n${errorMessage}`;
+  loggerService.error(failMessage, 'ApplicationService');
+  reply.status(500);
+  reply.send(failMessage);
+};
+
+export const Pain001Handler = async (req: TenantRequest, reply: FastifyReply): Promise<void> => {
+  const transactionType = extractTransactionType(req.routeOptions.url);
+  const { tenantId } = req;
+
+  loggerService.log(`Start - Handle ${transactionType} request for tenant ${tenantId}`);
 
   try {
     const request = req.body as Pain001;
-    await handlePain001(request, transactionType);
+    const enhancedRequest = enhanceTransactionWithTenant(request, tenantId);
+    await handlePain001(enhancedRequest, transactionType);
 
-    const body = {
-      message: 'Transaction is valid',
-      data: request,
-    };
-    reply.code(200);
+    const body = createResponseBody(request);
+    reply.status(200);
     reply.send(body);
   } catch (err) {
-    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
-    loggerService.error(failMessage, 'ApplicationService');
-
-    reply.code(500);
-    reply.send(failMessage);
+    handleError(err, reply);
   } finally {
     loggerService.log(`End - Handle ${transactionType} request`);
   }
 };
 
-export const Pain013Handler = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-  const urlPath = JSON.stringify(req.routeOptions.url);
-  const lastIndexOfForwardSlash = urlPath.lastIndexOf('/') + 1;
-  const transactionType = urlPath.substring(lastIndexOfForwardSlash, urlPath.length - 1);
+export const Pain013Handler = async (req: TenantRequest, reply: FastifyReply): Promise<void> => {
+  const transactionType = extractTransactionType(req.routeOptions.url);
+  const { tenantId } = req;
 
-  loggerService.log(`Start - Handle ${transactionType} request`);
+  loggerService.log(`Start - Handle ${transactionType} request for tenant ${tenantId}`);
+
   try {
     const request = req.body as Pain013;
-    handlePain013(request, transactionType);
+    const enhancedRequest = enhanceTransactionWithTenant(request, tenantId);
+    await handlePain013(enhancedRequest, transactionType);
 
-    const body = {
-      message: 'Transaction is valid',
-      data: { ...request, TxTp: transactionType },
-    };
+    const body = createResponseBody(request, transactionType);
     reply.status(200);
     reply.send(body);
   } catch (err) {
-    const failMessage = `Failed to process execution request. \n${JSON.stringify((err as Error).message, null, 4)}`;
-    loggerService.error(failMessage, 'ApplicationService');
-
-    reply.status(500);
-    reply.send(failMessage);
+    handleError(err, reply);
   } finally {
     loggerService.log(`End - Handle ${transactionType} request`);
   }
 };
 
-export const Pacs008Handler = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-  const urlPath = JSON.stringify(req.routeOptions.url);
-  const lastIndexOfForwardSlash = urlPath.lastIndexOf('/') + 1;
-  const transactionType = urlPath.substring(lastIndexOfForwardSlash, urlPath.length - 1);
+export const Pacs008Handler = async (req: TenantRequest, reply: FastifyReply): Promise<void> => {
+  const transactionType = extractTransactionType(req.routeOptions.url);
+  const { tenantId } = req;
 
-  loggerService.log(`Start - Handle ${transactionType} request`);
+  loggerService.log(`Start - Handle ${transactionType} request for tenant ${tenantId}`);
+
   try {
     const request = req.body as Pacs008;
-    await handlePacs008(request, transactionType);
+    const enhancedRequest = enhanceTransactionWithTenant(request, tenantId);
+    await handlePacs008(enhancedRequest, transactionType);
 
-    const body = {
-      message: 'Transaction is valid',
-      data: request,
-    };
+    const body = createResponseBody(request);
     reply.status(200);
     reply.send(body);
   } catch (err) {
-    loggerService.error(JSON.stringify(err));
-    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
-    loggerService.error(failMessage, 'ApplicationService');
-    reply.status(500);
-    reply.send(failMessage);
+    handleError(err, reply);
   } finally {
     loggerService.log(`End - Handle ${transactionType} request`);
   }
 };
 
-export const Pacs002Handler = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-  const urlPath = JSON.stringify(req.routeOptions.url);
-  const lastIndexOfForwardSlash = urlPath.lastIndexOf('/') + 1;
-  const transactionType = urlPath.substring(lastIndexOfForwardSlash, urlPath.length - 1);
+export const Pacs002Handler = async (req: TenantRequest, reply: FastifyReply): Promise<void> => {
+  const transactionType = extractTransactionType(req.routeOptions.url);
+  const { tenantId } = req;
 
-  loggerService.log(`Start - Handle ${transactionType} request`);
+  loggerService.log(`Start - Handle ${transactionType} request for tenant ${tenantId}`);
+
   try {
     const request = req.body as Pacs002;
-    await handlePacs002(request, transactionType);
+    const enhancedRequest = enhanceTransactionWithTenant(request, tenantId);
+    await handlePacs002(enhancedRequest, transactionType);
 
-    const body = {
-      message: 'Transaction is valid',
-      data: request,
-    };
+    const body = createResponseBody(request);
     reply.status(200);
     reply.send(body);
   } catch (err) {
-    const failMessage = `Failed to process execution request. \n${JSON.stringify(err, null, 4)}`;
-    loggerService.error(failMessage, 'ApplicationService');
-
-    reply.status(500);
-    reply.send(failMessage);
+    handleError(err, reply);
   } finally {
     loggerService.log(`End - Handle ${transactionType} request`);
   }
