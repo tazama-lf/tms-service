@@ -16,7 +16,8 @@ const schemaPacs008 = { ...messageSchemaPacs008, $id: 'messageSchemaPacs008' };
 const schemaPain001 = { ...messageSchemaPain001, $id: 'messageSchemaPain001' };
 const schemaPain013 = { ...messageSchemaPain013, $id: 'messageSchemaPain013' };
 
-// Create AJV instance with schemas
+const fastify = Fastify();
+
 const ajv = new Ajv({
   removeAdditional: 'all',
   useDefaults: true,
@@ -25,17 +26,12 @@ const ajv = new Ajv({
   strict: false,
 });
 
-// Add schemas to AJV instance (used by custom validator compiler)
 ajv.addSchema(schemaPain001);
 ajv.addSchema(schemaPain013);
 ajv.addSchema(schemaPacs008);
 ajv.addSchema(schemaPacs002);
 
-// Create Fastify instance
-const fastify = Fastify();
-
 export default async function initializeFastifyClient(): Promise<FastifyInstance> {
-  // Add schemas to both AJV (for custom validator) and Fastify (for route validation)
   fastify.addSchema(schemaPacs002);
   fastify.addSchema(schemaPacs008);
   fastify.addSchema(schemaPain001);

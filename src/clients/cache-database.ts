@@ -54,11 +54,11 @@ export class CacheDatabaseService {
    * Wrapper method for dbManager.getTransactionPacs008
    *
    * @param {string} EndToEndId
-   * @param {string} tenantId - Tenant ID for filtering (defaults to 'DEFAULT')
+   * @param {string} tenantId - Tenant ID for filtering
    * @return {*}  {Promise<unknown>}
    * @memberof CacheDatabaseService
    */
-  async getTransactionPacs008(EndToEndId: string, tenantId = 'DEFAULT'): Promise<unknown> {
+  async getTransactionPacs008(EndToEndId: string, tenantId: string): Promise<unknown> {
     const pacs008 = await this.dbManager.getTransactionPacs008(EndToEndId, tenantId);
     return pacs008;
   }
@@ -71,7 +71,7 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccount(hash: string, tenantId = 'DEFAULT'): Promise<void> {
+  async addAccount(hash: string, tenantId: string): Promise<void> {
     await this.dbManager.saveAccount(hash, tenantId);
   }
 
@@ -79,17 +79,16 @@ export class CacheDatabaseService {
    * Wrapper method for dbManager.saveEntity
    *
    * @param entityId - The entity ID
-   * @param tenantId - The tenant ID (default: 'DEFAULT')
+   * @param tenantId - The tenant ID
    * @param CreDtTm - The creation date time
    * @returns Promise<void>
    * @memberof CacheDatabaseService
    *
    * @remarks
    * BREAKING CHANGE: The parameter order for saveEntity has changed from (entityId, CreDtTm) to (entityId, tenantId, CreDtTm).
-   * Ensure all callers are updated accordingly.er order for saveEntity has changed from (entityId, CreDtTm) to (entityId, tenantId, CreDtTm).
    * Ensure all callers are updated accordingly.
    */
-  async addEntity(entityId: string, tenantId = 'DEFAULT', CreDtTm: string): Promise<void> {
+  async addEntity(entityId: string, tenantId: string, CreDtTm: string): Promise<void> {
     await this.dbManager.saveEntity(entityId, tenantId, CreDtTm);
   }
 
@@ -103,7 +102,7 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string, tenantId = 'DEFAULT'): Promise<void> {
+  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string, tenantId: string): Promise<void> {
     await this.dbManager.saveAccountHolder(entityId, accountId, CreDtTm, tenantId);
   }
 
