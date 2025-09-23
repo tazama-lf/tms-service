@@ -12,5 +12,5 @@ export interface TransactionRelationship {
   lat?: string;
   long?: string;
   TxSts?: string;
-  TenantId: string; // Standardized tenant identifier - capital T
+  TenantId: string;
 }
