@@ -21,22 +21,7 @@
     "test": "jest --config=jest.config.ts --passWithNoTests --forceExit",
     "test:watch": "jest --config=jest.config.ts --watch"
   },
-  "keywords": [
-    "mojaloop",
-    "tazama",
-    "frm"
-  ],
-  "contributors": [
-    {
-      "name": "Len Bekker"
-    },
-    {
-      "name": "Jean-Pierre Nell"
-    },
-    {
-      "name": "Fatima Ali"
-    }
-  ],
+  "author": "Tazama.org",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22.17"
