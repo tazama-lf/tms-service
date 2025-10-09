@@ -314,10 +314,10 @@
                               "type": "string"
                             }
                           },
-                          "CcyOfTrf": {
-                            "type": "string"
-                          },
                           "required": ["Amt", "Ccy"]
+                        },
+                        "CcyOfTrf": {
+                          "type": "string"
                         },
                         "XchgRateInf": {
                           "type": "object",
