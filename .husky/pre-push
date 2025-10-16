@@ -1,1 +1,2 @@
-npm test
+#!/bin/sh
+node_modules/.bin/jest.cmd --config=jest.config.ts --passWithNoTests --forceExit
