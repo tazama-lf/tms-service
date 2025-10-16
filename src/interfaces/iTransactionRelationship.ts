@@ -5,7 +5,7 @@ export interface TransactionRelationship {
   TxTp: string;
   MsgId: string;
   CreDtTm: string;
-  Amt?: string;
+  Amt?: number;
   Ccy?: string;
   PmtInfId: string;
   EndToEndId: string;

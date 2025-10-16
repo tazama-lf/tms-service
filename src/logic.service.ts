@@ -106,11 +106,11 @@ export const rebuildCache = async (
     dbtrAcctId,
     creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
     instdAmt: {
-      amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
+      amt: cdtTrfTxInf.InstdAmt.Amt.Amt,
       ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
     },
     intrBkSttlmAmt: {
-      amt: parseFloat(cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt),
+      amt: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt,
       ccy: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy,
     },
     xchgRate: cdtTrfTxInf.XchgRate,
@@ -345,11 +345,11 @@ export const handlePacs008 = async (transaction: Pacs008, transactionType: strin
     dbtrAcctId,
     creDtTm,
     instdAmt: {
-      amt: parseFloat(InstdAmt),
+      amt: InstdAmt,
       ccy: InstdAmtCcy,
     },
     intrBkSttlmAmt: {
-      amt: parseFloat(IntrBkSttlmAmt),
+      amt: IntrBkSttlmAmt,
       ccy: IntrBkSttlmAmtCcy,
     },
     xchgRate: XchgRate,
