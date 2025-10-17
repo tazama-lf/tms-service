@@ -6,6 +6,11 @@ import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
 import type { Configuration } from '../config';
 
+// Cache Constants
+const CACHE_CONSTANTS = {
+  DEFAULT_TTL: 0,
+} as const;
+
 export class CacheDatabaseService {
   private readonly dbManager: DatabaseManagerInstance<Configuration>;
 
@@ -32,7 +37,7 @@ export class CacheDatabaseService {
       [Database.RAW_HISTORY, Database.EVENT_HISTORY, Cache.DISTRIBUTED],
       auth,
     );
-    return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? 0) };
+    return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? CACHE_CONSTANTS.DEFAULT_TTL) };
   }
 
   /**
@@ -48,34 +53,37 @@ export class CacheDatabaseService {
    * Wrapper method for dbManager.getTransactionPacs008
    *
    * @param {string} EndToEndId
+   * @param {string} tenantId - Tenant ID for filtering
    * @return {*}  {Promise<unknown>}
    * @memberof CacheDatabaseService
    */
-  async getTransactionPacs008(EndToEndId: string): Promise<Pacs008 | undefined> {
-    return await this.dbManager.getTransactionPacs008(EndToEndId);
+  async getTransactionPacs008(EndToEndId: string, tenantId: string): Promise<Pacs008 | undefined> {
+    return await this.dbManager.getTransactionPacs008(EndToEndId, tenantId);
   }
 
   /**
    * Wrapper method for dbManager.saveAccount
    *
    * @param {string} hash
+   * @param {string} tenantId
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccount(hash: string): Promise<void> {
-    await this.dbManager.saveAccount(hash);
+  async addAccount(hash: string, tenantId: string): Promise<void> {
+    await this.dbManager.saveAccount(hash, tenantId);
   }
 
   /**
    * Wrapper method for dbManager.saveEntity
    *
-   * @param {string} entityId
-   * @param {string} CreDtTm
-   * @return {*}  {Promise<void>}
+   * @param entityId - The entity ID
+   * @param tenantId - The tenant ID
+   * @param CreDtTm - The creation date time
+   * @returns Promise<void>
    * @memberof CacheDatabaseService
    */
-  async addEntity(entityId: string, CreDtTm: string): Promise<void> {
-    await this.dbManager.saveEntity(entityId, CreDtTm);
+  async addEntity(entityId: string, tenantId: string, CreDtTm: string): Promise<void> {
+    await this.dbManager.saveEntity(entityId, tenantId, CreDtTm);
   }
 
   /**
@@ -84,11 +92,12 @@ export class CacheDatabaseService {
    * @param {string} entityId
    * @param {string} accountId
    * @param {string} CreDtTm
+   * @param {string} tenantId
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string): Promise<void> {
-    await this.dbManager.saveAccountHolder(entityId, accountId, CreDtTm);
+  async addAccountHolder(entityId: string, accountId: string, CreDtTm: string, tenantId: string): Promise<void> {
+    await this.dbManager.saveAccountHolder(entityId, accountId, CreDtTm, tenantId);
   }
 
   /**
@@ -164,11 +173,11 @@ export class CacheDatabaseService {
   /**
    * Wrapper method for dbManager.isReadyCheck
    *
-   * @return {*}  {Promise<Record<string, unknown>>}
+   * @return {*}  {Record<string, unknown> | undefined}
    * @memberof CacheDatabaseService
    */
-  async isReadyCheck(): Promise<Record<string, unknown> | undefined> {
-    const ready = (await this.dbManager.isReadyCheck()) as Record<string, unknown>;
+  isReadyCheck(): Record<string, unknown> | undefined {
+    const ready = this.dbManager.isReadyCheck() as Record<string, unknown>;
     if (typeof ready === 'object') {
       return ready;
     }

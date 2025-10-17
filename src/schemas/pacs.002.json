@@ -1,5 +1,6 @@
 {
   "type": "object",
+  "not": { "required": ["TenantId"] },
   "properties": {
     "FIToFIPmtSts": {
       "type": "object",
@@ -14,10 +15,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "MsgId",
-            "CreDtTm"
-          ]
+          "required": ["MsgId", "CreDtTm"]
         },
         "TxInfAndSts": {
           "type": "object",
@@ -47,10 +45,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "Amt",
-                        "Ccy"
-                      ]
+                      "required": ["Amt", "Ccy"]
                     },
                     "Agt": {
                       "type": "object",
@@ -65,25 +60,16 @@
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "MmbId"
-                              ]
+                              "required": ["MmbId"]
                             }
                           },
-                          "required": [
-                            "ClrSysMmbId"
-                          ]
+                          "required": ["ClrSysMmbId"]
                         }
                       },
-                      "required": [
-                        "FinInstnId"
-                      ]
+                      "required": ["FinInstnId"]
                     }
                   },
-                  "required": [
-                    "Amt",
-                    "Agt"
-                  ]
+                  "required": ["Amt", "Agt"]
                 },
                 {
                   "type": "object",
@@ -98,10 +84,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "Amt",
-                        "Ccy"
-                      ]
+                      "required": ["Amt", "Ccy"]
                     },
                     "Agt": {
                       "type": "object",
@@ -116,25 +99,16 @@
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "MmbId"
-                              ]
+                              "required": ["MmbId"]
                             }
                           },
-                          "required": [
-                            "ClrSysMmbId"
-                          ]
+                          "required": ["ClrSysMmbId"]
                         }
                       },
-                      "required": [
-                        "FinInstnId"
-                      ]
+                      "required": ["FinInstnId"]
                     }
                   },
-                  "required": [
-                    "Amt",
-                    "Agt"
-                  ]
+                  "required": ["Amt", "Agt"]
                 },
                 {
                   "type": "object",
@@ -149,10 +123,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "Amt",
-                        "Ccy"
-                      ]
+                      "required": ["Amt", "Ccy"]
                     },
                     "Agt": {
                       "type": "object",
@@ -167,25 +138,16 @@
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "MmbId"
-                              ]
+                              "required": ["MmbId"]
                             }
                           },
-                          "required": [
-                            "ClrSysMmbId"
-                          ]
+                          "required": ["ClrSysMmbId"]
                         }
                       },
-                      "required": [
-                        "FinInstnId"
-                      ]
+                      "required": ["FinInstnId"]
                     }
                   },
-                  "required": [
-                    "Amt",
-                    "Agt"
-                  ]
+                  "required": ["Amt", "Agt"]
                 }
               ]
             },
@@ -205,19 +167,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "MmbId"
-                      ]
+                      "required": ["MmbId"]
                     }
                   },
-                  "required": [
-                    "ClrSysMmbId"
-                  ]
+                  "required": ["ClrSysMmbId"]
                 }
               },
-              "required": [
-                "FinInstnId"
-              ]
+              "required": ["FinInstnId"]
             },
             "InstdAgt": {
               "type": "object",
@@ -232,39 +188,24 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "MmbId"
-                      ]
+                      "required": ["MmbId"]
                     }
                   },
-                  "required": [
-                    "ClrSysMmbId"
-                  ]
+                  "required": ["ClrSysMmbId"]
                 }
               },
-              "required": [
-                "FinInstnId"
-              ]
+              "required": ["FinInstnId"]
             }
           },
-          "required": [
-            "OrgnlInstrId",
-            "OrgnlEndToEndId",
-            "TxSts",
-            "ChrgsInf",
-            "AccptncDtTm",
-            "InstgAgt",
-            "InstdAgt"
-          ]
+          "required": ["OrgnlInstrId", "OrgnlEndToEndId", "TxSts", "ChrgsInf", "AccptncDtTm", "InstgAgt", "InstdAgt"]
         }
       },
-      "required": [
-        "GrpHdr",
-        "TxInfAndSts"
-      ]
+      "required": ["GrpHdr", "TxInfAndSts"]
+    },
+    "TxTp": {
+      "type": "string",
+      "default": "pacs.002.001.12"
     }
   },
-  "required": [
-    "FIToFIPmtSts"
-  ]
+  "required": ["FIToFIPmtSts"]
 }

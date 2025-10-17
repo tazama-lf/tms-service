@@ -1,5 +1,6 @@
 {
   "type": "object",
+  "not": { "required": ["TenantId"] },
   "properties": {
     "FIToFICstmrCdtTrf": {
       "type": "object",
@@ -540,6 +541,10 @@
         }
       },
       "required": ["GrpHdr", "CdtTrfTxInf", "RgltryRptg", "RmtInf", "SplmtryData"]
+    },
+    "TxTp": {
+      "type": "string",
+      "default": "pacs.008.001.10"
     }
   },
   "required": ["FIToFICstmrCdtTrf"]
