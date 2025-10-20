@@ -342,7 +342,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   const cacheBuffer = createMessageBuffer({ DataCache: { ...dataCache } });
   if (cacheBuffer) {
     const redisTTL = configuration.redisConfig.distributedCacheTTL;
-    const tenantCacheKey = `${TenantId}${EndToEndId}`;
+    const tenantCacheKey = `${TenantId}:${EndToEndId}`;
     pendingPromises.push(cacheDatabaseManager.set(tenantCacheKey, cacheBuffer, redisTTL ?? 0));
   } else {
     throw new Error('[pacs008] data cache could not be serialized');
@@ -411,7 +411,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs002.tenant');
   try {
-    const tenantCacheKey = `${TenantId}${EndToEndId}`;
+    const tenantCacheKey = `${TenantId}:${EndToEndId}`;
     const dataCacheJSON = (await cacheDatabaseManager.getBuffer(tenantCacheKey)).DataCache;
     dataCache = dataCacheJSON ? (dataCacheJSON as DataCache) : await rebuildCache(EndToEndId, false, TenantId, id);
   } catch (ex) {
