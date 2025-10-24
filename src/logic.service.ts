@@ -67,14 +67,14 @@ const parseDataCache = (transaction: Pacs008): AccountIds => {
  * @param {string} endToEndId
  * @param {boolean} writeToRedis
  * @param {string} tenantId - Tenant ID (defaults to 'DEFAULT' if not provided)
- * @param {string} id - Optional ID for logging
+ * @param {string} id - ID for logging
  * @return {*}  {(Promise<DataCache | undefined>)}
  */
 export const rebuildCache = async (
   endToEndId: string,
   writeToRedis: boolean,
   tenantId: string,
-  id?: string,
+  id: string,
 ): Promise<DataCache | undefined> => {
   const span = apm.startSpan('db.cache.rebuild.tenant');
   const context = 'rebuildCache()';
@@ -182,7 +182,7 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   const spanInsert = apm.startSpan('db.insert.pain001.tenant');
   try {
     await Promise.all([
-      cacheDatabaseManager.saveTransactionHistory(transaction, `pain001_${EndToEndId}`),
+      cacheDatabaseManager.saveTransactionHistory(transaction),
       cacheDatabaseManager.addAccount(debtorAcctId, TenantId),
       cacheDatabaseManager.addAccount(creditorAcctId, TenantId),
       cacheDatabaseManager.addEntity(creditorId, TenantId, CreDtTm),
@@ -263,7 +263,7 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   const spanInsert = apm.startSpan('db.insert.pain013.tenant');
   try {
     await Promise.all([
-      cacheDatabaseManager.saveTransactionHistory(transaction, `pain013_${EndToEndId}`),
+      cacheDatabaseManager.saveTransactionHistory(transaction),
       cacheDatabaseManager.addAccount(debtorAcctId, TenantId),
       cacheDatabaseManager.addAccount(creditorAcctId, TenantId),
     ]);
@@ -366,7 +366,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionDetails(transactionDetails),
-      cacheDatabaseManager.saveTransactionHistory(transaction, `pacs008_${EndToEndId}`),
+      cacheDatabaseManager.saveTransactionHistory(transaction),
     ]);
   } catch (err) {
     loggerService.error(err instanceof Error ? err.message : JSON.stringify(err), logContext, id);
@@ -417,7 +417,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
   } catch (ex) {
     loggerService.error(`Could not retrieve data cache for: ${EndToEndId} from redis`, logContext, id);
     loggerService.log('Proceeding with Datacache rebuild', logContext, id);
-    dataCache = await rebuildCache(EndToEndId, false, id);
+    dataCache = await rebuildCache(EndToEndId, false, TenantId, id);
   } finally {
     spanDataCache?.end();
   }
@@ -426,7 +426,7 @@ export const handlePacs002 = async (transaction: Pacs002): Promise<void> => {
 
   const spanInsert = apm.startSpan('db.insert.pacs002');
   try {
-    await cacheDatabaseManager.saveTransactionHistory(transaction, `pacs002_${EndToEndId}`);
+    await cacheDatabaseManager.saveTransactionHistory(transaction);
 
     // data cache is valid at this point
 

@@ -50,7 +50,7 @@ export const Pain001Handler = async (req: FastifyRequest<{ Body: Pain001 }>, rep
 export const Pain013Handler = async (req: FastifyRequest<{ Body: Pain013 }>, reply: FastifyReply): Promise<void> => {
   const { TenantId: tenantId } = req.body;
 
-  loggerService.log(`Start - Handle Pain0113 request for tenant ${tenantId}`);
+  loggerService.log(`Start - Handle Pain013 request for tenant ${tenantId}`);
 
   try {
     const request = req.body;

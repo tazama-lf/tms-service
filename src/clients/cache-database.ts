@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
-import type { Pacs002, Pacs008, Pain001, Pain013, TransactionDetails } from '@tazama-lf/frms-coe-lib/lib/interfaces';
-import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
+import type { Pacs002, Pacs008, Pain001, Pain013, TransactionDetails } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import type { Configuration } from '../config';
 
 // Cache Constants
@@ -120,7 +119,7 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002, redisKey = ''): Promise<void> {
+  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002): Promise<void> {
     switch (transaction.TxTp) {
       case 'pain.001.001.11': {
         await this.dbManager.saveTransactionHistoryPain001(transaction as Pain001);
@@ -141,8 +140,6 @@ export class CacheDatabaseService {
       default:
         throw Error('Error while selecting transaction type.');
     }
-    const buff = createMessageBuffer({ ...transaction });
-    if (redisKey && buff) await this.dbManager.set(redisKey, buff, this.cacheExpireTime);
   }
 
   /**
