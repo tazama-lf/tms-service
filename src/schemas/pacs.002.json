@@ -201,6 +201,10 @@
         }
       },
       "required": ["GrpHdr", "TxInfAndSts"]
+    },
+    "TxTp": {
+      "type": "string",
+      "default": "pacs.002.001.12"
     }
   },
   "required": ["FIToFIPmtSts"]

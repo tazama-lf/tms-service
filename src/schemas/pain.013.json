@@ -605,6 +605,10 @@
         }
       },
       "required": ["GrpHdr", "PmtInf", "SplmtryData"]
+    },
+    "TxTp": {
+      "type": "string",
+      "default": "pain.013.001.09"
     }
   },
   "required": ["CdtrPmtActvtnReq"]

@@ -31,7 +31,7 @@ export const dbInit = async (): Promise<void> => {
   const { config, db } = await CacheDatabaseService.create(configuration);
   cacheDatabaseManager = db;
   configuration = { ...configuration, ...config };
-  loggerService.log(JSON.stringify(cacheDatabaseManager.isReadyCheck()));
+  loggerService.log(util.inspect(cacheDatabaseManager.isReadyCheck()));
 };
 
 const connect = async (): Promise<void> => {
@@ -94,6 +94,8 @@ if (cluster.isPrimary && configuration.maxCPU !== APP_CONSTANTS.PRIMARY_WORKER_O
       if (process.env.NODE_ENV !== 'test') {
         await dbInit();
         await runServer();
+
+        loggerService.debug(`Authentication is ${configuration.AUTHENTICATED ? 'ENABLED' : 'DISABLED'}`);
       }
     } catch (err) {
       loggerService.error(`Error while starting ${configuration.functionName}`, err);

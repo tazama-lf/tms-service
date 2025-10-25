@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
+import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { FastifySchema } from 'fastify/types/schema';
-import { loggerService } from '..';
+import { configuration } from '../';
 import { tokenHandler } from '../auth/authHandler';
 import { validateTenantMiddleware } from '../middleware/validateTenantMiddleware';
-import { configuration } from '../';
 
-type preHandler = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+export type TransactionTypes = Pain001 | Pain013 | Pacs008 | Pacs002;
+type preHandler = (request: FastifyRequest<{ Body: TransactionTypes }>, reply: FastifyReply) => Promise<void>;
 
 const responseSchema = (schemaTransactionName: string): Record<string, unknown> => ({
   '2xx': {
@@ -23,20 +24,13 @@ const responseSchema = (schemaTransactionName: string): Record<string, unknown> 
   },
 });
 
-const SetOptions = (
-  handler: RouteHandlerMethod,
-  schemaTransactionName: string,
-  claim: string,
-): { preHandler?: preHandler[]; handler: RouteHandlerMethod; schema: FastifySchema } => {
-  loggerService.debug(`Authentication is ${configuration.AUTHENTICATED ? 'ENABLED' : 'DISABLED'} for ${handler.name}`);
-
+const SetOptions = (schemaTransactionName: string, claim: string): { preHandler?: preHandler[]; schema: FastifySchema } => {
   const preHandlers: preHandler[] = configuration.AUTHENTICATED
     ? [validateTenantMiddleware, tokenHandler(claim)]
     : [validateTenantMiddleware];
 
   return {
     preHandler: preHandlers,
-    handler,
     schema: { body: { $ref: `${schemaTransactionName}#` }, response: responseSchema(schemaTransactionName) },
   };
 };

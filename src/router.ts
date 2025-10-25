@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
-import { Pacs002Handler, Pacs008Handler, Pain001Handler, Pain013Handler, handleHealthCheck } from './app.controller';
+import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import type { FastifyInstance } from 'fastify';
 import { configuration } from './';
+import { Pacs002Handler, Pacs008Handler, Pain001Handler, Pain013Handler, handleHealthCheck } from './app.controller';
 import SetOptions from './utils/schema-utils';
 
 const routePrivilege = {
@@ -16,21 +17,33 @@ function Routes(fastify: FastifyInstance, options: unknown): void {
   fastify.get('/health', handleHealthCheck);
 
   if (configuration.QUOTING) {
-    fastify.post('/v1/evaluate/iso20022/pain.001.001.11', {
-      ...SetOptions(Pain001Handler as RouteHandlerMethod, 'messageSchemaPain001', routePrivilege.pain001),
-    });
-    fastify.post('/v1/evaluate/iso20022/pain.013.001.09', {
-      ...SetOptions(Pain013Handler as RouteHandlerMethod, 'messageSchemaPain013', routePrivilege.pain013),
-    });
+    fastify.post<{ Body: Pain001 }>(
+      '/v1/evaluate/iso20022/pain.001.001.11',
+      { ...SetOptions('messageSchemaPain001', routePrivilege.pain001) },
+      Pain001Handler,
+    );
+
+    fastify.post<{ Body: Pain013 }>(
+      '/v1/evaluate/iso20022/pain.013.001.09',
+      { ...SetOptions('messageSchemaPain013', routePrivilege.pain013) },
+      Pain013Handler,
+    );
   }
 
-  // Pacs008 and Pacs002 routes (tenant-aware via SetOptions middleware)
-  fastify.post('/v1/evaluate/iso20022/pacs.008.001.10', {
-    ...SetOptions(Pacs008Handler as RouteHandlerMethod, 'messageSchemaPacs008', routePrivilege.pacs008),
-  });
-  fastify.post('/v1/evaluate/iso20022/pacs.002.001.12', {
-    ...SetOptions(Pacs002Handler as RouteHandlerMethod, 'messageSchemaPacs002', routePrivilege.pacs002),
-  });
+  fastify.post<{ Body: Pacs008 }>(
+    '/v1/evaluate/iso20022/pacs.008.001.10',
+    {
+      ...SetOptions('messageSchemaPacs008', routePrivilege.pacs008),
+    },
+    Pacs008Handler,
+  );
+  fastify.post<{ Body: Pacs002 }>(
+    '/v1/evaluate/iso20022/pacs.002.001.12',
+    {
+      ...SetOptions('messageSchemaPacs002', routePrivilege.pacs002),
+    },
+    Pacs002Handler,
+  );
 }
 
 export default Routes;

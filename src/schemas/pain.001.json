@@ -315,10 +315,10 @@
                               "type": "string"
                             }
                           },
-                          "CcyOfTrf": {
-                            "type": "string"
-                          },
                           "required": ["Amt", "Ccy"]
+                        },
+                        "CcyOfTrf": {
+                          "type": "string"
                         },
                         "XchgRateInf": {
                           "type": "object",
@@ -631,6 +631,10 @@
         }
       },
       "required": ["GrpHdr", "PmtInf", "SplmtryData"]
+    },
+    "TxTp": {
+      "type": "string",
+      "default": "pain.001.001.11"
     }
   },
   "required": ["CstmrCdtTrfInitn"]

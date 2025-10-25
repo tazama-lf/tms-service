@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createMessageBuffer } from '@tazama-lf/frms-coe-lib/lib/helpers/protobuf';
-import type { Pacs002, Pacs008, Pain001, Pain013 } from '@tazama-lf/frms-coe-lib/lib/interfaces';
-import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
-import type { TransactionRelationship } from '../interfaces/iTransactionRelationship';
 import { Database } from '@tazama-lf/frms-coe-lib/lib/config/database.config';
 import { Cache } from '@tazama-lf/frms-coe-lib/lib/config/redis.config';
+import type { Pacs002, Pacs008, Pain001, Pain013, TransactionDetails } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { CreateStorageManager, type DatabaseManagerInstance, type ManagerConfig } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import type { Configuration } from '../config';
 
 // Cache Constants
@@ -35,7 +33,7 @@ export class CacheDatabaseService {
   public static async create(configuration: Configuration): Promise<{ db: CacheDatabaseService; config: ManagerConfig }> {
     const auth = configuration.nodeEnv === 'production';
     const { db, config } = await CreateStorageManager<typeof configuration>(
-      [Database.TRANSACTION_HISTORY, Database.PSEUDONYMS, Cache.DISTRIBUTED],
+      [Database.RAW_HISTORY, Database.EVENT_HISTORY, Cache.DISTRIBUTED],
       auth,
     );
     return { config, db: new CacheDatabaseService(db, config.redisConfig?.distributedCacheTTL ?? CACHE_CONSTANTS.DEFAULT_TTL) };
@@ -58,9 +56,8 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<unknown>}
    * @memberof CacheDatabaseService
    */
-  async getTransactionPacs008(EndToEndId: string, tenantId: string): Promise<unknown> {
-    const pacs008 = await this.dbManager.getTransactionPacs008(EndToEndId, tenantId);
-    return pacs008;
+  async getTransactionPacs008(EndToEndId: string, tenantId: string): Promise<Pacs008 | undefined> {
+    return await this.dbManager.getTransactionPacs008(EndToEndId, tenantId);
   }
 
   /**
@@ -83,10 +80,6 @@ export class CacheDatabaseService {
    * @param CreDtTm - The creation date time
    * @returns Promise<void>
    * @memberof CacheDatabaseService
-   *
-   * @remarks
-   * BREAKING CHANGE: The parameter order for saveEntity has changed from (entityId, CreDtTm) to (entityId, tenantId, CreDtTm).
-   * Ensure all callers are updated accordingly.
    */
   async addEntity(entityId: string, tenantId: string, CreDtTm: string): Promise<void> {
     await this.dbManager.saveEntity(entityId, tenantId, CreDtTm);
@@ -109,12 +102,12 @@ export class CacheDatabaseService {
   /**
    * Wrapper method for dbManager.saveTransactionRelationship
    *
-   * @param {TransactionRelationship} tR
+   * @param {TransactionDetails} td
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async saveTransactionRelationship(tR: TransactionRelationship): Promise<void> {
-    await this.dbManager.saveTransactionRelationship(tR);
+  async saveTransactionDetails(td: TransactionDetails): Promise<void> {
+    await this.dbManager.saveTransactionDetails(td);
   }
 
   /**
@@ -126,7 +119,7 @@ export class CacheDatabaseService {
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002, redisKey = ''): Promise<void> {
+  async saveTransactionHistory(transaction: Pain001 | Pain013 | Pacs008 | Pacs002): Promise<void> {
     switch (transaction.TxTp) {
       case 'pain.001.001.11': {
         await this.dbManager.saveTransactionHistoryPain001(transaction as Pain001);
@@ -147,8 +140,6 @@ export class CacheDatabaseService {
       default:
         throw Error('Error while selecting transaction type.');
     }
-    const buff = createMessageBuffer({ ...transaction });
-    if (redisKey && buff) await this.dbManager.set(redisKey, buff, this.cacheExpireTime);
   }
 
   /**
@@ -179,11 +170,11 @@ export class CacheDatabaseService {
   /**
    * Wrapper method for dbManager.isReadyCheck
    *
-   * @return {*}  {Promise<Record<string, unknown>>}
+   * @return {*}  {Record<string, unknown> | undefined}
    * @memberof CacheDatabaseService
    */
-  async isReadyCheck(): Promise<Record<string, unknown> | undefined> {
-    const ready = (await this.dbManager.isReadyCheck()) as Record<string, unknown>;
+  isReadyCheck(): Record<string, unknown> | undefined {
+    const ready = this.dbManager.isReadyCheck() as Record<string, unknown>;
     if (typeof ready === 'object') {
       return ready;
     }

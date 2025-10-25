@@ -20,7 +20,7 @@ sequenceDiagram
     participant Client as "External Client"
     participant TMS as "Transaction Monitoring Service"
     participant log as "Logger"
-    participant Ara as "ArangoDB"
+    participant DB as "Postgres"
     participant Cache as "Valkey Cache"
     participant ED as "Event-Director"
 
@@ -32,17 +32,17 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
         end
-                par save in ArangoDB
-                    TMS ->> Ara: saveTransactionHistory(pain001)
-                    TMS ->> Ara: addAccount(debtor)
-                    TMS ->> Ara: addAccount(creditor)
-                    TMS ->> Ara: addEntity(debtor)
-                    TMS ->> Ara: addEntity(creditor)                   
+                par save in Postgres
+                    TMS ->> DB: saveTransactionHistory(pain001)
+                    TMS ->> DB: addAccount(debtor)
+                    TMS ->> DB: addAccount(creditor)
+                    TMS ->> DB: addEntity(debtor)
+                    TMS ->> DB: addEntity(creditor)                   
                 end
-                par save in ArangoDB
-                    TMS ->> Ara: saveTransactionRelationship(pain001)
-                    TMS ->> Ara: addAccountHolder(debtor)
-                    TMS ->> Ara: addAccountHolder(creditor)                
+                par save in Postgres
+                    TMS ->> DB: saveTransactionRelationship(pain001)
+                    TMS ->> DB: addAccountHolder(debtor)
+                    TMS ->> DB: addAccountHolder(creditor)                
                 end
             
         alt Error
@@ -61,12 +61,12 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
         end
-            par save in ArangoDB
-                TMS ->> Ara: saveTransactionHistory(pain013)
-                TMS ->> Ara: addAccount(debtor)
-                TMS ->> Ara: addAccount(creditor)
+            par save in Postgres
+                TMS ->> DB: saveTransactionHistory(pain013)
+                TMS ->> DB: addAccount(debtor)
+                TMS ->> DB: addAccount(creditor)
             end
-            TMS ->> Ara: saveTransactionRelationship(pain013)
+            TMS ->> DB: saveTransactionRelationship(pain013)
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
@@ -83,25 +83,25 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
         end
-            par save in ArangoDB
-                TMS ->> Ara: addAccount(debtor)
-                TMS ->> Ara: addAccount(creditor)
+            par save in Postgres
+                TMS ->> DB: addAccount(debtor)
+                TMS ->> DB: addAccount(creditor)
                 TMS ->> Cache: save Data Cache
-                %% TMS ->> Ara: saveTransactionHistory(pacs008)
+                %% TMS ->> DB: saveTransactionHistory(pacs008)
             end
             alt Quoting Enabled
-                par save in ArangoDB
-                  TMS ->> Ara: addEntity(creditor)
-                  TMS ->> Ara: addEntity(debtor)
+                par save in Postgres
+                  TMS ->> DB: addEntity(creditor)
+                  TMS ->> DB: addEntity(debtor)
                 end
 
-                par save in ArangoDB
-                  TMS ->> Ara: addAccountHolder(creditor)
-                  TMS ->> Ara: addAccountHolder(debtor)
+                par save in Postgres
+                  TMS ->> DB: addAccountHolder(creditor)
+                  TMS ->> DB: addAccountHolder(debtor)
                 end
             end
-            TMS ->> Ara: saveTransactionRelationship
-            TMS ->> Ara: saveTransactionHistory(pacs008)
+            TMS ->> DB: saveTransactionRelationship
+            TMS ->> DB: saveTransactionHistory(pacs008)
 
             
         alt Error
@@ -122,12 +122,12 @@ sequenceDiagram
         end
         TMS ->> Cache: getCache
         alt cache miss
-          TMS ->> Ara: get Pacs008
+          TMS ->> DB: get Pacs008
           TMS ->> TMS: rebuild cache
         end
-        TMS ->> Ara: saveTransactionHistory
-        TMS ->> Ara: get Pacs008
-        TMS ->> Ara: saveTransactionRelationship
+        TMS ->> DB: saveTransactionHistory
+        TMS ->> DB: get Pacs008
+        TMS ->> DB: saveTransactionRelationship
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
@@ -193,7 +193,7 @@ graph TD
 
 ## Repository
 
-[GitHub - frmscoe/tms-service](https://github.com/frmscoe/tms-service)
+[GitHub - tazama-lf/tms-service](https://github.com/tazama-lf/tms-service)
 
 ## Pain001 Message
 
@@ -910,3 +910,29 @@ graph TD
 }
 ```
   </details>
+
+## Environment variables
+
+You then need to configure your environment: a [sample](.env.template) configuration file has been provided and you may adapt that to your environment. Copy it to `.env` and modify as needed:
+
+```sh
+cp .env.template .env
+```
+A [registry](https://github.com/tazama-lf/docs/blob/f292c9ddabf52d6fe62addc1c61957419ed4ad05/Technical/processor-startup-config-registry.md) of environment variables is provided to provide more context for what each variable is used for.
+
+##### Additional Variables
+
+| Variable                           | Purpose                         | Example         |
+|------------------------------------|---------------------------------|-----------------|
+| `CONFIGURATION_DATABASE`           | PostgreSQL database name        | `configuration` |
+| `CONFIGURATION_DATABASE_HOST`      | PostgreSQL hostname or endpoint | `localhost`     |
+| `CONFIGURATION_DATABASE_PORT`      | PostgreSQL post used            | `5432`          |
+| `CONFIGURATION_DATABASE_USER`      | PostgreSQL username             | `root`          |
+| `CONFIGURATION_DATABASE_PASSWORD`  | PostgreSQL database password    | `password`      |
+| `CONFIGURATION_DATABASE_CERT_PATH` | PostgreSQL certificate path     | `/path/to/cert` |
+| `EVENT_HISTORY_DATABASE`           | PostgreSQL database name        | `event_history` |
+| `EVENT_HISTORY_DATABASE_HOST`      | PostgreSQL hostname or endpoint | `localhost`     |
+| `EVENT_HISTORY_DATABASE_PORT`      | PostgreSQL post used            | `5432`          |
+| `EVENT_HISTORY_DATABASE_USER`      | PostgreSQL username             | `root`          |
+| `EVENT_HISTORY_DATABASE_PASSWORD`  | PostgreSQL database password    | `password`      |
+| `EVENT_HISTORY_DATABASE_CERT_PATH` | PostgreSQL certificate path     | `/path/to/cert` |

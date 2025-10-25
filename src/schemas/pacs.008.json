@@ -541,6 +541,10 @@
         }
       },
       "required": ["GrpHdr", "CdtTrfTxInf", "RgltryRptg", "RmtInf", "SplmtryData"]
+    },
+    "TxTp": {
+      "type": "string",
+      "default": "pacs.008.001.10"
     }
   },
   "required": ["FIToFICstmrCdtTrf"]
