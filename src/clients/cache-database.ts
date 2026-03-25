@@ -65,11 +65,12 @@ export class CacheDatabaseService {
    *
    * @param {string} hash
    * @param {string} tenantId
+   * @param {string} CreDtTm
    * @return {*}  {Promise<void>}
    * @memberof CacheDatabaseService
    */
-  async addAccount(hash: string, tenantId: string): Promise<void> {
-    await this.dbManager.saveAccount(hash, tenantId);
+  async addAccount(hash: string, tenantId: string, CreDtTm: string): Promise<void> {
+    await this.dbManager.saveAccount(hash, tenantId, CreDtTm);
   }
 
   /**

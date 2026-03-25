@@ -32,17 +32,18 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.001.001.11 POST Result
         end
+        TMS ->> TMS: Extract CreDtTm from CstmrCdtTrfInitn.GrpHdr.CreDtTm
                 par save in Postgres
                     TMS ->> DB: saveTransactionHistory(pain001)
-                    TMS ->> DB: addAccount(debtor)
-                    TMS ->> DB: addAccount(creditor)
-                    TMS ->> DB: addEntity(debtor)
-                    TMS ->> DB: addEntity(creditor)                   
+                    TMS ->> DB: addAccount(debtorAcctId, TenantId, CreDtTm)
+                    TMS ->> DB: addAccount(creditorAcctId, TenantId, CreDtTm)
+                    TMS ->> DB: addEntity(creditorId, TenantId, CreDtTm)
+                    TMS ->> DB: addEntity(debtorId, TenantId, CreDtTm)
                 end
                 par save in Postgres
-                    TMS ->> DB: saveTransactionRelationship(pain001)
-                    TMS ->> DB: addAccountHolder(debtor)
-                    TMS ->> DB: addAccountHolder(creditor)                
+                    TMS ->> DB: saveTransactionDetails(CreDtTm included)
+                    TMS ->> DB: addAccountHolder(creditorId, creditorAcctId, CreDtTm, TenantId)
+                    TMS ->> DB: addAccountHolder(debtorId, debtorAcctId, CreDtTm, TenantId)
                 end
             
         alt Error
@@ -61,12 +62,13 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pain.013.001.09 POST Result
         end
+        TMS ->> TMS: Extract CreDtTm from CdtrPmtActvtnReq.GrpHdr.CreDtTm
             par save in Postgres
                 TMS ->> DB: saveTransactionHistory(pain013)
-                TMS ->> DB: addAccount(debtor)
-                TMS ->> DB: addAccount(creditor)
+                TMS ->> DB: addAccount(debtorAcctId, TenantId, CreDtTm)
+                TMS ->> DB: addAccount(creditorAcctId, TenantId, CreDtTm)
             end
-            TMS ->> DB: saveTransactionRelationship(pain013)
+            TMS ->> DB: saveTransactionDetails(CreDtTm included)
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
@@ -83,25 +85,27 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pacs.008.001.10 POST Result
         end
-            par save in Postgres
-                TMS ->> DB: addAccount(debtor)
-                TMS ->> DB: addAccount(creditor)
-                TMS ->> Cache: save Data Cache
-                %% TMS ->> DB: saveTransactionHistory(pacs008)
+        TMS ->> TMS: Extract CreDtTm from FIToFICstmrCdtTrf.GrpHdr.CreDtTm
+            par save in Postgres and Cache
+                TMS ->> DB: addAccount(dbtrAcctId, TenantId, CreDtTm)
+                TMS ->> DB: addAccount(cdtrAcctId, TenantId, CreDtTm)
+                TMS ->> Cache: save DataCache (includes CreDtTm)
             end
-            alt Quoting Enabled
+            alt Quoting Not Enabled
                 par save in Postgres
-                  TMS ->> DB: addEntity(creditor)
-                  TMS ->> DB: addEntity(debtor)
+                  TMS ->> DB: addEntity(cdtrId, TenantId, CreDtTm)
+                  TMS ->> DB: addEntity(dbtrId, TenantId, CreDtTm)
                 end
 
                 par save in Postgres
-                  TMS ->> DB: addAccountHolder(creditor)
-                  TMS ->> DB: addAccountHolder(debtor)
+                  TMS ->> DB: addAccountHolder(cdtrId, cdtrAcctId, CreDtTm, TenantId)
+                  TMS ->> DB: addAccountHolder(dbtrId, dbtrAcctId, CreDtTm, TenantId)
                 end
             end
-            TMS ->> DB: saveTransactionRelationship
-            TMS ->> DB: saveTransactionHistory(pacs008)
+            par save in Postgres
+                TMS ->> DB: saveTransactionDetails(CreDtTm included)
+                TMS ->> DB: saveTransactionHistory(pacs008)
+            end
 
             
         alt Error
@@ -120,14 +124,14 @@ sequenceDiagram
         TMS ->> log: Logging of error
         TMS ->> Client: /v1/evaluate/iso20022/pacs.002.001.12 POST Result
         end
-        TMS ->> Cache: getCache
+        TMS ->> TMS: Extract CreDtTm from FIToFIPmtSts.GrpHdr.CreDtTm
+        TMS ->> Cache: getCache (DataCache includes CreDtTm from pacs008)
         alt cache miss
           TMS ->> DB: get Pacs008
-          TMS ->> TMS: rebuild cache
+          TMS ->> TMS: rebuild cache (CreDtTm from pacs008 GrpHdr)
         end
-        TMS ->> DB: saveTransactionHistory
-        TMS ->> DB: get Pacs008
-        TMS ->> DB: saveTransactionRelationship
+        TMS ->> DB: saveTransactionHistory(pacs002)
+        TMS ->> DB: saveTransactionDetails(CreDtTm included)
         alt Error
         TMS ->> log: Logging of error
         TMS ->> TMS: Throw error
