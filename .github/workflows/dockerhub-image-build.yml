@@ -31,7 +31,7 @@ jobs:
       id-token: write
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Log in to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
@@ -68,7 +68,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: GH_TOKEN=${{ secrets.GH_TOKEN }}
+          secrets: |
+            GH_TOKEN=${{ secrets.GH_TOKEN }}
       
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32
@@ -78,7 +79,8 @@ jobs:
           push-to-registry: true
 
       - name: Send Slack Notification
+        continue-on-error: true
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          curl -X POST -H 'Content-type: application/json' --data '{"blocks": [{"type": "header","text": {"type": "plain_text","text": "New Dockerhub Image published :ship::ship:","emoji": true}},{"type": "section","fields": [{"type": "mrkdwn","text": "*Service:*\n${{ env.REPO_NAME }} "},{"type": "mrkdwn","text": "*Tazama Dockerhub:*\n<https://hub.docker.com/orgs/tazamaorg/repositories>"}]}]}' $SLACK_WEBHOOK_URL
+          curl --fail -sS -X POST -H 'Content-type: application/json' --data '{"blocks": [{"type": "header","text": {"type": "plain_text","text": "New Dockerhub Image published :ship::ship:","emoji": true}},{"type": "section","fields": [{"type": "mrkdwn","text": "*Service:*\n${{ env.REPO_NAME }} "},{"type": "mrkdwn","text": "*Tazama Dockerhub:*\n<https://hub.docker.com/orgs/tazamaorg/repositories>"}]}]}' $SLACK_WEBHOOK_URL
