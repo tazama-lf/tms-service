@@ -11,7 +11,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 # Scorecard workflow restrictions (enforced when publish_results=true):
 #   - No workflow-level env vars or defaults
@@ -40,9 +39,7 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # Publish results (badge + REST API) only when running on the default
-          # branch or on a schedule/branch-protection event.  Dev-branch runs
-          # still score the repo but do not overwrite the published badge.
+          # Publish results (badge + REST API) on main, schedule, and branch_protection_rule events.
           publish_results: ${{ github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'branch_protection_rule' }}
 
       - name: "Upload artifact"
