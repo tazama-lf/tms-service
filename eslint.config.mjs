@@ -32,6 +32,7 @@ export default defineConfig([
       ...eslintPluginEslintComments.configs.recommended.rules,
       '@eslint-community/eslint-comments/require-description': ['error', { ignore: ['eslint-enable'] }],
       '@eslint-community/eslint-comments/disable-enable-pair': 'error',
+      '@typescript-eslint/unified-signatures': 'off', // crashes on SupportedTransactionMessage union param (eslint-plugin bug in <=8.46.2)
       '@typescript-eslint/init-declarations': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
