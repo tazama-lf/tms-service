@@ -97,11 +97,11 @@ export const rebuildCache = async (
     dbtrAcctId,
     creDtTm: pacs008.FIToFICstmrCdtTrf.GrpHdr.CreDtTm,
     instdAmt: {
-      amt: parseFloat(cdtTrfTxInf.InstdAmt.Amt.Amt),
+      amt: cdtTrfTxInf.InstdAmt.Amt.Amt,
       ccy: cdtTrfTxInf.InstdAmt.Amt.Ccy,
     },
     intrBkSttlmAmt: {
-      amt: parseFloat(cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt),
+      amt: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Amt,
       ccy: cdtTrfTxInf.IntrBkSttlmAmt.Amt.Ccy,
     },
     xchgRate: cdtTrfTxInf.XchgRate,
@@ -183,8 +183,8 @@ export const handlePain001 = async (transaction: Pain001): Promise<void> => {
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionHistory(transaction),
-      cacheDatabaseManager.addAccount(debtorAcctId, TenantId),
-      cacheDatabaseManager.addAccount(creditorAcctId, TenantId),
+      cacheDatabaseManager.addAccount(debtorAcctId, TenantId, CreDtTm),
+      cacheDatabaseManager.addAccount(creditorAcctId, TenantId, CreDtTm),
       cacheDatabaseManager.addEntity(creditorId, TenantId, CreDtTm),
       cacheDatabaseManager.addEntity(debtorId, TenantId, CreDtTm),
     ]);
@@ -264,8 +264,8 @@ export const handlePain013 = async (transaction: Pain013): Promise<void> => {
   try {
     await Promise.all([
       cacheDatabaseManager.saveTransactionHistory(transaction),
-      cacheDatabaseManager.addAccount(debtorAcctId, TenantId),
-      cacheDatabaseManager.addAccount(creditorAcctId, TenantId),
+      cacheDatabaseManager.addAccount(debtorAcctId, TenantId, CreDtTm),
+      cacheDatabaseManager.addAccount(creditorAcctId, TenantId, CreDtTm),
     ]);
 
     await cacheDatabaseManager.saveTransactionDetails(transactionDetails);
@@ -319,7 +319,10 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     TenantId,
   };
 
-  const pendingPromises = [cacheDatabaseManager.addAccount(dbtrAcctId, TenantId), cacheDatabaseManager.addAccount(cdtrAcctId, TenantId)];
+  const pendingPromises = [
+    cacheDatabaseManager.addAccount(dbtrAcctId, TenantId, creDtTm),
+    cacheDatabaseManager.addAccount(cdtrAcctId, TenantId, creDtTm),
+  ];
 
   const dataCache: DataCache = {
     cdtrId,
@@ -328,11 +331,11 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     dbtrAcctId,
     creDtTm,
     instdAmt: {
-      amt: parseFloat(InstdAmt),
+      amt: InstdAmt,
       ccy: InstdAmtCcy,
     },
     intrBkSttlmAmt: {
-      amt: parseFloat(IntrBkSttlmAmt),
+      amt: IntrBkSttlmAmt,
       ccy: IntrBkSttlmAmtCcy,
     },
     xchgRate: XchgRate,

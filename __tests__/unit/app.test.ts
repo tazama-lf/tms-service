@@ -95,6 +95,12 @@ describe('App Controller & Logic Service', () => {
       expect(handleSpy).toHaveReturned();
     });
 
+    it('should pass CreDtTm to addAccount for pain.001', async () => {
+      const addAccountSpy = jest.spyOn(cacheDatabaseManager, 'addAccount');
+      await LogicService.handlePain001(Pain001Sample as Pain001);
+      expect(addAccountSpy).toHaveBeenCalledWith(expect.any(String), expect.any(String), Pain001Sample.CstmrCdtTrfInitn.GrpHdr.CreDtTm);
+    });
+
     it('should handle pain.001, database error', async () => {
       const request: Pain001 = Pain001Sample;
 
@@ -143,6 +149,12 @@ describe('App Controller & Logic Service', () => {
       expect(handleSpy).toHaveReturned();
     });
 
+    it('should pass CreDtTm to addAccount for pain.013', async () => {
+      const addAccountSpy = jest.spyOn(cacheDatabaseManager, 'addAccount');
+      await LogicService.handlePain013(Pain013Sample as Pain013);
+      expect(addAccountSpy).toHaveBeenCalledWith(expect.any(String), expect.any(String), Pain013Sample.CdtrPmtActvtnReq.GrpHdr.CreDtTm);
+    });
+
     it('should handle pain.013, database error', async () => {
       const request: Pain013 = Pain013Sample;
 
@@ -171,6 +183,12 @@ describe('App Controller & Logic Service', () => {
       await LogicService.handlePacs008(request);
       expect(handleSpy).toHaveBeenCalledTimes(1);
       expect(handleSpy).toHaveReturned();
+    });
+
+    it('should pass CreDtTm to addAccount for pacs.008', async () => {
+      const addAccountSpy = jest.spyOn(cacheDatabaseManager, 'addAccount');
+      await LogicService.handlePacs008(Pacs008Sample as Pacs008);
+      expect(addAccountSpy).toHaveBeenCalledWith(expect.any(String), expect.any(String), Pacs008Sample.FIToFICstmrCdtTrf.GrpHdr.CreDtTm);
     });
 
     it('should pacs.008, createMessageBuffer undefined', async () => {
