@@ -17,6 +17,7 @@ export const tokenHandler =
       const validated = validateTokenAndClaims(token, [claim]);
       if (!validated[claim]) {
         reply.code(401).send({ error: 'Unauthorized' });
+        return;
       }
       loggerService.log('Authenticated', logContext);
     } catch (error) {
