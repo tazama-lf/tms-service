@@ -8,6 +8,8 @@ import { configuration } from '../../src/';
 import { cacheDatabaseManager, dbInit, loggerService, runServer, server } from '../../src/index';
 import * as LogicService from '../../src/logic.service';
 import { parseDataCache, calculateDuration } from '../../src/logic.service';
+import Ajv from 'ajv';
+import pacs008Schema from '../../src/schemas/pacs.008.json';
 
 // Common test data constants to avoid duplication
 
@@ -175,6 +177,36 @@ describe('App Controller & Logic Service', () => {
   });
 
   describe('handlePacs.008', () => {
+    it.each([1, 17.536082])('preserves numeric XchgRate %s after validation and processing', async (rate) => {
+      // Match an HTTP JSON body: the shared fixture contains Date instances.
+      const request = JSON.parse(JSON.stringify(Pacs008Sample)) as Pacs008;
+      Reflect.deleteProperty(request, 'TenantId');
+      Reflect.deleteProperty(request, 'DataCache');
+      request.FIToFICstmrCdtTrf.CdtTrfTxInf.XchgRate = rate;
+      const validate = new Ajv({
+        removeAdditional: 'all',
+        useDefaults: true,
+        coerceTypes: 'array',
+        strictTuples: false,
+        strict: false,
+      }).compile(pacs008Schema);
+      expect(validate(request)).toBe(true);
+      expect(request.FIToFICstmrCdtTrf.CdtTrfTxInf.XchgRate).toBe(rate);
+      request.TenantId = 'DEFAULT';
+
+      const historySpy = jest.spyOn(cacheDatabaseManager, 'saveTransactionHistory');
+      const bufferSpy = jest.spyOn(protobuf, 'createMessageBuffer');
+      await LogicService.handlePacs008(request);
+
+      expect(historySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FIToFICstmrCdtTrf: expect.objectContaining({ CdtTrfTxInf: expect.objectContaining({ XchgRate: rate }) }),
+          DataCache: expect.objectContaining({ xchgRate: rate }),
+        }),
+      );
+      expect(bufferSpy).toHaveBeenCalledWith({ DataCache: expect.objectContaining({ xchgRate: rate }) });
+    });
+
     it('should pacs.008', async () => {
       const request: Pacs008 = Pacs008Sample;
 
@@ -405,6 +437,15 @@ describe('App Controller & Logic Service', () => {
   });
 
   describe('rebuildCache', () => {
+    it('preserves numeric XchgRate when rebuilding DataCache', async () => {
+      const transaction: Pacs008 = structuredClone(Pacs008Sample);
+      transaction.FIToFICstmrCdtTrf.CdtTrfTxInf.XchgRate = 17.536082;
+      const lookupSpy = jest.spyOn(cacheDatabaseManager, 'getTransactionPacs008').mockResolvedValueOnce(transaction);
+      const cache = await LogicService.rebuildCache('exchange-rate-test', false, 'DEFAULT', 'test-message');
+      expect(lookupSpy).toHaveBeenCalledWith('exchange-rate-test', 'DEFAULT');
+      expect(cache?.xchgRate).toBe(17.536082);
+    });
+
     it('no pacs008', async () => {
       const EndToEndId = crypto.randomUUID();
       const Id = crypto.randomUUID();
